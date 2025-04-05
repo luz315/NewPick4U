@@ -16,8 +16,8 @@ import org.hibernate.annotations.ColumnDefault;
 @Entity
 @Table(name = "p_tag")
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Tag {
 
   @Id
