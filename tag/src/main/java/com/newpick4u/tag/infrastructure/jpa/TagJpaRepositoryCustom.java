@@ -1,4 +1,4 @@
-package com.newpick4u.tag.infrastructure.persistence;
+package com.newpick4u.tag.infrastructure.jpa;
 
 import com.newpick4u.tag.domain.criteria.SearchTagCriteria;
 import com.newpick4u.tag.domain.entity.Tag;

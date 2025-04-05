@@ -1,4 +1,4 @@
-package com.newpick4u.tag.infrastructure.persistence;
+package com.newpick4u.tag.infrastructure.jpa;
 
 import static com.newpick4u.tag.domain.entity.QTag.tag;
 

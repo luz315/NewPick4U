@@ -13,5 +13,5 @@ public interface TagRepository {
 
   Optional<Tag> findById(UUID id);
 
-  void save(Tag findTag);
+  Tag save(Tag tag);
 }

@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +23,7 @@ public class TagServiceImpl implements TagService {
   }
 
   @Override
+  @Transactional
   public void updateTag(UpdateTagRequestDto tag, UUID tagId) {
     Tag findTag = tagRepository.findById(tagId)
         .orElseThrow(() -> new IllegalArgumentException("Not Exsit Tag"));
