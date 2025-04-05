@@ -1,2 +1,22 @@
 server:
   port: 12001
+spring:
+  config:
+    import:
+      - file:.env.comment[.properties]
+  datasource:
+    url: ${DEVELOP_DB_URL}
+    username: ${DEVELOP_DB_USERNAME}
+    password: ${DEVELOP_DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    open-in-view: false
+    defer-datasource-initialization: true # hibernate가 초기화되기 전 data.sql 실행하는 것을 방지
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        default_batch_fetch_size: 100
+        format_sql: true
