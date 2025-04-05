@@ -10,24 +10,26 @@ import java.util.UUID;
 @Entity
 @Table(name = "p_news_tag")
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class NewsTag {
 
     @Id
-    @GeneratedValue(generator = "uuid2")
-    @GenericGenerator(name = "uuid2", strategy = "uuid2")
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "news_tag_id", nullable = false, unique = true)
-    private UUID newsTagId;
+    private UUID id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
+    private UUID tagId;
+
+    @Column(nullable = false)
     private String name;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "news_id", nullable = false, unique = true)
+    @JoinColumn(name = "news_id", nullable = false)
     private News news;
 
-    public static NewsTag create(String name, News news) {
-        return new NewsTag(null,name,news);
+    public static NewsTag create(UUID tagId, String name, News news) {
+        return new NewsTag(null,tagId,name,news);
     }
 }

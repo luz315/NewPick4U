@@ -13,15 +13,14 @@ import java.util.UUID;
 @Entity
 @Table(name = "p_news")
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class News {
 
     @Id
-    @GeneratedValue(generator = "uuid2")
-    @GenericGenerator(name = "uuid2", strategy = "uuid2")
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "news_id", nullable = false, unique = true)
-    private UUID newsId;
+    private UUID id;
 
     @Column(nullable = false)
     private String title;
@@ -32,13 +31,16 @@ public class News {
     @Column
     private Long view;
 
-    @OneToMany(mappedBy = "p_news", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "news", cascade = CascadeType.ALL, orphanRemoval = true)
     @BatchSize(size = 10)
-    private List<NewsTag> tagList = new ArrayList<>();
+    private List<NewsTag> newsTagList;
 
     public static News create(String title, String content, Long view) {
         return new News(null, title, content, view, new ArrayList<>());
     }
 
+    public void updateNewsTags(List<NewsTag> newTags) {
+        this.newsTagList.addAll(newTags);
+    }
 
 }
