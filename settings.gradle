@@ -1,3 +1,4 @@
 rootProject.name = 'newpick4you'
 include 'common'
 include 'comment'
+include 'client'
