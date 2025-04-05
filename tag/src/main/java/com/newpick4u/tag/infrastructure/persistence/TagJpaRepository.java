@@ -5,7 +5,7 @@ import com.newpick4u.tag.domain.repository.TagRepository;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface TagJpaRepository extends TagRepository, JpaRepository<Tag, UUID>,
-    TagJpaRepositoryCustom {
+public interface TagJpaRepository extends JpaRepository<Tag, UUID>, TagJpaRepositoryCustom,
+    TagRepository {
 
 }

@@ -31,7 +31,13 @@ public class Tag {
   @ColumnDefault("1")
   private Long score;
 
-  public static Tag create(String tagName, Long score) {
+  public static Tag of(String tagName, Long score) {
     return new Tag(null, tagName, score);
+  }
+
+  public void updateTagName(String newTagName) {
+    if (newTagName != null && !newTagName.isBlank()) {
+      this.tagName = newTagName;
+    }
   }
 }
