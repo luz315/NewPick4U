@@ -15,21 +15,19 @@ import org.springframework.stereotype.Component;
 public class RetryNewsConsumer {
 
     private final NewsMessageHandler newsMessageHandler;
-    private final ObjectMapper objectMapper;
 
     @KafkaListener(
             topics = "dev.news.dlq.news.1",
             groupId = "news-dlq-consumer"
     )
-    public void consume(ConsumerRecord<String, String> record) {
-        String message = record.value();
+    public void consume(ConsumerRecord<String, AiNewsDto> record) {
+        AiNewsDto dto = record.value();
         try {
-            AiNewsDto dto = objectMapper.readValue(message, AiNewsDto.class);
             log.info("[DLQ Retry] DLQ 메시지 재처리 시작: {}", dto);
             newsMessageHandler.handle(dto);
 
         } catch (Exception e) {
-            log.error("[DLQ Retry] 재처리 실패 - 메시지: {}", message, e);
+            log.error("[DLQ Retry] 재처리 실패 - 메시지: {}", dto, e);
             throw new RuntimeException(e);
         }
     }
