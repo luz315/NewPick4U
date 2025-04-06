@@ -10,6 +10,6 @@ import java.util.List;
 @FeignClient(name = "tag-service")
 public interface TagClient {
 
-    @GetMapping ("/api/v1/tag/list")
+    @GetMapping ("/api/v1/tags/list")
     List<TagDto> getOrCreateTags(@RequestBody List<String> tagNames);
 }
