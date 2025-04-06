@@ -3,9 +3,6 @@ package com.newpick4u.news.news.domain.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.GenericGenerator;
-
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -14,12 +11,11 @@ import java.util.UUID;
 @Table(name = "p_news")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class News {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "news_id", nullable = false, unique = true)
+    @Column(name = "news_id")
     private UUID id;
 
     @Column(nullable = false)
@@ -35,8 +31,20 @@ public class News {
     @BatchSize(size = 10)
     private List<NewsTag> newsTagList;
 
+    @Builder(access = AccessLevel.PRIVATE)
+    private News(String title, String content, Long view, List<NewsTag> newsTagList) {
+        this.title = title;
+        this.content = content;
+        this.view = view;
+        this.newsTagList = newsTagList != null ? newsTagList : new ArrayList<>();
+    }
+
     public static News create(String title, String content, Long view) {
-        return new News(null, title, content, view, new ArrayList<>());
+        return News.builder()
+                .title(title)
+                .content(content)
+                .view(view)
+                .build();
     }
 
     public void updateNewsTags(List<NewsTag> newTags) {
