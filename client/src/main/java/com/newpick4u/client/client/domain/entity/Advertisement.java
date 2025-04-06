@@ -3,10 +3,13 @@ package com.newpick4u.client.client.domain.entity;
 import com.newpick4u.common.domain.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.util.UUID;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.UuidGenerator;
@@ -28,22 +31,35 @@ public class Advertisement extends BaseEntity {
   @Column(nullable = false)
   private String content;
   @Column(nullable = false)
+  @Enumerated(EnumType.STRING)
   private AdvertisementType type;
   @Column(nullable = false)
   private String url;
   @Column(nullable = false)
   private Long budget;
 
-  public static Advertisement of(UUID clientId, String title, String content,
+  @Builder
+  private Advertisement(UUID clientId, String title, String content,
       AdvertisementType type, String url, Long budget) {
-    Advertisement advertisement = new Advertisement();
-    advertisement.clientId = clientId;
-    advertisement.title = title;
-    advertisement.content = content;
-    advertisement.type = type;
-    advertisement.url = url;
-    advertisement.budget = budget;
-    return advertisement;
+    this.clientId = clientId;
+    this.title = title;
+    this.content = content;
+    this.type = type;
+    this.url = url;
+    this.budget = budget;
+  }
+
+
+  public static Advertisement create(UUID clientId, String title, String content,
+      AdvertisementType type, String url, Long budget) {
+    return Advertisement.builder()
+        .clientId(clientId)
+        .title(title)
+        .content(content)
+        .type(type)
+        .url(url)
+        .budget(budget)
+        .build();
   }
 
   @Getter
