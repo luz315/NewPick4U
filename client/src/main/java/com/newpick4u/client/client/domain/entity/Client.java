@@ -3,13 +3,17 @@ package com.newpick4u.client.client.domain.entity;
 import com.newpick4u.common.domain.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.util.UUID;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.UuidGenerator;
+import org.springframework.util.StringUtils;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -24,6 +28,7 @@ public class Client extends BaseEntity {
   @Column(nullable = false, length = 50)
   private String name;
   @Column(nullable = false)
+  @Enumerated(EnumType.STRING)
   private Industry industry;
   @Column(nullable = false, length = 50)
   private String email;
@@ -32,15 +37,56 @@ public class Client extends BaseEntity {
   @Column(nullable = false, length = 100)
   private String address;
 
-  public static Client of(String name, Industry industry, String email, String phone,
+  @Builder
+  private Client(String name, Industry industry, String email, String phone,
       String address) {
-    Client client = new Client();
-    client.name = name;
-    client.industry = industry;
-    client.email = email;
-    client.phone = phone;
-    client.address = address;
-    return client;
+    this.name = name;
+    this.industry = industry;
+    this.email = email;
+    this.phone = phone;
+    this.address = address;
+  }
+
+  public static Client create(String name, Industry industry, String email, String phone,
+      String address) {
+    return Client.builder()
+        .name(name)
+        .industry(industry)
+        .email(email)
+        .phone(phone)
+        .address(address)
+        .build();
+  }
+
+  public void updateName(String name) {
+    this.name = name;
+  }
+
+  public void updateEmail(String email) {
+    this.email = email;
+  }
+
+  public void updatePhone(String phone) {
+    this.phone = phone;
+  }
+
+  public void updateAddress(String address) {
+    this.address = address;
+  }
+
+  public void updateClient(String name, String email, String phone, String address) {
+    if (StringUtils.hasText(name)) {
+      this.name = name;
+    }
+    if (StringUtils.hasText(email)) {
+      this.email = email;
+    }
+    if (StringUtils.hasText(phone)) {
+      this.phone = phone;
+    }
+    if (StringUtils.hasText(address)) {
+      this.address = address;
+    }
   }
 
   @Getter
