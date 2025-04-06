@@ -7,6 +7,6 @@ public record UpdateTagRequestDto(
 ) {
 
   public Tag toEntity() {
-    return Tag.of(tagName, null);
+    return Tag.create(tagName, 1L);
   }
 }

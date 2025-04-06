@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,17 +31,9 @@ public class TagController {
 
   @GetMapping()
   public ResponseEntity<PageResponse<TagListResponseDto>> getTags(
-      @RequestParam(required = false) String tagName,
-      @RequestParam(required = false) Long minScore,
-      @RequestParam(required = false) Long maxScore,
+      @ModelAttribute SearchTagCriteria criteria,
       Pageable pageable
   ) {
-
-    SearchTagCriteria criteria = SearchTagCriteria.builder()
-        .tagName(tagName)
-        .minScore(minScore)
-        .maxScore(maxScore)
-        .build();
 
     Page<Tag> result = tagService.getTags(criteria, pageable);
     Page<TagListResponseDto> response = result.map(TagListResponseDto::from);
