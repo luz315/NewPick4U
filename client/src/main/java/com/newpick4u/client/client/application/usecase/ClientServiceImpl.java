@@ -33,6 +33,7 @@ public class ClientServiceImpl implements ClientService {
   }
 
   @Override
+  @Transactional
   public UUID updateClient(UUID clientId, UpdateClientRequestDto request) {
     Client client = clientRepository.findById(clientId)
         .orElseThrow(NotFoundException::new);
@@ -43,6 +44,7 @@ public class ClientServiceImpl implements ClientService {
   }
 
   @Override
+  @Transactional
   public UUID deleteClient(UUID clientId, Long deletedBy) {
     Client client = clientRepository.findById(clientId)
         .orElseThrow(NotFoundException::new);

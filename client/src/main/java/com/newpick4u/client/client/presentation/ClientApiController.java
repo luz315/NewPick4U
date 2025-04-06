@@ -28,7 +28,8 @@ public class ClientApiController {
   private final ClientService clientService;
 
   @PostMapping
-  public ResponseEntity<?> saveClient(@RequestBody @Valid CreateClientRequestDto request) {
+  public ResponseEntity<ApiResponse<Map<String, UUID>>> saveClient(
+      @RequestBody @Valid CreateClientRequestDto request) {
     UUID savedClientId = clientService.saveClient(request);
 
     return ResponseEntity.status(HttpStatus.CREATED.value())
@@ -36,7 +37,8 @@ public class ClientApiController {
   }
 
   @PatchMapping("/{clientId}")
-  public ResponseEntity<?> updateClient(@PathVariable("clientId") UUID clientId,
+  public ResponseEntity<ApiResponse<Map<String, UUID>>> updateClient(
+      @PathVariable("clientId") UUID clientId,
       @RequestBody @Valid UpdateClientRequestDto request) {
     UUID updatedClientId = clientService.updateClient(clientId, request);
     return ResponseEntity.status(HttpStatus.OK.value())
@@ -44,8 +46,9 @@ public class ClientApiController {
   }
 
   @DeleteMapping("/{clientId}")
-  public ResponseEntity<?> deleteClient(@PathVariable("clientId") UUID clientId, @CurrentUserInfo
-  CurrentUserInfoDto userInfoDto) {
+  public ResponseEntity<ApiResponse<Map<String, UUID>>> deleteClient(
+      @PathVariable("clientId") UUID clientId, @CurrentUserInfo
+      CurrentUserInfoDto userInfoDto) {
     UUID deletedClientId = clientService.deleteClient(clientId, userInfoDto.userId());
     return ResponseEntity.status(HttpStatus.OK.value())
         .body(ApiResponse.of(HttpStatus.OK, Map.of("deletedClientId", deletedClientId)));
