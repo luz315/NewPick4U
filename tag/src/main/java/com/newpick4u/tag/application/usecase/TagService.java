@@ -11,5 +11,5 @@ public interface TagService {
 
   Page<Tag> getTags(SearchTagCriteria criteria, Pageable pageable);
 
-  void updateTag(UpdateTagRequestDto tag, UUID tagId);
+  UpdateTagRequestDto updateTag(UpdateTagRequestDto tag, UUID tagId);
 }

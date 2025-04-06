@@ -1,5 +1,7 @@
 package com.newpick4u.tag.application.usecase;
 
+import com.newpick4u.common.exception.CustomException;
+import com.newpick4u.common.exception.type.ApiErrorCode;
 import com.newpick4u.tag.application.dto.UpdateTagRequestDto;
 import com.newpick4u.tag.domain.criteria.SearchTagCriteria;
 import com.newpick4u.tag.domain.entity.Tag;
@@ -24,12 +26,14 @@ public class TagServiceImpl implements TagService {
 
   @Override
   @Transactional
-  public void updateTag(UpdateTagRequestDto tag, UUID tagId) {
+  public UpdateTagRequestDto updateTag(UpdateTagRequestDto tag, UUID tagId) {
     Tag findTag = tagRepository.findById(tagId)
-        .orElseThrow(() -> new IllegalArgumentException("Not Exsit Tag"));
+        .orElseThrow(() -> new CustomException(ApiErrorCode.NOT_FOUND));
 
     findTag.updateTagName(tag.tagName());
 
-    tagRepository.save(findTag);
+    Tag save = tagRepository.save(findTag);
+
+    return new UpdateTagRequestDto(save.getTagName());
   }
 }

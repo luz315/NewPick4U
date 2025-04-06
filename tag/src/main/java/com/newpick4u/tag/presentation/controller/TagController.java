@@ -1,5 +1,8 @@
 package com.newpick4u.tag.presentation.controller;
 
+import com.newpick4u.common.response.ApiResponse;
+import com.newpick4u.common.response.PageResponse;
+import com.newpick4u.tag.application.dto.TagListResponseDto;
 import com.newpick4u.tag.application.dto.UpdateTagRequestDto;
 import com.newpick4u.tag.application.usecase.TagService;
 import com.newpick4u.tag.domain.criteria.SearchTagCriteria;
@@ -8,6 +11,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -25,7 +29,7 @@ public class TagController {
   private final TagService tagService;
 
   @GetMapping()
-  public ResponseEntity<?> getTags(
+  public ResponseEntity<PageResponse<TagListResponseDto>> getTags(
       @RequestParam(required = false) String tagName,
       @RequestParam(required = false) Long minScore,
       @RequestParam(required = false) Long maxScore,
@@ -39,13 +43,14 @@ public class TagController {
         .build();
 
     Page<Tag> result = tagService.getTags(criteria, pageable);
-    return ResponseEntity.ok(result);
+    Page<TagListResponseDto> response = result.map(TagListResponseDto::from);
+
+    return ResponseEntity.ok(PageResponse.from(response));
   }
 
   @PatchMapping("/{tagId}")
-  public ResponseEntity<?> updateTag(@PathVariable UUID tagId,
+  public ResponseEntity<ApiResponse<UpdateTagRequestDto>> updateTag(@PathVariable UUID tagId,
       @RequestBody UpdateTagRequestDto tag) {
-    tagService.updateTag(tag, tagId);
-    return ResponseEntity.ok().build();
+    return ResponseEntity.ok(ApiResponse.of(HttpStatus.OK, tagService.updateTag(tag, tagId)));
   }
 }

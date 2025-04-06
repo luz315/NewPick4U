@@ -1,5 +1,6 @@
 package com.newpick4u.tag.domain.entity;
 
+import com.newpick4u.common.domain.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -18,11 +19,11 @@ import org.hibernate.annotations.ColumnDefault;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class Tag {
+public class Tag extends BaseEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  @Column(name = "tag_id", nullable = false, unique = true)
+  @Column(name = "tag_id", nullable = false, unique = true, columnDefinition = "CHAR(36)")
   private UUID tagId;
 
   @Column(nullable = false, unique = true)

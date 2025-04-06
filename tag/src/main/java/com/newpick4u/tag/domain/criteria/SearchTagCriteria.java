@@ -13,6 +13,9 @@ public record SearchTagCriteria(
 ) {
 
   public BooleanBuilder likeTagName() {
+    if (tagName == null || tagName.isBlank()) {
+      return new BooleanBuilder();
+    }
     return new BooleanBuilder(tag.tagName.containsIgnoreCase(tagName));
   }
 
