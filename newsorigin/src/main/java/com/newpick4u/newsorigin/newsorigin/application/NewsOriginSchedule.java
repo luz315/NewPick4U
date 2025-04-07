@@ -16,4 +16,11 @@ public class NewsOriginSchedule {
     int collectCount = newsOriginService.collectOriginNews();
     log.info("End OriginNews Collect : collectCount = {} =====", collectCount);
   }
+
+  // @Scheduled(fixedDelay = 2 * 60 * 1000)
+  public void sendNewsOriginMessagesSchedule() {
+    log.info("Start Send News Origin Task =========================");
+    int updateCount = newsOriginService.sendNewsOriginMessages();
+    log.info("End Send News Origin Task : updateCount = {} =====", updateCount);
+  }
 }

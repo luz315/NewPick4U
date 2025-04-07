@@ -45,13 +45,13 @@ public class OriginCollectClientImpl implements OriginCollectClient {
 
     ArrayList<NewNewsOriginDto> newNewsOriginDtoList = new ArrayList<>();
     for (JsonNode item : items) {
-
+      String title = item.get("title").asText().replace("<b>", "").replace("</b>", "");
       String url = item.get("originallink").asText();
 
       String pubDateString = item.get("pubDate").asText();
       LocalDateTime publishedDate = CommonUtil.convertStringToLocalDateTime(pubDateString);
 
-      NewNewsOriginDto newNewsOriginDto = new NewNewsOriginDto(publishedDate, url);
+      NewNewsOriginDto newNewsOriginDto = new NewNewsOriginDto(title, url, publishedDate);
       newNewsOriginDtoList.add(newNewsOriginDto);
     }
     return newNewsOriginDtoList;

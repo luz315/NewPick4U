@@ -20,6 +20,15 @@ spring:
       hibernate:
         default_batch_fetch_size: 100
         format_sql: true
+  kafka:
+    newsorigin-topic:
+      topic-name: test.originnews-info.fct.1
+    # Kafka 클러스터의 진입 지점 역할을 하는 브로커 주소 목록
+    # 최소 하나의 브로커 주소만 있어도 클러스터 전체 메타데이터 조회 가능
+    bootstrap-servers: ${TEST_SPRING_KAFKA_BOOTSTRAP_SERVERS}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
 app:
   client:
     naver:
@@ -34,3 +43,7 @@ app:
         search-sort: ${TEST_NAVER_COLLECT_NEWS_SEARCH_SORT}
         # 한번에 쿼리할 양
         search-display: ${TEST_NAVER_COLLECT_NEWS_SEARCH_DISPLAY}
+    webclient:
+      connection-timeout: 5000
+      read-timeout: 20000
+      max-buffer-size-MB: 20

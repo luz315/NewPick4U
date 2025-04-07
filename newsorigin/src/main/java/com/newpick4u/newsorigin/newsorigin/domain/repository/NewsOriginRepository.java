@@ -5,5 +5,9 @@ import java.util.List;
 
 public interface NewsOriginRepository {
 
+  NewsOrigin save(NewsOrigin newsOrigin);
+
   List<NewsOrigin> saveAll(List<NewsOrigin> newsOriginList);
+
+  List<NewsOrigin> getAllByBeforeSentQueue();
 }

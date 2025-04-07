@@ -1,6 +1,10 @@
 package com.newpick4u.newsorigin.newsorigin.infrastructure.jpa;
 
+import static com.newpick4u.newsorigin.newsorigin.domain.entity.QNewsOrigin.newsOrigin;
+
+import com.newpick4u.newsorigin.newsorigin.domain.entity.NewsOrigin;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -10,4 +14,13 @@ public class NewsOriginRepositoryCustomImpl implements NewsOriginRepositoryCusto
 
   private final JPAQueryFactory queryFactory;
 
+  @Override
+  public List<NewsOrigin> getAllByBeforeSentQueue() {
+    return queryFactory.selectFrom(newsOrigin)
+        .where(
+            newsOrigin.isSentToQueue.eq(false)
+                .and(newsOrigin.deletedAt.isNull())
+        )
+        .fetch();
+  }
 }
