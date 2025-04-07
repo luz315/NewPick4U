@@ -1,5 +1,6 @@
 package com.newpick4u.client.client.application.usecase;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -7,10 +8,14 @@ import static org.mockito.Mockito.when;
 
 import com.newpick4u.client.client.application.dto.request.CreateClientRequestDto;
 import com.newpick4u.client.client.application.dto.request.UpdateClientRequestDto;
+import com.newpick4u.client.client.application.dto.response.GetClientResponseDto;
 import com.newpick4u.client.client.application.exception.ClientException;
+import com.newpick4u.client.client.domain.criteria.SearchClientCriteria;
 import com.newpick4u.client.client.domain.entity.Client;
 import com.newpick4u.client.client.domain.entity.Client.Industry;
 import com.newpick4u.client.client.domain.repository.ClientRepository;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.assertj.core.api.Assertions;
@@ -20,6 +25,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,6 +38,7 @@ class ClientServiceImplTest {
   private ClientServiceImpl clientService;
   @Mock
   private ClientRepository clientRepository;
+
 
   @Test
   @DisplayName("고객사 생성 테스트 - 성공 케이스")
@@ -175,5 +185,49 @@ class ClientServiceImplTest {
     // when & then
     Assertions.assertThatThrownBy(() -> clientService.deleteClient(notExistsClientId, deletedBy))
         .isInstanceOf(ClientException.NotFoundException.class);
+  }
+
+  @Test
+  @DisplayName("고객사 정보 검색 조회 테스트")
+  void searchClient() {
+
+    // given
+    SearchClientCriteria criteria = SearchClientCriteria.builder()
+        .name("스파르타")
+        .industry(Industry.TECHNOLOGY)
+        .build();
+
+    Pageable pageable = PageRequest.of(0, 10);
+
+    List<GetClientResponseDto> getClientResponseDtos = searchClientResults();
+    PageImpl<GetClientResponseDto> responseDtoPage = new PageImpl<>(getClientResponseDtos, pageable,
+        getClientResponseDtos.size());
+
+    when(clientRepository.getClients(pageable, criteria)).thenReturn(responseDtoPage);
+
+    // when
+    Page<GetClientResponseDto> actualResponsePage = clientService.getClients(pageable, criteria);
+
+    // then
+    assertNotNull(actualResponsePage);
+    assertEquals(responseDtoPage.getTotalElements(), actualResponsePage.getTotalElements());
+    assertThat(actualResponsePage.getContent().stream().map(GetClientResponseDto::name))
+        .anyMatch(name -> name.equals("스파르타 솔루션"));
+    assertThat(actualResponsePage.getContent().stream().map(GetClientResponseDto::name))
+        .anyMatch(name -> name.equals("스파르타 농업"));
+    assertThat(actualResponsePage.getContent().stream().map(GetClientResponseDto::industry))
+        .allMatch(industry -> industry.equals(Industry.TECHNOLOGY));
+
+  }
+
+  private List<GetClientResponseDto> searchClientResults() {
+    return List.of(
+        new GetClientResponseDto("스파르타 솔루션", Industry.TECHNOLOGY, "mobile@solution.com",
+            LocalDateTime.now(), 1L, LocalDateTime.now(), 1L),
+        new GetClientResponseDto("스파르타 농업", Industry.TECHNOLOGY, "smart@agriculture.com",
+            LocalDateTime.now(), 1L, LocalDateTime.now(), 1L)
+    );
+
+
   }
 }
