@@ -1,11 +1,14 @@
 package com.newpick4u.news.news.application.usecase;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.newpick4u.news.news.domain.entity.News;
 import com.newpick4u.news.news.domain.entity.NewsTag;
+import com.newpick4u.news.news.domain.entity.TagInbox;
 import com.newpick4u.news.news.domain.repository.NewsRepository;
-import com.newpick4u.news.news.infrastructure.feign.TagClient;
-import com.newpick4u.news.news.infrastructure.feign.dto.TagDto;
-import com.newpick4u.news.news.infrastructure.kafka.dto.AiNewsDto;
+import com.newpick4u.news.news.domain.repository.TagInboxRepository;
+import com.newpick4u.news.news.infrastructure.kafka.dto.NewsInfoDto;
+import com.newpick4u.news.news.infrastructure.kafka.dto.NewsTagDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,24 +19,41 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NewsServiceImpl implements NewsService {
     private final NewsRepository newsRepository;
-    private final TagClient tagClient;
+    private final TagInboxRepository tagInboxRepository;
+    private final ObjectMapper objectMapper;
 
     @Transactional
-    public void createNewsFromAi(AiNewsDto dto) {
-        News news = News.create(dto.title(), dto.content(), 0L);
+      public void createNewsInfo(NewsInfoDto dto) {
+          if (newsRepository.existsByAiNewsId(dto.aiNewsId())) {
+              throw new IllegalStateException("이미 저장된 뉴스입니다: " + dto.aiNewsId());
+          }
 
-        List<TagDto> tags = tagClient.getOrCreateTags(dto.tags());
+          News news = News.create(dto.aiNewsId(), dto.title(), dto.content(), 0L);
+          newsRepository.save(news);
+      }
 
-        List<NewsTag> newsTags = tags.stream()
-                .map(tagDto -> NewsTag.create(
-                        tagDto.id(),
-                        tagDto.name(),
-                        news)
-                )
-                .toList();
+    @Transactional
+    public void updateTagList(NewsTagDto dto) {
+        if (dto.tagList() == null || dto.tagList().size() != 10) {
+            throw new IllegalArgumentException("뉴스 태그는 반드시 10개여야 합니다.");
+        }
 
-        news.updateNewsTags(newsTags); // cascade = ALL 로 News 저장 시 NewsTag도 저장됨
+        newsRepository.findByAiNewsId(dto.aiNewsId()).ifPresentOrElse(news -> {
+            List<NewsTag> tags = dto.tagList().stream()
+                    .map(tag -> NewsTag.create(tag.id(), tag.name(), news))
+                    .toList();
+            news.updateNewsTags(tags);
+        }, () -> {
+            TagInbox tagInbox = TagInbox.create(dto.aiNewsId(), toJson(dto));
+            tagInboxRepository.save(tagInbox);
+        });
+    }
 
-        newsRepository.save(news);
+    private String toJson(NewsTagDto dto) {
+        try {
+            return objectMapper.writeValueAsString(dto);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("태그 인박스 직렬화 실패", e);
+        }
     }
 }

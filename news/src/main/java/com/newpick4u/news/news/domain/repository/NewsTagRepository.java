@@ -1,7 +1,7 @@
 package com.newpick4u.news.news.domain.repository;
 
-import com.newpick4u.news.news.domain.entity.News;
+import com.newpick4u.news.news.domain.entity.NewsTag;
 
 public interface NewsTagRepository {
-    News save(News news);
+    NewsTag save(NewsTag newsTag);
 }

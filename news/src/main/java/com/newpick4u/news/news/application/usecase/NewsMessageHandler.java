@@ -1,6 +1,7 @@
 package com.newpick4u.news.news.application.usecase;
 
-import com.newpick4u.news.news.infrastructure.kafka.dto.AiNewsDto;
+import com.newpick4u.news.news.infrastructure.kafka.dto.NewsInfoDto;
+import com.newpick4u.news.news.infrastructure.kafka.dto.NewsTagDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -10,7 +11,11 @@ public class NewsMessageHandler {
 
     private final NewsService newsService;
 
-    public void handle(AiNewsDto dto) {
-        newsService.createNewsFromAi(dto);
+    public void handleNewsInfoCreate(NewsInfoDto dto) {
+        newsService.createNewsInfo(dto);
+    }
+
+    public void handleNewsTagUpdate(NewsTagDto dto) {
+        newsService.updateTagList(dto);
     }
 }
