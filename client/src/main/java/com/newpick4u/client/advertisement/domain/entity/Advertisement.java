@@ -27,6 +27,8 @@ public class Advertisement extends BaseEntity {
   private UUID advertisementId;
   @Column(name = "client_id", nullable = false)
   private UUID clientId;
+  @Column(name = "news_id", nullable = false)
+  private UUID newsId;
   @Column(nullable = false, length = 50)
   private String title;
   @Column(nullable = false)
@@ -40,9 +42,10 @@ public class Advertisement extends BaseEntity {
   private Long budget;
 
   @Builder
-  private Advertisement(UUID clientId, String title, String content,
+  private Advertisement(UUID clientId, UUID newsId, String title, String content,
       AdvertisementType type, String url, Long budget) {
     this.clientId = clientId;
+    this.newsId = newsId;
     this.title = title;
     this.content = content;
     this.type = type;
@@ -51,10 +54,11 @@ public class Advertisement extends BaseEntity {
   }
 
 
-  public static Advertisement create(UUID clientId, String title, String content,
+  public static Advertisement create(UUID clientId, UUID newsId, String title, String content,
       AdvertisementType type, String url, Long budget) {
     return Advertisement.builder()
         .clientId(clientId)
+        .newsId(newsId)
         .title(title)
         .content(content)
         .type(type)
