@@ -1,7 +1,7 @@
 package com.newpick4u.client.advertisement.infrastructure.client;
 
 import com.newpick4u.client.advertisement.application.client.NewsClient;
-import com.newpick4u.client.advertisement.infrastructure.client.response.GetNewsResponseDto;
+import com.newpick4u.client.advertisement.application.dto.response.GetNewsResponseDto;
 import com.newpick4u.client.global.config.FeignConfig;
 import com.newpick4u.common.response.ApiResponse;
 import java.util.UUID;
