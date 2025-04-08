@@ -46,7 +46,7 @@ public class NewsServiceImpl implements NewsService {
 
     // 내부 메서드
     private void validateTagListSize(NewsTagDto dto) {
-        if (dto.tagList() == null || dto.tagList().size() <= 10) {
+        if (dto.tagList() == null || dto.tagList().size() < 10) {
             throw new IllegalArgumentException("뉴스 태그는 최대 10개까지 존재합니다.");
         }
     }
