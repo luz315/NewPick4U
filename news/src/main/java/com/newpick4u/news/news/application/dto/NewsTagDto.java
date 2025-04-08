@@ -1,4 +1,4 @@
-package com.newpick4u.news.news.infrastructure.kafka.dto;
+package com.newpick4u.news.news.application.dto;
 
 import java.util.List;
 import java.util.UUID;

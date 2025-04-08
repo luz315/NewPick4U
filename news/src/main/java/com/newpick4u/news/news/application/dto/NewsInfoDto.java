@@ -1,4 +1,4 @@
-package com.newpick4u.news.news.infrastructure.kafka.dto;
+package com.newpick4u.news.news.application.dto;
 
 public record NewsInfoDto(
     String aiNewsId,
