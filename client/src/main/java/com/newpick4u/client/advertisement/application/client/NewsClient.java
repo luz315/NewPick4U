@@ -1,6 +1,6 @@
 package com.newpick4u.client.advertisement.application.client;
 
-import com.newpick4u.client.advertisement.infrastructure.client.response.GetNewsResponseDto;
+import com.newpick4u.client.advertisement.application.dto.response.GetNewsResponseDto;
 import com.newpick4u.common.response.ApiResponse;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;

@@ -8,12 +8,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.newpick4u.client.advertisement.application.dto.request.CreateAdvertiseRequestDto;
+import com.newpick4u.client.advertisement.application.dto.response.GetNewsResponseDto;
 import com.newpick4u.client.advertisement.application.exception.AdvertisementException;
 import com.newpick4u.client.advertisement.domain.entity.Advertisement;
 import com.newpick4u.client.advertisement.domain.entity.Advertisement.AdvertisementType;
 import com.newpick4u.client.advertisement.domain.repository.AdvertisementRepository;
 import com.newpick4u.client.advertisement.infrastructure.client.NewsClientImpl;
-import com.newpick4u.client.advertisement.infrastructure.client.response.GetNewsResponseDto;
 import com.newpick4u.common.response.ApiResponse;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;

@@ -2,10 +2,10 @@ package com.newpick4u.client.advertisement.application.usecase;
 
 import com.newpick4u.client.advertisement.application.client.NewsClient;
 import com.newpick4u.client.advertisement.application.dto.request.CreateAdvertiseRequestDto;
+import com.newpick4u.client.advertisement.application.dto.response.GetNewsResponseDto;
 import com.newpick4u.client.advertisement.application.exception.AdvertisementException;
 import com.newpick4u.client.advertisement.domain.entity.Advertisement;
 import com.newpick4u.client.advertisement.domain.repository.AdvertisementRepository;
-import com.newpick4u.client.advertisement.infrastructure.client.response.GetNewsResponseDto;
 import com.newpick4u.common.response.ApiResponse;
 import java.util.Objects;
 import java.util.UUID;
