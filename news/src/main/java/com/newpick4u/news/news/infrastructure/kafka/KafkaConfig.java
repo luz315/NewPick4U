@@ -1,9 +1,11 @@
 package com.newpick4u.news.news.infrastructure.kafka;
 
-import com.newpick4u.news.news.infrastructure.kafka.dto.AiNewsDto;
+import com.newpick4u.news.news.application.dto.NewsInfoDto;
+import com.newpick4u.news.news.application.dto.NewsTagDto;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
@@ -22,49 +24,88 @@ import java.util.Map;
 @Configuration
 public class KafkaConfig {
 
-    @Bean
-    public ConsumerFactory<String, AiNewsDto> consumerFactory() {
-        Map<String, Object> props = new HashMap<>();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "${KAFKA_BOOTSTRAP_SERVERS}");
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "${KAFKA_GROUP_ID}");
-        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+    private static final String PACKAGE_TRUSTED = "com.newpick4u.news.news.infrastructure.kafka.dto";
 
-        JsonDeserializer<AiNewsDto> valueDeserializer = new JsonDeserializer<>(AiNewsDto.class);
-        valueDeserializer.addTrustedPackages("com.newpick4u.news.news.infrastructure.kafka.dto");
-
-        return new DefaultKafkaConsumerFactory<>(
-                props,
-                new StringDeserializer(),
-                valueDeserializer
-        );
-    }
+    @Value("${KAFKA_BOOTSTRAP_SERVERS}")
+    private String bootstrapServers;
 
     @Bean
     public KafkaTemplate<String, String> kafkaTemplate(ProducerFactory<String, String> producerFactory) {
         return new KafkaTemplate<>(producerFactory);
     }
 
+    private Map<String, Object> commonConsumerProps(String groupId) {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        return props;
+    }
+
+    private <T> ConsumerFactory<String, T> buildConsumerFactory(Class<T> clazz, String groupId) {
+        JsonDeserializer<T> valueDeserializer = new JsonDeserializer<>(clazz);
+        valueDeserializer.addTrustedPackages(PACKAGE_TRUSTED);
+        valueDeserializer.setRemoveTypeHeaders(false);
+        valueDeserializer.setUseTypeMapperForKey(true);
+        return new DefaultKafkaConsumerFactory<>(
+                commonConsumerProps(groupId),
+                new StringDeserializer(),
+                valueDeserializer
+        );
+    }
+
+    private <T> ConcurrentKafkaListenerContainerFactory<String, T> buildListenerContainerFactory(
+            ConsumerFactory<String, T> consumerFactory
+    ) {
+        ConcurrentKafkaListenerContainerFactory<String, T> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory);
+        return factory;
+    }
+
+    // ai - news 카프카
+    @Bean
+    public ConsumerFactory<String, NewsInfoDto> newsInfoConsumerFactory() {
+        return buildConsumerFactory(NewsInfoDto.class, "news-info-consumer");
+    }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
-            ConsumerFactory<String, String> consumerFactory,
+    public ConcurrentKafkaListenerContainerFactory<String, NewsInfoDto> newsInfoListenerContainerFactory(
+            ConsumerFactory<String, NewsInfoDto> newsInfoConsumerFactory,
             KafkaTemplate<String, String> kafkaTemplate
     ) {
-        var factory = new ConcurrentKafkaListenerContainerFactory<String, String>();
-        factory.setConsumerFactory(consumerFactory);
+        var factory = buildListenerContainerFactory(newsInfoConsumerFactory);
 
-        // poll timeout
-        factory.getContainerProperties().setPollTimeout(1500L);
-
-        // DLQ 설정 (1초 간격으로 3번 재시도 후 DLQ 이동)
+        // DLQ 적용
         var recoverer = new DeadLetterPublishingRecoverer(kafkaTemplate,
-                (record, ex) -> new TopicPartition("dev.news.dlq.news.1", record.partition()));
+                (record, ex) -> new TopicPartition("news-info-dlq.fct.v1", record.partition()));
         var errorHandler = new DefaultErrorHandler(recoverer, new FixedBackOff(1000L, 3));
         factory.setCommonErrorHandler(errorHandler);
 
         return factory;
     }
 
+
+    // tag - news 카프카
+    @Bean
+    public ConsumerFactory<String, NewsTagDto> newsTagConsumerFactory() {
+        return buildConsumerFactory(NewsTagDto.class, "news-tag-consumer");
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, NewsTagDto> newsTagListenerContainerFactory(
+            ConsumerFactory<String, NewsTagDto> newsTagConsumerFactory,
+            KafkaTemplate<String, String> kafkaTemplate
+    ) {
+        var factory = buildListenerContainerFactory(newsTagConsumerFactory);
+
+        // DLQ 적용
+        var recoverer = new DeadLetterPublishingRecoverer(kafkaTemplate,
+                (record, ex) -> new TopicPartition("tag-dlq.fct.v1", record.partition()));
+        var errorHandler = new DefaultErrorHandler(recoverer, new FixedBackOff(1000L, 3));
+        factory.setCommonErrorHandler(errorHandler);
+
+        return factory;
+    }
 
 }

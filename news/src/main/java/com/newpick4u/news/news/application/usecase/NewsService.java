@@ -1,7 +1,9 @@
 package com.newpick4u.news.news.application.usecase;
 
-import com.newpick4u.news.news.infrastructure.kafka.dto.AiNewsDto;
+import com.newpick4u.news.news.application.dto.NewsInfoDto;
+import com.newpick4u.news.news.application.dto.NewsTagDto;
 
 public interface NewsService {
-    void createNewsFromAi(AiNewsDto dto);
+    void saveNewsInfo(NewsInfoDto dto);
+    void updateNewsTagList(NewsTagDto dto);
 }

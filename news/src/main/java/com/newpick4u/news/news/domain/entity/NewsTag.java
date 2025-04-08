@@ -8,7 +8,6 @@ import java.util.UUID;
 @Table(name = "p_news_tag")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class NewsTag {
 
     @Id
