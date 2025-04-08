@@ -36,6 +36,12 @@ dependencyManagement {
 dependencies {
     implementation project(':common')
 
+    // 뉴스 본문 추출을 위한 jsoup
+    implementation("org.jsoup:jsoup:1.18.3")
+
+    // webclient
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'

@@ -21,22 +21,27 @@ public class NewsOrigin extends BaseEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
+  @Column(name = "news_origin_id")
   private UUID id;
 
   @Column(length = 255)
   private String url;
 
+  @Column(length = 255)
+  private String title;
+
   private Boolean isSentToQueue = Boolean.FALSE;
 
   private LocalDateTime newsPublishedDate;
 
-  private NewsOrigin(LocalDateTime newsPublishedDate, String url) {
-    this.newsPublishedDate = newsPublishedDate;
+  private NewsOrigin(String title, String url, LocalDateTime newsPublishedDate) {
+    this.title = title;
     this.url = url;
+    this.newsPublishedDate = newsPublishedDate;
   }
 
-  public static NewsOrigin of(LocalDateTime newsPublishedDate, String url) {
-    return new NewsOrigin(newsPublishedDate, url);
+  public static NewsOrigin create(String title, String url, LocalDateTime newsPublishedDate) {
+    return new NewsOrigin(title, url, newsPublishedDate);
   }
 
   public void sentToQueue() {
