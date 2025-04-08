@@ -1,7 +1,7 @@
 package com.newpick4u.news.news.infrastructure.kafka;
 
-import com.newpick4u.news.news.application.usecase.NewsMessageHandler;
-import com.newpick4u.news.news.infrastructure.kafka.dto.NewsInfoDto;
+import com.newpick4u.news.news.application.dto.NewsInfoDto;
+import com.newpick4u.news.news.application.usecase.NewsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -13,10 +13,10 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class RetryNewsInfoConsumer {
 
-    private final NewsMessageHandler newsMessageHandler;
+    private final NewsService newsService;
 
     @KafkaListener(
-            topics = "news-info.dlq.v1",
+            topics = "news-info-dlq.fct.v1",
             groupId = "news-info-dlq-consumer",
             containerFactory = "newsTagListenerContainerFactory"
     )
@@ -24,7 +24,7 @@ public class RetryNewsInfoConsumer {
         NewsInfoDto dto = record.value();
         try {
             log.info("[DLQ Retry] 뉴스 초안 DLQ 재처리 시작: {}", dto);
-            newsMessageHandler.handleNewsInfoCreate(dto);
+            newsService.saveNewsInfo(dto);
 
         } catch (Exception e) {
             log.error("[DLQ Retry] 뉴스 초안 재처리 실패 - 메시지: {}", dto, e);

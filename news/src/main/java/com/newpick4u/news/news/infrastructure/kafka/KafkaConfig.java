@@ -1,7 +1,7 @@
 package com.newpick4u.news.news.infrastructure.kafka;
 
-import com.newpick4u.news.news.infrastructure.kafka.dto.NewsInfoDto;
-import com.newpick4u.news.news.infrastructure.kafka.dto.NewsTagDto;
+import com.newpick4u.news.news.application.dto.NewsInfoDto;
+import com.newpick4u.news.news.application.dto.NewsTagDto;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -78,7 +78,7 @@ public class KafkaConfig {
 
         // DLQ 적용
         var recoverer = new DeadLetterPublishingRecoverer(kafkaTemplate,
-                (record, ex) -> new TopicPartition("news-info.fct.v1", record.partition()));
+                (record, ex) -> new TopicPartition("news-info-dlq.fct.v1", record.partition()));
         var errorHandler = new DefaultErrorHandler(recoverer, new FixedBackOff(1000L, 3));
         factory.setCommonErrorHandler(errorHandler);
 
@@ -101,7 +101,7 @@ public class KafkaConfig {
 
         // DLQ 적용
         var recoverer = new DeadLetterPublishingRecoverer(kafkaTemplate,
-                (record, ex) -> new TopicPartition("tag.fct.v1", record.partition()));
+                (record, ex) -> new TopicPartition("tag-dlq.fct.v1", record.partition()));
         var errorHandler = new DefaultErrorHandler(recoverer, new FixedBackOff(1000L, 3));
         factory.setCommonErrorHandler(errorHandler);
 

@@ -1,7 +1,7 @@
 package com.newpick4u.news.news.infrastructure.kafka;
 
-import com.newpick4u.news.news.application.usecase.NewsMessageHandler;
-import com.newpick4u.news.news.infrastructure.kafka.dto.NewsInfoDto;
+import com.newpick4u.news.news.application.dto.NewsInfoDto;
+import com.newpick4u.news.news.application.usecase.NewsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -13,17 +13,16 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class NewsInfoConsumer {
-
-    private final NewsMessageHandler newsMessageHandler;
+    private final NewsService newsService;
 
     @KafkaListener(
-            topics = "news-info.fct.1",
+            topics = "news-info.fct.v1",
             groupId = "news-info-consumer",
             containerFactory = "newsTagListenerContainerFactory"
     )
     public void consume(ConsumerRecord<String, NewsInfoDto> record, Acknowledgment acknowledgment) {
         try {
-            newsMessageHandler.handleNewsInfoCreate(record.value());
+            newsService.saveNewsInfo(record.value());
             acknowledgment.acknowledge();
 
         } catch (Exception e) {

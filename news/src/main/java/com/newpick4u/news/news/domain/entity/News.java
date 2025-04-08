@@ -56,7 +56,7 @@ public class News {
                 .build();
     }
 
-    public void updateNewsTags(List<NewsTag> newTags) {
+    public void addTags(List<NewsTag> newTags) {
         this.newsTagList.addAll(newTags);
         this.status = NewsStatus.ACTIVE;
     }
