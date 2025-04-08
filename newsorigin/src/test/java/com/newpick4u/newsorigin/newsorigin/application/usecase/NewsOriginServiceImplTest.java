@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.newpick4u.newsorigin.newsorigin.application.dto.SendNewOriginDto;
 import com.newpick4u.newsorigin.newsorigin.domain.entity.NewsOrigin;
 import com.newpick4u.newsorigin.newsorigin.infrastructure.jpa.NewsOriginJpaRepository;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
@@ -73,11 +75,10 @@ class NewsOriginServiceImplTest {
         LocalDateTime.now());
 
     // 불필요한 API 호출을 막기 위한 주석 처리
-//    newsOrigins.add(newsOrigin01);
-//    newsOrigins.add(newsOrigin02);
 //    NewsOrigin saved01 = newsOriginJpaRepository.save(newsOrigin01);
 //    NewsOrigin saved02 = newsOriginJpaRepository.save(newsOrigin02);
 //
+//    // when
 //    newsOriginServiceImpl.sendNewsOriginMessages();
 //
 //    Assertions.assertEquals(true,
@@ -86,5 +87,41 @@ class NewsOriginServiceImplTest {
 //    Assertions.assertEquals(true,
 //        newsOriginJpaRepository.findById(saved02.getId()).get().getIsSentToQueue());
 //    ;
+  }
+
+  @Test
+  @DisplayName("batch task 작업 수행 테스트")
+  void batchTaskTest() throws URISyntaxException, IOException {
+    // 불필요한 API 호출을 막기 위한 주석 처리
+//    // given
+//    // 리소스 경로 가져오기
+//    URL resourceUrl = getClass().getClassLoader().getResource("naverapi-sample.json");
+//    // URI를 통해 안전하게 Path 생성
+//    Path filePath = Paths.get(resourceUrl.toURI());
+//    // 파일 읽기
+//    String jsonString = Files.readString(filePath, StandardCharsets.UTF_8);
+//    ObjectMapper objectMapper = new ObjectMapper();
+//    JsonNode jsonNode = objectMapper.readTree(jsonString);
+//    JsonNode items = jsonNode.get("items");
+//
+//    ArrayList<NewsOrigin> newsOrigins = new ArrayList<>();
+//    for (JsonNode item : items) {
+//      if (newsOrigins.size() == 45) {
+//        break;
+//      }
+//      String title = item.get("title").asText();
+//      String url = item.get("originallink").asText();
+//      LocalDateTime publishedDate = CommonUtil.convertStringToLocalDateTime(
+//          item.get("pubDate").asText());
+//
+//      NewsOrigin newsOrigin = NewsOrigin.create(title, url, publishedDate);
+//      newsOrigins.add(newsOrigin);
+//    }
+//    log.info("newsOrigins.size = {}", newsOrigins.size());
+//    newsOriginJpaRepository.saveAll(newsOrigins);
+//
+//    // when
+//    int updateCount = newsOriginServiceImpl.sendNewsOriginMessages();
+//    log.info("updateCount = {}", updateCount);
   }
 }
