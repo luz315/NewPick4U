@@ -1,17 +1,12 @@
 package com.newpick4u.news.news.domain.repository;
 
+import com.newpick4u.news.news.application.dto.response.NewsResponseDto;
 import com.newpick4u.news.news.domain.critria.NewsSearchCriteria;
 import com.newpick4u.news.news.domain.entity.News;
 import com.newpick4u.news.news.domain.model.Pagination;
 
-import java.util.Optional;
-import java.util.UUID;
+import java.util.List;
 
-public interface NewsRepository {
-    News save(News news);
-    Optional<News> findByAiNewsId(String aiNewsId);
-    Optional<News> findById(UUID id);
-    boolean existsByAiNewsId(String aiNewsId);
+public interface NewsRepositoryCustom {
     Pagination<News> searchNewsList(NewsSearchCriteria request);
-    Optional<News> findDetail(UUID id);
 }

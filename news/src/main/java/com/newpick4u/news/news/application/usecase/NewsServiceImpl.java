@@ -4,9 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.newpick4u.news.news.application.dto.NewsInfoDto;
 import com.newpick4u.news.news.application.dto.NewsTagDto;
+import com.newpick4u.news.news.application.dto.response.NewsListResponse;
+import com.newpick4u.news.news.application.dto.response.NewsResponseDto;
+import com.newpick4u.news.news.domain.critria.NewsSearchCriteria;
 import com.newpick4u.news.news.domain.entity.News;
 import com.newpick4u.news.news.domain.entity.NewsTag;
 import com.newpick4u.news.news.domain.entity.TagInbox;
+import com.newpick4u.news.news.domain.model.Pagination;
 import com.newpick4u.news.news.domain.repository.NewsRepository;
 import com.newpick4u.news.news.domain.repository.TagInboxRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -70,5 +75,18 @@ public class NewsServiceImpl implements NewsService {
         } catch (JsonProcessingException e) {
             throw new RuntimeException("태그 인박스 직렬화 실패", e);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public NewsResponseDto getNews(UUID id) {
+        News news = newsRepository.findDetail(id)
+                .orElseThrow(() -> new IllegalArgumentException("뉴스를 찾을 수 없습니다."));
+        return NewsResponseDto.from(news);
+    }
+
+    @Transactional(readOnly = true)
+    public NewsListResponse searchNewsList(NewsSearchCriteria request) {
+        Pagination<News> pagination = newsRepository.searchNewsList(request);
+        return NewsListResponse.from(pagination);
     }
 }
