@@ -8,5 +8,5 @@ import com.newpick4u.news.news.domain.model.Pagination;
 import java.util.List;
 
 public interface NewsRepositoryCustom {
-    Pagination<News> searchNewsList(NewsSearchCriteria request);
+    Pagination<News> searchNewsList(NewsSearchCriteria request, boolean isMaster);
 }

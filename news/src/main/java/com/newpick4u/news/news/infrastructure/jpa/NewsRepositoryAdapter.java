@@ -1,11 +1,13 @@
 package com.newpick4u.news.news.infrastructure.jpa;
 
+import com.newpick4u.common.resolver.annotation.CurrentUserInfo;
 import com.newpick4u.news.news.domain.critria.NewsSearchCriteria;
 import com.newpick4u.news.news.domain.entity.News;
 import com.newpick4u.news.news.domain.model.Pagination;
 import com.newpick4u.news.news.domain.repository.NewsRepository;
 import com.newpick4u.news.news.domain.repository.NewsRepositoryCustom;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -39,8 +41,14 @@ public class NewsRepositoryAdapter implements NewsRepository {
     }
 
     @Override
-    public Pagination<News> searchNewsList(NewsSearchCriteria criteria) {
-        return newsRepositoryCustom.searchNewsList(criteria);
+    public  Optional<News> findActiveDetail(UUID id) {
+        return jpaNewsRepository.findActiveDetail(id);
+    }
+
+
+    @Override
+    public Pagination<News> searchNewsList(NewsSearchCriteria criteria, boolean isMaster) {
+        return newsRepositoryCustom.searchNewsList(criteria, isMaster);
     }
 
     @Override

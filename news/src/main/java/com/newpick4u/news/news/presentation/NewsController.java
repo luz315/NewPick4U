@@ -1,5 +1,7 @@
 package com.newpick4u.news.news.presentation;
 
+import com.newpick4u.common.resolver.annotation.CurrentUserInfo;
+import com.newpick4u.common.resolver.dto.CurrentUserInfoDto;
 import com.newpick4u.news.news.application.dto.response.NewsListResponse;
 import com.newpick4u.news.news.application.dto.response.NewsResponseDto;
 import com.newpick4u.news.news.application.usecase.NewsService;
@@ -17,14 +19,17 @@ public class NewsController {
     private final NewsService newsService;
 
     @GetMapping("/{id}")
-    public ResponseEntity<NewsResponseDto> getNews(@PathVariable UUID id) {
-        return ResponseEntity.ok(newsService.getNews(id));
+    public ResponseEntity<NewsResponseDto> getNews(
+            @PathVariable UUID id,
+            @CurrentUserInfo CurrentUserInfoDto userInfoDto) {
+        return ResponseEntity.ok(newsService.getNews(id, userInfoDto));
     }
 
     @GetMapping
     public ResponseEntity<NewsListResponse> searchNewsList(
-            @ModelAttribute NewsSearchCriteria request
+            @ModelAttribute NewsSearchCriteria request,
+            @CurrentUserInfo CurrentUserInfoDto userInfoDto
     ) {
-        return ResponseEntity.ok(newsService.searchNewsList(request));
+        return ResponseEntity.ok(newsService.searchNewsList(request, userInfoDto));
     }
 }

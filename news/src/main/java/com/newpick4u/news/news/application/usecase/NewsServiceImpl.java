@@ -2,6 +2,8 @@ package com.newpick4u.news.news.application.usecase;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.newpick4u.common.resolver.dto.CurrentUserInfoDto;
+import com.newpick4u.common.resolver.dto.UserRole;
 import com.newpick4u.news.news.application.dto.NewsInfoDto;
 import com.newpick4u.news.news.application.dto.NewsTagDto;
 import com.newpick4u.news.news.application.dto.response.NewsListResponse;
@@ -78,15 +80,23 @@ public class NewsServiceImpl implements NewsService {
     }
 
     @Transactional(readOnly = true)
-    public NewsResponseDto getNews(UUID id) {
-        News news = newsRepository.findDetail(id)
-                .orElseThrow(() -> new IllegalArgumentException("뉴스를 찾을 수 없습니다."));
+    public NewsResponseDto getNews(UUID id, CurrentUserInfoDto userInfoDto) {
+        News news;
+
+        if (userInfoDto.role() == UserRole.ROLE_MASTER) {
+            news = newsRepository.findDetail(id)
+                    .orElseThrow(() -> new IllegalArgumentException("뉴스를 찾을 수 없습니다."));
+        } else {
+            news = newsRepository.findActiveDetail(id)
+                    .orElseThrow(() -> new IllegalArgumentException("뉴스를 찾을 수 없습니다."));
+        }
         return NewsResponseDto.from(news);
     }
 
     @Transactional(readOnly = true)
-    public NewsListResponse searchNewsList(NewsSearchCriteria request) {
-        Pagination<News> pagination = newsRepository.searchNewsList(request);
+    public NewsListResponse searchNewsList(NewsSearchCriteria request, CurrentUserInfoDto userInfoDto) {
+        boolean isMaster = userInfoDto.role() == UserRole.ROLE_MASTER;
+        Pagination<News> pagination = newsRepository.searchNewsList(request, isMaster);
         return NewsListResponse.from(pagination);
     }
 }

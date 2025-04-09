@@ -12,6 +12,8 @@ public interface NewsRepository {
     Optional<News> findByAiNewsId(String aiNewsId);
     Optional<News> findById(UUID id);
     boolean existsByAiNewsId(String aiNewsId);
-    Pagination<News> searchNewsList(NewsSearchCriteria request);
+    Pagination<News> searchNewsList(NewsSearchCriteria request, boolean isMaster);
     Optional<News> findDetail(UUID id);
+    Optional<News> findActiveDetail(UUID id);
+
 }

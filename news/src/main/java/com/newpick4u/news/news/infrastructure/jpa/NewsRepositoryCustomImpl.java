@@ -1,7 +1,9 @@
 package com.newpick4u.news.news.infrastructure.jpa;
 
+import com.newpick4u.common.resolver.dto.CurrentUserInfoDto;
 import com.newpick4u.news.news.domain.critria.NewsSearchCriteria;
 import com.newpick4u.news.news.domain.entity.News;
+import com.newpick4u.news.news.domain.entity.NewsStatus;
 import com.newpick4u.news.news.domain.entity.QNews;
 import com.newpick4u.news.news.domain.entity.QNewsTag;
 import com.newpick4u.news.news.domain.model.Pagination;
@@ -22,12 +24,16 @@ public class NewsRepositoryCustomImpl implements NewsRepositoryCustom {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Pagination<News> searchNewsList(NewsSearchCriteria request) {
+    public Pagination<News> searchNewsList(NewsSearchCriteria request, boolean isMaster) {
         QNews news = QNews.news;
         QNewsTag newsTag = QNewsTag.newsTag;
         BooleanBuilder where = buildWhereClause(request, news, newsTag);
         OrderSpecifier<?> order = buildOrderSpecifier(request, news);
 
+        // 유저 권한에 따른 상태 필터링
+        if (!isMaster) {
+            where.and(news.status.eq(NewsStatus.ACTIVE));
+        }
 
         // 1차 쿼리: News ID만 조회 (페이징 적용)
         List<UUID> newsIds = queryFactory
@@ -71,7 +77,8 @@ public class NewsRepositoryCustomImpl implements NewsRepositoryCustom {
         if (request.keyword() != null && !request.keyword().isBlank()) {
             switch (request.filter()) {
                 case "tag" -> where.and(newsTag.name.containsIgnoreCase(request.keyword()));
-                case "title", default -> where.and(news.title.containsIgnoreCase(request.keyword()));
+                case "title" -> where.and(news.title.containsIgnoreCase(request.keyword()));
+                default -> where.and(news.title.containsIgnoreCase(request.keyword()));
             }
         }
         return where;
