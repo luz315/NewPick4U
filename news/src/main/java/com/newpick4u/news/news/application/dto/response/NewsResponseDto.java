@@ -1,6 +1,7 @@
 package com.newpick4u.news.news.application.dto.response;
 
 import com.newpick4u.news.news.domain.entity.News;
+import com.newpick4u.news.news.domain.entity.NewsStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -11,30 +12,31 @@ public record NewsResponseDto(
     UUID id,
     String title,
     String content,
-    List<NewsTagResponseDto> newsTagList
-//    LocalDateTime createdAt,
-//    String createdBy,
-//    LocalDateTime updatedAt,
-//    String updatedBy,
-//    LocalDateTime deletedAt,
-//    String deletedBy
+    NewsStatus status,
+    List<NewsTagResponseDto> newsTagList,
+    Long createdBy,
+    LocalDateTime createdAt,
+    Long updatedBy,
+    LocalDateTime updatedAt,
+    Long deletedBy,
+    LocalDateTime deletedAt
+
 ) {
-    public static NewsResponseDto from(
-        News news
-    ) {
+    public static NewsResponseDto from(News news) {
         return new NewsResponseDto(
             news.getId(),
             news.getTitle(),
             news.getContent(),
+            news.getStatus(),
             news.getNewsTagList().stream().map(NewsTagResponseDto::from)
-                                .collect(Collectors.toList())
+                                .collect(Collectors.toList()),
 
-//            news.getCreatedAt(),
-//            news.getCreatedBy(),
-//            news.getUpdatedAt(),
-//            news.getUpdatedBy(),
-//            news.getDeletedAt(),
-//            news.getDeletedBy()
+            news.getCreatedBy(),
+            news.getCreatedAt(),
+            news.getUpdatedBy(),
+            news.getUpdatedAt(),
+            news.getDeletedBy(),
+            news.getDeletedAt()
         );
     }
 }

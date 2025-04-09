@@ -1,5 +1,6 @@
 package com.newpick4u.news.news.domain.entity;
 
+import com.newpick4u.common.domain.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
@@ -10,7 +11,7 @@ import java.util.UUID;
 @Table(name = "p_news")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class News {
+public class News extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
