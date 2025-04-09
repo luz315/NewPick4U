@@ -1,4 +1,4 @@
-package com.newpick4u.client.advertisement.infrastructure.client.response;
+package com.newpick4u.client.advertisement.application.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.UUID;
