@@ -1,0 +1,22 @@
+package com.newpick4u.tag.infrastructure.kafka;
+
+import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Component;
+
+@Component
+@Slf4j
+public class TagDlqConsumer {
+
+  @KafkaListener(
+      topics = "${spring.kafka.dlq-topic.topic-name}",
+      groupId = "tag-dlq-consumer"
+  )
+  public void hadleTagDlq(ConsumerRecord<String, String> record) {
+
+    log.error("[DLQ] 처리 실패한 메세지 수신 : {}", record.value());
+
+    // 모니터링, 백오피스 알림(슬랙, 이메일)
+  }
+}
