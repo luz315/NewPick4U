@@ -3,6 +3,7 @@ package com.newpick4u.tag.infrastructure.kafka;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -13,10 +14,13 @@ public class TagDlqConsumer {
       topics = "${spring.kafka.dlq-topic.topic-name}",
       groupId = "tag-dlq-consumer"
   )
-  public void hadleTagDlq(ConsumerRecord<String, String> record) {
+  public void handleTagDlq(ConsumerRecord<String, String> record, Acknowledgment ack) {
 
     log.error("[DLQ] 처리 실패한 메세지 수신 : {}", record.value());
 
     // 모니터링, 백오피스 알림(슬랙, 이메일)
+
+    ack.acknowledge();
+
   }
 }

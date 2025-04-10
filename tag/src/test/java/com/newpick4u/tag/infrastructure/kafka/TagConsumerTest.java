@@ -81,8 +81,8 @@ class TagConsumerTest {
     kafkaTemplate.send("dev.news.del.news.v1", message);
 
     await()
-        .atMost(Duration.ofSeconds(60))      // 최대 5초 기다림
-        .pollInterval(Duration.ofMillis(1000)) // 100ms 마다 검사
+        .atMost(Duration.ofSeconds(60))      // 최대 60초 기다림
+        .pollInterval(Duration.ofMillis(1000)) // 1초 마다 검사
         .untilAsserted(() -> {
           List<Tag> findList = tagRepository.findAll();
           assertThat(findList.size()).isEqualTo(2); // 단일 테스트에서는 1 , 전체 테스트 돌릴 때는 2
@@ -98,8 +98,8 @@ class TagConsumerTest {
     kafkaTemplate.send("dev.news.del.news.v1", message);
 
     await()
-        .atMost(Duration.ofSeconds(60))      // 최대 5초 기다림
-        .pollInterval(Duration.ofMillis(1000)) // 100ms 마다 검사
+        .atMost(Duration.ofSeconds(60))      // 최대 60초 기다림
+        .pollInterval(Duration.ofMillis(1000)) // 1초 마다 검사
         .untilAsserted(() -> {
           Tag tag = tagRepository.findByTagName("TEST").get();
           assertThat(tag.getScore()).isEqualTo(1);
