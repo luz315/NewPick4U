@@ -6,8 +6,9 @@ import com.newpick4u.common.resolver.dto.CurrentUserInfoDto;
 import com.newpick4u.common.resolver.dto.UserRole;
 import com.newpick4u.news.news.application.dto.NewsInfoDto;
 import com.newpick4u.news.news.application.dto.NewsTagDto;
-import com.newpick4u.news.news.application.dto.response.NewsListResponse;
 import com.newpick4u.news.news.application.dto.response.NewsResponseDto;
+import com.newpick4u.news.news.application.dto.response.NewsSummaryDto;
+import com.newpick4u.news.news.application.dto.response.PageResponse;
 import com.newpick4u.news.news.domain.critria.NewsSearchCriteria;
 import com.newpick4u.news.news.domain.entity.News;
 import com.newpick4u.news.news.domain.entity.NewsTag;
@@ -18,7 +19,6 @@ import com.newpick4u.news.news.domain.repository.TagInboxRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -35,8 +35,7 @@ public class NewsServiceImpl implements NewsService {
           if (newsRepository.existsByAiNewsId(dto.aiNewsId())) {
               throw new IllegalStateException("이미 저장된 뉴스입니다: " + dto.aiNewsId());
           }
-
-          News news = News.create(dto.aiNewsId(), dto.title(), dto.content(), 0L);
+          News news = News.create(dto.aiNewsId(), dto.title(), dto.content(), dto.url(), dto.publishedDate(), 0L);
           newsRepository.save(news);
       }
 
@@ -49,7 +48,6 @@ public class NewsServiceImpl implements NewsService {
                         () -> saveInbox(dto)
                 );
     }
-
 
     // 내부 메서드
     private void validateTagListSize(NewsTagDto dto) {
@@ -81,22 +79,16 @@ public class NewsServiceImpl implements NewsService {
 
     @Transactional(readOnly = true)
     public NewsResponseDto getNews(UUID id, CurrentUserInfoDto userInfoDto) {
-        News news;
-
-        if (userInfoDto.role() == UserRole.ROLE_MASTER) {
-            news = newsRepository.findDetail(id)
-                    .orElseThrow(() -> new IllegalArgumentException("뉴스를 찾을 수 없습니다."));
-        } else {
-            news = newsRepository.findActiveDetail(id)
-                    .orElseThrow(() -> new IllegalArgumentException("뉴스를 찾을 수 없습니다."));
-        }
+        boolean isMaster = userInfoDto.role() == UserRole.ROLE_MASTER;
+        News news = newsRepository.findNewsByRole(id, isMaster)
+                .orElseThrow(() -> new IllegalArgumentException("뉴스를 찾을 수 없습니다."));
         return NewsResponseDto.from(news);
     }
 
     @Transactional(readOnly = true)
-    public NewsListResponse searchNewsList(NewsSearchCriteria request, CurrentUserInfoDto userInfoDto) {
+    public PageResponse<NewsSummaryDto> searchNewsList(NewsSearchCriteria request, CurrentUserInfoDto userInfoDto) {
         boolean isMaster = userInfoDto.role() == UserRole.ROLE_MASTER;
         Pagination<News> pagination = newsRepository.searchNewsList(request, isMaster);
-        return NewsListResponse.from(pagination);
+        return PageResponse.from(pagination).map(NewsSummaryDto::from);
     }
 }

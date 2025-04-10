@@ -1,6 +1,5 @@
 package com.newpick4u.news.news.infrastructure.jpa;
 
-import com.newpick4u.common.resolver.dto.CurrentUserInfoDto;
 import com.newpick4u.news.news.domain.critria.NewsSearchCriteria;
 import com.newpick4u.news.news.domain.entity.News;
 import com.newpick4u.news.news.domain.entity.NewsStatus;
@@ -15,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -22,18 +22,16 @@ import java.util.UUID;
 public class NewsRepositoryCustomImpl implements NewsRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
+    static QNews news;
+    static QNewsTag newsTag;
 
+    // 복수조회
     @Override
     public Pagination<News> searchNewsList(NewsSearchCriteria request, boolean isMaster) {
-        QNews news = QNews.news;
-        QNewsTag newsTag = QNewsTag.newsTag;
         BooleanBuilder where = buildWhereClause(request, news, newsTag);
         OrderSpecifier<?> order = buildOrderSpecifier(request, news);
 
-        // 유저 권한에 따른 상태 필터링
-        if (!isMaster) {
-            where.and(news.status.eq(NewsStatus.ACTIVE));
-        }
+        applyRoleFilter(where, isMaster);
 
         // 1차 쿼리: News ID만 조회 (페이징 적용)
         List<UUID> newsIds = queryFactory
@@ -48,7 +46,7 @@ public class NewsRepositoryCustomImpl implements NewsRepositoryCustom {
                 .fetch();
 
         if (newsIds.isEmpty()) {
-            return Pagination.of(request.page(), request.size(), 0L, List.of());
+            return Pagination.of(List.of(), request.page(), request.size(), 0L);
         }
 
         // 2차 쿼리: fetch join으로 실제 데이터 조회
@@ -68,7 +66,7 @@ public class NewsRepositoryCustomImpl implements NewsRepositoryCustom {
                 .where(where)
                 .fetchOne();
 
-        return Pagination.of(request.page(), request.size(), total != null ? total : 0, result);
+        return Pagination.of(result, request.page(), request.size(), total != null ? total : 0);
     }
 
     // 내부메서드
@@ -94,5 +92,28 @@ public class NewsRepositoryCustomImpl implements NewsRepositoryCustom {
             };
         }
         return news.createdAt.desc();
+    }
+
+    // 단건조회
+    @Override
+    public Optional<News> findNewsByRole(UUID id, boolean isMaster) {
+        BooleanBuilder where = new BooleanBuilder().and(news.id.eq(id));
+
+        applyRoleFilter(where, isMaster);
+
+        return Optional.ofNullable(
+                queryFactory
+                        .selectFrom(news)
+                        .leftJoin(news.newsTagList, newsTag).fetchJoin()
+                        .where(where)
+                        .fetchOne()
+        );
+    }
+
+    // 내부메서드
+    private void applyRoleFilter(BooleanBuilder where, boolean isMaster) {
+        if (!isMaster) {
+            where.and(news.status.eq(NewsStatus.ACTIVE));
+        }
     }
 }
