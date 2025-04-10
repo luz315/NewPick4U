@@ -2,18 +2,25 @@ package com.newpick4u.news.news.application.usecase;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.newpick4u.common.resolver.dto.CurrentUserInfoDto;
+import com.newpick4u.common.resolver.dto.UserRole;
 import com.newpick4u.news.news.application.dto.NewsInfoDto;
 import com.newpick4u.news.news.application.dto.NewsTagDto;
+import com.newpick4u.news.news.application.dto.response.NewsResponseDto;
+import com.newpick4u.news.news.application.dto.response.NewsSummaryDto;
+import com.newpick4u.news.news.application.dto.response.PageResponse;
+import com.newpick4u.news.news.domain.critria.NewsSearchCriteria;
 import com.newpick4u.news.news.domain.entity.News;
 import com.newpick4u.news.news.domain.entity.NewsTag;
 import com.newpick4u.news.news.domain.entity.TagInbox;
+import com.newpick4u.news.news.domain.model.Pagination;
 import com.newpick4u.news.news.domain.repository.NewsRepository;
 import com.newpick4u.news.news.domain.repository.TagInboxRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -28,8 +35,7 @@ public class NewsServiceImpl implements NewsService {
           if (newsRepository.existsByAiNewsId(dto.aiNewsId())) {
               throw new IllegalStateException("이미 저장된 뉴스입니다: " + dto.aiNewsId());
           }
-
-          News news = News.create(dto.aiNewsId(), dto.title(), dto.content(), 0L);
+          News news = News.create(dto.aiNewsId(), dto.title(), dto.content(), dto.url(), dto.publishedDate(), 0L);
           newsRepository.save(news);
       }
 
@@ -42,7 +48,6 @@ public class NewsServiceImpl implements NewsService {
                         () -> saveInbox(dto)
                 );
     }
-
 
     // 내부 메서드
     private void validateTagListSize(NewsTagDto dto) {
@@ -70,5 +75,20 @@ public class NewsServiceImpl implements NewsService {
         } catch (JsonProcessingException e) {
             throw new RuntimeException("태그 인박스 직렬화 실패", e);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public NewsResponseDto getNews(UUID id, CurrentUserInfoDto userInfoDto) {
+        boolean isMaster = userInfoDto.role() == UserRole.ROLE_MASTER;
+        News news = newsRepository.findNewsByRole(id, isMaster)
+                .orElseThrow(() -> new IllegalArgumentException("뉴스를 찾을 수 없습니다."));
+        return NewsResponseDto.from(news);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<NewsSummaryDto> searchNewsList(NewsSearchCriteria request, CurrentUserInfoDto userInfoDto) {
+        boolean isMaster = userInfoDto.role() == UserRole.ROLE_MASTER;
+        Pagination<News> pagination = newsRepository.searchNewsList(request, isMaster);
+        return PageResponse.from(pagination).map(NewsSummaryDto::from);
     }
 }
