@@ -12,6 +12,8 @@ public record NewsResponseDto(
     UUID id,
     String title,
     String content,
+    String url,
+    String publishedDate,
     NewsStatus status,
     List<NewsTagResponseDto> newsTagList,
     Long createdBy,
@@ -27,6 +29,8 @@ public record NewsResponseDto(
             news.getId(),
             news.getTitle(),
             news.getContent(),
+            news.getUrl(),
+            news.getPublishedDate(),
             news.getStatus(),
             news.getNewsTagList().stream().map(NewsTagResponseDto::from)
                                 .collect(Collectors.toList()),

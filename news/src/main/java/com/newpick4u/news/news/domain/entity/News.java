@@ -27,6 +27,12 @@ public class News extends BaseEntity {
     @Column(nullable = false)
     private String content;
 
+    @Column(nullable = false)
+    private String url;
+
+    @Column(nullable = false)
+    private String publishedDate;
+
     @Enumerated(EnumType.STRING)
     @Column
     private NewsStatus status;
@@ -39,15 +45,17 @@ public class News extends BaseEntity {
     private List<NewsTag> newsTagList;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private News(String aiNewsId, String title, String content, Long view, NewsStatus status) {
+    private News(String aiNewsId, String title, String content,String url, String publishedDate, Long view, NewsStatus status) {
         this.aiNewsId = aiNewsId;
         this.title = title;
         this.content = content;
+        this.url = url;
+        this.publishedDate = publishedDate;
         this.view = view;
         this.status = status;
     }
 
-    public static News create(String aiNewsId, String title, String content, Long view) {
+    public static News create(String aiNewsId, String title, String content, String url, String publishedDate, Long view) {
         return News.builder()
                 .aiNewsId(aiNewsId)
                 .title(title)
