@@ -31,9 +31,6 @@ public class KafkaConfig {
   @Value("${spring.kafka.bootstrap-servers}")
   private String BOOTSTRAP_SERVERS;
 
-  @Value("${spring.kafka.dlq-topic.topic-name}")
-  private String TOPIC_DLQ_TOPIC_NAME;
-
   @Bean
   public ProducerFactory<String, String> producerFactory() {
     Map<String, Object> config = new HashMap<>();
