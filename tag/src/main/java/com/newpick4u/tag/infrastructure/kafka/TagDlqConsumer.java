@@ -16,11 +16,11 @@ public class TagDlqConsumer {
   )
   public void handleTagDlq(ConsumerRecord<String, String> record, Acknowledgment ack) {
 
-    log.error("[DLQ] 처리 실패한 메세지 수신 : {}", record.value());
-
-    // 모니터링, 백오피스 알림(슬랙, 이메일)
-
-    ack.acknowledge();
-
+    try {
+      ack.acknowledge();
+      // 모니터링, 백오피스 알림(슬랙, 이메일)
+    } catch (Exception e) {
+      log.error("[DLQ] 처리 실패한 메세지 수신 : {}", record.value());
+    }
   }
 }
