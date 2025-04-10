@@ -6,10 +6,7 @@ import com.newpick4u.news.news.domain.model.Pagination;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface NewsRepository  {
-    News save(News news);
-    Optional<News> findByAiNewsId(String aiNewsId);
-    boolean existsByAiNewsId(String aiNewsId);
+public interface NewsRepositoryCustom {
     Pagination<News> searchNewsList(NewsSearchCriteria request, boolean isMaster);
     Optional<News> findNewsByRole(UUID id, boolean isMaster);
 }

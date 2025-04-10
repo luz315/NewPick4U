@@ -6,41 +6,31 @@ import com.newpick4u.news.news.domain.entity.NewsStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-public record NewsResponseDto(
+public record NewsSummaryDto(
     UUID id,
     String title,
     String content,
     String url,
     String publishedDate,
     NewsStatus status,
-    List<NewsTagResponseDto> newsTagList,
-    Long createdBy,
+    long view,
     LocalDateTime createdAt,
-    Long updatedBy,
-    LocalDateTime updatedAt,
-    Long deletedBy,
-    LocalDateTime deletedAt
-
+    List<NewsTagResponseDto> tags
 ) {
-    public static NewsResponseDto from(News news) {
-        return new NewsResponseDto(
+    public static NewsSummaryDto from(News news) {
+        return new NewsSummaryDto(
             news.getId(),
             news.getTitle(),
             news.getContent(),
             news.getUrl(),
             news.getPublishedDate(),
             news.getStatus(),
-            news.getNewsTagList().stream().map(NewsTagResponseDto::from)
-                                .collect(Collectors.toList()),
-
-            news.getCreatedBy(),
+            news.getView(),
             news.getCreatedAt(),
-            news.getUpdatedBy(),
-            news.getUpdatedAt(),
-            news.getDeletedBy(),
-            news.getDeletedAt()
+            news.getNewsTagList().stream()
+                .map(NewsTagResponseDto::from)
+                .toList()
         );
     }
 }

@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;
 
-public interface JpaTagInboxRepository  extends JpaRepository<TagInbox, UUID>, TagInboxRepository {
+public interface TagInboxJpaRepository extends JpaRepository<TagInbox, UUID>, TagInboxRepository {
 }
