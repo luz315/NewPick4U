@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.newpick4u.tag.application.dto.AiNewsDto;
 import com.newpick4u.tag.domain.entity.Tag;
 import com.newpick4u.tag.domain.repository.TagRepository;
-import com.newpick4u.tag.infrastructure.kafka.config.KafkaConfig;
 import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
@@ -18,8 +17,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.ActiveProfiles;
@@ -27,7 +26,6 @@ import org.springframework.test.context.ActiveProfiles;
 @SpringBootTest
 @EmbeddedKafka(partitions = 1, topics = {"dev.news.fct.news.v1", "dev.news.del.news.v1",
     "dev.tag.fct.dql.v1"})
-@Import(KafkaConfig.class)
 @ActiveProfiles("test")
 @TestInstance(Lifecycle.PER_CLASS)
 class TagConsumerTest {
@@ -41,6 +39,11 @@ class TagConsumerTest {
   private TagRepository tagRepository;
 
   private AiNewsDto aiNewsDto;
+
+  @Value("${spring.kafka.consumer.topic.create}")
+  private String CREATE_TAG_TOPIC;
+  @Value("${spring.kafka.consumer.topic.delete}")
+  private String DELETE_TAG_TOPIC;
 
   @BeforeAll
   void init() {
@@ -60,7 +63,7 @@ class TagConsumerTest {
   void testConsumer_success() throws Exception {
 
     String message = objectMapper.writeValueAsString(aiNewsDto);
-    kafkaTemplate.send("dev.news.fct.news.v1", message);
+    kafkaTemplate.send(CREATE_TAG_TOPIC, message);
 
     await()
         .atMost(Duration.ofSeconds(50))
@@ -78,7 +81,7 @@ class TagConsumerTest {
 
     AiNewsDto testDto = new AiNewsDto(UUID.randomUUID(), List.of("TEST"));
     String message = objectMapper.writeValueAsString(testDto);
-    kafkaTemplate.send("dev.news.del.news.v1", message);
+    kafkaTemplate.send(DELETE_TAG_TOPIC, message);
 
     await()
         .atMost(Duration.ofSeconds(60))      // 최대 60초 기다림
@@ -95,7 +98,7 @@ class TagConsumerTest {
 
     AiNewsDto testDto = new AiNewsDto(UUID.randomUUID(), List.of("IT"));
     String message = objectMapper.writeValueAsString(testDto);
-    kafkaTemplate.send("dev.news.del.news.v1", message);
+    kafkaTemplate.send(DELETE_TAG_TOPIC, message);
 
     await()
         .atMost(Duration.ofSeconds(60))      // 최대 60초 기다림

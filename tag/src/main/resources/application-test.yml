@@ -2,6 +2,9 @@ server:
   port: 14001
 
 spring:
+  config:
+    import:
+      - file:.env.tag[.properties]
   datasource:
     url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
     driver-class-name: org.h2.Driver
@@ -24,7 +27,7 @@ spring:
       topic-name: tag.fct.v1
     dlq-topic:
       topic-name: dev.tag.fct.dql.v1
-    bootstrap-servers: host.docker.internal:9093
+    bootstrap-servers: "${KAFKA_BOOTSTRAP_SERVERS}"
     #    producer:
     #      key-serializer: org.apache.kafka.common.serialization.StringSerializer
     #      value-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -36,8 +39,8 @@ spring:
       delete:
         group-id: tag-delete-consumer
       topic:
-        create: dev.news.fct.news.v1
-        delete: dev.news.del.news.v1
+        create: "${CREATE_TAG_TOPIC}"
+        delete: "${DELETE_TAG_TOPIC}"
     #      auto-offset-reset: earliest
     #      max-poll-records: 20 # 한번에 가져오는 메세지 수
     #      max-poll-interval-ms: 15000 # 지정한 시간 넘게 poll() 호출 안하면 리밸런싱 발생
