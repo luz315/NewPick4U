@@ -27,7 +27,6 @@ public class NewsTagConsumer {
             ack.acknowledge();
         } catch (Exception e) {
             log.error("[Kafka] 뉴스 태그 연동 실패: {}", record.value(), e);
-            throw new RuntimeException(e);
         }
     }
 }

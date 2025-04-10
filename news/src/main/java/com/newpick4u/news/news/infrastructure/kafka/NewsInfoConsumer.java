@@ -27,7 +27,6 @@ public class NewsInfoConsumer {
 
         } catch (Exception e) {
             log.error("[Kafka] 뉴스 저장 실패 - 메시지: {}", record.value(), e);
-            throw new RuntimeException(e);
         }
     }
 }

@@ -35,14 +35,12 @@ public class RetryNewsInfoConsumer {
             if (attempt >= 3) {
                 log.error("[DLQ Retry] 최대 재시도 초과. 메시지 폐기: {}", dto);
                 ack.acknowledge(); // 커밋하고 종료 (폐기)
-            } else {
-                throw new RuntimeException(e); // Kafka가 재시도 하도록 유도
             }
         }
     }
 
     private int getRetryAttempt(ConsumerRecord<?, ?> record) {
-        return Optional.ofNullable(record.headers().lastHeader("kafka_deliveryAttempt"))
+        return Optional.ofNullable(record.headers().lastHeader("kafka_NewsAttempt"))
                     .map(header -> header.value()[0]) // byte에서 int 변환
                     .map(value -> (int) value)
                     .orElse(1);
