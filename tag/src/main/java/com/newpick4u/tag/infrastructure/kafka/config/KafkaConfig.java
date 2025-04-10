@@ -5,7 +5,6 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -69,8 +68,7 @@ public class KafkaConfig {
   @Bean
   public DefaultErrorHandler errorHandler(KafkaTemplate<String, String> kafkaTemplate) {
     DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(kafkaTemplate,
-        (record, ex) -> new TopicPartition(TOPIC_DLQ_TOPIC_NAME,
-            record.partition())); // 재시도 실패한 메세지를 dlq 토픽으로 전송
+        (record, ex) -> null); // 재시도 실패한 메세지를 dlq 토픽으로 전송
 
     FixedBackOff backOff = new FixedBackOff(1000L, 3); // 3번 재시도
     DefaultErrorHandler handler = new DefaultErrorHandler(recoverer,
