@@ -38,8 +38,8 @@ spring:
       delete:
         group-id: ${KAFKA_DELETE_GROUP_ID}
       topic:
-        create: dev.news.fct.news.v1
-        delete: dev.news.del.news.v1
+        create: news.fct.news.v1
+        delete: news.del.news.v1
     #      auto-offset-reset: earliest
     #      max-poll-records: 20 # 한번에 가져오는 메세지 수
     #      max-poll-interval-ms: 15000 # 지정한 시간 넘게 poll() 호출 안하면 리밸런싱 발생
