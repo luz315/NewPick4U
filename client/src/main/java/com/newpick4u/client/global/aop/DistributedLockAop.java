@@ -9,6 +9,10 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.expression.Expression;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Component;
 
 @Aspect
@@ -27,7 +31,9 @@ public class DistributedLockAop {
     MethodSignature signature = (MethodSignature) joinPoint.getSignature();
     Method method = signature.getMethod();
 
-    String key = REDISSON_LOCK_PREFIX + distributedLock.key();
+    Object parsedKey = CustomSpringELParser.getDynamicValue(signature.getParameterNames(),
+        joinPoint.getArgs(), distributedLock.key());
+    String key = REDISSON_LOCK_PREFIX + parsedKey;
     RLock rLock = redissonClient.getLock(key);
 
     try {
@@ -54,6 +60,24 @@ public class DistributedLockAop {
         log.info("분산 락이 이미 해제된 상태입니다 : {}, key: {}",
             method.getName(), key);
       }
+    }
+  }
+
+  public static class CustomSpringELParser {
+
+    private CustomSpringELParser() {
+    }
+
+    public static Object getDynamicValue(String[] parameterNames, Object[] args, String key) {
+      ExpressionParser parser = new SpelExpressionParser();
+      StandardEvaluationContext context = new StandardEvaluationContext();
+
+      for (int i = 0; i < parameterNames.length; i++) {
+        context.setVariable(parameterNames[i], args[i]);
+      }
+      Expression expression = parser.parseExpression(key);
+
+      return parser.parseExpression(key).getValue(context, Object.class);
     }
   }
 }

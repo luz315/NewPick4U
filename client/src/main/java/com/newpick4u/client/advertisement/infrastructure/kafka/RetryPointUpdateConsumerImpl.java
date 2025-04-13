@@ -26,7 +26,7 @@ public class RetryPointUpdateConsumerImpl implements RetryPointUpdateConsumer {
   private final AdvertisementService advertisementService;
 
   @KafkaListener(
-      topics = "${spring.kafka.consumer.groups.point-request-dlq}",
+      topics = "${spring.kafka.consumer.topics.point-request-dlq}",
       groupId = "${spring.kafka.consumer.groups.point-request-dlq}",
       containerFactory = "updateMessageConcurrentKafkaListenerContainerFactory"
   )
@@ -37,7 +37,7 @@ public class RetryPointUpdateConsumerImpl implements RetryPointUpdateConsumer {
     try {
       PointUpdateMessage message = objectMapper.readValue(record.value(), PointUpdateMessage.class);
       log.info("[DLQ Retry] 포인트 DLQ 재처리 시작:{}", message);
-      advertisementService.updatePointCounter(message);
+      advertisementService.updatePointGrantedCount(message);
       acknowledgment.acknowledge();
     } catch (Exception e) {
       if (retryAttempt > MAX_ATTEMPT_COUNT) {

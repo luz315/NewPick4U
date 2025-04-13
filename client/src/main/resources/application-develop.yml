@@ -22,14 +22,14 @@ spring:
         point-request: advertisement-point-request-1
         point-request-dlq: advertisement-point-request-dlq-1
       topics:
-        point-request: point-request.fct.v1
-        point-request-dlq: point-request-dlq.fct.v1
-        point-update: point-update.fct.v1
+        point-request: advertisement-point-request.fct.v1
+        point-request-dlq: advertisement-point-request-dlq.fct.v1
+        point-update: user-point-update.fct.v1
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     producer:
       topics:
-        point-update: point-update.fct.v1
+        point-update: user-point-update.fct.v1
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
     listener:

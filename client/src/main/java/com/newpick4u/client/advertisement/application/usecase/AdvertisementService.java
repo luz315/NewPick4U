@@ -8,6 +8,6 @@ public interface AdvertisementService {
 
   public UUID createAdvertisement(CreateAdvertiseRequestDto request);
 
-  public void updatePointCounter(PointUpdateMessage message);
+  public void updatePointGrantedCount(PointUpdateMessage message);
 
 }

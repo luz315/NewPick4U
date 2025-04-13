@@ -26,12 +26,15 @@ public class PointUpdateConsumerImpl implements PointUpdateConsumer {
   )
   public void consume(ConsumerRecord<String, String> record, Acknowledgment acknowledgment)
       throws JsonProcessingException {
+    log.info("Kafka Raw Value: {}", record.value());
     try {
       PointUpdateMessage message = objectMapper.readValue(record.value(), PointUpdateMessage.class);
-      advertisementService.updatePointCounter(message);
+      advertisementService.updatePointGrantedCount(message);
       acknowledgment.acknowledge();
     } catch (Exception e) {
       log.error("Kafka consume error", e);
+      throw new RuntimeException();
     }
   }
 }
+

@@ -4,6 +4,8 @@ import com.newpick4u.client.advertisement.application.client.NewsClient;
 import com.newpick4u.client.advertisement.application.dto.request.CreateAdvertiseRequestDto;
 import com.newpick4u.client.advertisement.application.dto.response.GetNewsResponseDto;
 import com.newpick4u.client.advertisement.application.exception.AdvertisementException;
+import com.newpick4u.client.advertisement.application.exception.AdvertisementException.NotFoundException;
+import com.newpick4u.client.advertisement.application.exception.AdvertisementException.PointGrantFinishedException;
 import com.newpick4u.client.advertisement.application.message.producer.PointUpdateProducer;
 import com.newpick4u.client.advertisement.application.message.request.PointUpdateMessage;
 import com.newpick4u.client.advertisement.domain.entity.Advertisement;
@@ -41,18 +43,18 @@ public class AdvertisementServiceImpl implements AdvertisementService {
 
   // ToDo : 고도화 파트에서 파티션 정책 수정으로 인해 변경될 가능성 존재
   @Transactional
-  @DistributedLock(key = "#message.advertisementId")
-  public void updatePointCounter(PointUpdateMessage message) {
+  @DistributedLock(key = "'advertise:' + #message.advertisementId")
+  public void updatePointGrantedCount(PointUpdateMessage message) {
     Advertisement advertisement = advertisementRepository.findById(message.advertisementId())
-        .orElseThrow(AdvertisementException.NotFoundException::new);
+        .orElseThrow(NotFoundException::new);
     if (advertisement.isPointGrantFinished()) {
-      throw new AdvertisementException.PointGrantFinishedException();
+      throw new PointGrantFinishedException();
     }
-    updatePointCount(advertisement);
+    IncreasePointGrantedCount(advertisement);
     pointUpdateProducer.produce(message);
   }
 
-  private void updatePointCount(Advertisement advertisement) {
+  private void IncreasePointGrantedCount(Advertisement advertisement) {
     advertisement.incrementPointGrantCount();
     if (advertisement.isMaxPointGrantCountEqualToCurrentPointGrantCount()) {
       advertisement.updateIsPointGrantFinished();

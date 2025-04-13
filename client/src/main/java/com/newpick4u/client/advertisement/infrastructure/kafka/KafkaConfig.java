@@ -18,6 +18,7 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
+import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.util.backoff.FixedBackOff;
@@ -90,11 +91,10 @@ public class KafkaConfig {
 
   @Bean
   public ConcurrentKafkaListenerContainerFactory<String, String> updateMessageConcurrentKafkaListenerContainerFactory(
-      ConsumerFactory<String, String> consumerFactory,
       KafkaTemplate<String, String> kafkaTemplate,
-      @Value("${spring.kafka.consumer.groups.point-request-dlq}") String topic) {
+      @Value("${spring.kafka.consumer.topics.point-request-dlq}") String topic) {
     ConcurrentKafkaListenerContainerFactory<String, String> factory = buildListenerContainerFactory(
-        consumerFactory);
+        pointRequestConsumerFactory());
 
     DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(
         kafkaTemplate,
@@ -102,6 +102,7 @@ public class KafkaConfig {
     DefaultErrorHandler errorHandler = new DefaultErrorHandler(recoverer,
         new FixedBackOff(1000L, 3));
     factory.setCommonErrorHandler(errorHandler);
+    factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
     return factory;
   }
 
