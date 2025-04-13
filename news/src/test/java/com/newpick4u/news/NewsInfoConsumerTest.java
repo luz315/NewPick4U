@@ -57,7 +57,7 @@ class NewsInfoConsumerTest {
     @Test
     void 뉴스_초안_정상_컨슈밍_처리() throws Exception {
         // given
-        NewsInfoDto dto = new NewsInfoDto("ai-123", "제목", "내용");
+        NewsInfoDto dto = new NewsInfoDto("ai-123", "제목", "내용",  "http://url.com", "2025-04-13");
         String json = objectMapper.writeValueAsString(dto);
 
         // when
@@ -75,7 +75,7 @@ class NewsInfoConsumerTest {
     @Test
     void 뉴스_초안_DLQ_리트라이_1회성공() throws Exception {
         // given
-        NewsInfoDto dto = new NewsInfoDto("fail-once", "재시도 제목", "재시도 내용");
+        NewsInfoDto dto = new NewsInfoDto("fail-once", "재시도 제목", "재시도 내용",  "http://url.com", "2025-04-13");
         String json = objectMapper.writeValueAsString(dto);
 
         // when
@@ -92,7 +92,7 @@ class NewsInfoConsumerTest {
     @Test
     void 뉴스_초안_DLQ_3회실패_최종실패_및_DLQ확인() throws Exception {
         // given
-        NewsInfoDto dto = new NewsInfoDto("fail-me", "DLQ 제목", "DLQ 내용");
+        NewsInfoDto dto = new NewsInfoDto("fail-me", "DLQ 제목", "DLQ 내용",  "http://url.com", "2025-04-13");
         String json = objectMapper.writeValueAsString(dto);
 
         // when

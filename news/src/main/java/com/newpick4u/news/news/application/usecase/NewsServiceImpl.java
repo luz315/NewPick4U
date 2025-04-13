@@ -37,7 +37,7 @@ public class NewsServiceImpl implements NewsService {
             throw new IllegalStateException("이미 저장된 뉴스입니다: " + dto.aiNewsId());
         }
 
-        News news = News.create(dto.aiNewsId(), dto.title(), dto.content(), 0L);
+        News news = News.create(dto.aiNewsId(), dto.title(), dto.content(), dto.url(), dto.publishedDate(), 0L);
         newsRepository.save(news);
       }
 

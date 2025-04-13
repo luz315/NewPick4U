@@ -24,7 +24,7 @@ import java.util.Map;
 @Configuration
 public class KafkaConfig {
 
-    private static final String PACKAGE_TRUSTED = "com.newpick4u.news.news.application.dto";
+    private static final String PACKAGE_TRUSTED = "*";
 
     @Value("${KAFKA_BOOTSTRAP_SERVERS}")
     private String bootstrapServers;

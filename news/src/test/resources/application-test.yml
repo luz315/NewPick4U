@@ -2,27 +2,18 @@ server:
   port: 11001
 
 spring:
-  config:
-    import:
-      - file:.env.news[.properties]
-
   kafka:
-    bootstrap-servers:  ${KAFKA_BOOTSTRAP_SERVERS}
+    bootstrap-servers: localhost:9092 # EmbeddedKafka 사용 시 필수
     consumer:
       auto-offset-reset: earliest
       enable-auto-commit: false
-      max-poll-records: 20
-      max-poll-interval-ms: 15000
-      heartbeat-interval-ms: 1000
-      session-timeout-ms: 60000
-
     listener:
       ack-mode: manual_immediate
 
   datasource:
-    url: ${DEVELOP_DB_URL}
-    username: ${DEVELOP_DB_USERNAME}
-    password: ${DEVELOP_DB_PASSWORD}
+    url: jdbc:mysql://localhost:3306/newpick4u
+    username: usernewpick4u
+    password: usernewpick4u
     driver-class-name: com.mysql.cj.jdbc.Driver
 
     jpa:
@@ -33,5 +24,4 @@ spring:
       properties:
         hibernate:
           dialect: org.hibernate.dialect.MySQL8Dialect
-          default_batch_fetch_size: 100
           format_sql: true
