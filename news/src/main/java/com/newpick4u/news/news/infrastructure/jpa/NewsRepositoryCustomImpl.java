@@ -116,4 +116,15 @@ public class NewsRepositoryCustomImpl implements NewsRepositoryCustom {
             where.and(news.status.eq(NewsStatus.ACTIVE));
         }
     }
+
+    //추천알고리즘
+    @Override
+    public List<News> findAllActive() {
+        return queryFactory
+                .selectFrom(news)
+                .leftJoin(news.newsTagList, newsTag).fetchJoin()
+                .where(news.status.eq(NewsStatus.ACTIVE))
+                .distinct()
+                .fetch();
+    }
 }

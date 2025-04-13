@@ -4,7 +4,7 @@ server:
 spring:
   config:
     import:
-      - file:.env.news
+      - file:.env.news[.properties]
 
   kafka:
     bootstrap-servers:  ${KAFKA_BOOTSTRAP_SERVERS}

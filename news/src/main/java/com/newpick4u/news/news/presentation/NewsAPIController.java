@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -24,6 +25,8 @@ public class NewsAPIController {
             @PathVariable UUID id,
             @CurrentUserInfo CurrentUserInfoDto userInfoDto
     ) {
+        newsService.logUserTags(id, userInfoDto.userId());
+
         return ResponseEntity.ok(newsService.getNews(id, userInfoDto));
     }
 
@@ -33,5 +36,10 @@ public class NewsAPIController {
             @CurrentUserInfo CurrentUserInfoDto userInfoDto
     ) {
         return ResponseEntity.ok(newsService.searchNewsList(request, userInfoDto));
+    }
+
+    @GetMapping("/recommend")
+    public List<NewsSummaryDto> recommend(@CurrentUserInfo CurrentUserInfoDto currentUser) {
+        return newsService.recommendTop10(currentUser);
     }
 }
