@@ -8,4 +8,5 @@ public interface TagInboxRepository {
     TagInbox save(TagInbox tagInbox);
     List<TagInbox> findAll();
     void delete(TagInbox inbox);
+    void flush();
 }
