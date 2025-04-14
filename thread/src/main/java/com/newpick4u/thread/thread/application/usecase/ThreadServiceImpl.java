@@ -28,6 +28,7 @@ import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +43,7 @@ public class ThreadServiceImpl implements ThreadService {
   private static final String OPEN_THREAD_KEY = "thread:open:id";
   private static final String HOT_TAG_KEY = "tag_count";
   private static final int MAX_THREADS = 5;
+  private static final int MIN_HOT_TAG_COUNT = 30;
 
   @Override
   @Transactional(readOnly = true)
@@ -79,7 +81,7 @@ public class ThreadServiceImpl implements ThreadService {
       try {
         // 쓰레드에 달린 댓글들 가져오기
         CommentResponse comments = commentClient.getAllByThreadId(UUID.fromString(threadId));
-        if (comments.commentList() == null || comments.commentList().isEmpty()) {
+        if (CollectionUtils.isEmpty(comments.commentList())) {
           throw new IllegalArgumentException("댓글이 없습니다.");
         }
 
@@ -119,7 +121,7 @@ public class ThreadServiceImpl implements ThreadService {
     // 존재하는 태그 업데이트
     Set<String> processedTags = updateExistingThreads(hotTags, tagToThreadMap);
 
-    int threadsToCreate = MAX_THREADS - openThreads.size();
+    int threadsToCreate = getThreadsToCreate(openThreads);
 
     if (threadsToCreate > 0) {
       createAdditionalThreads(hotTags, threadsToCreate, tagToThreadMap);
@@ -130,6 +132,10 @@ public class ThreadServiceImpl implements ThreadService {
     if (!openThreads.isEmpty()) {
       cacheOpenThreadsToRedis(openThreads);
     }
+  }
+
+  private static int getThreadsToCreate(List<Thread> openThreads) {
+    return MAX_THREADS - openThreads.size();
   }
 
   private void cacheOpenThreadsToRedis(List<Thread> openThreads) {
@@ -149,9 +155,9 @@ public class ThreadServiceImpl implements ThreadService {
    */
   private Set<String> getHotTagsFromRedis() {
     Set<ZSetOperations.TypedTuple<String>> sortedTags = redisTemplate.opsForZSet()
-        .reverseRangeByScoreWithScores(HOT_TAG_KEY, 30, Double.MAX_VALUE);
+        .reverseRangeByScoreWithScores(HOT_TAG_KEY, MIN_HOT_TAG_COUNT, Double.MAX_VALUE);
 
-    if (sortedTags == null || sortedTags.isEmpty()) {
+    if (CollectionUtils.isEmpty(sortedTags)) {
       return Collections.emptySet();
     }
 
