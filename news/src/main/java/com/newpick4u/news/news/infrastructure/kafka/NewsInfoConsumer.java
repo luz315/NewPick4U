@@ -28,7 +28,7 @@ public class NewsInfoConsumer {
             newsService.saveNewsInfo(record.value());
             ack.acknowledge();
         } catch (Exception e) {
-            ack.nack(Duration.ofSeconds(3));
+//            ack.nack(Duration.ofSeconds(3));
             log.error("[Kafka] 뉴스 저장 실패 - 메시지: {}", record.value(), e);
             throw e; // 이걸 넣자!
         }

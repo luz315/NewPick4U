@@ -34,16 +34,30 @@ public class KafkaConfig {
     private String bootstrapServers;
 
     @Bean
-    public KafkaTemplate<String, String> kafkaTemplate() {
-        return new KafkaTemplate<>(producerFactory());
-    }
-
-    @Bean
     public ProducerFactory<String, String> producerFactory() {
         Map<String, Object> config = new HashMap<>();
         config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        return new DefaultKafkaProducerFactory<>(config);
+    }
+
+    @Bean
+    public KafkaTemplate<String, String> kafkaTemplate() {
+        return new KafkaTemplate<>(producerFactory());
+    }
+
+    @Bean
+    public KafkaTemplate<String, Object> dlqKafkaTemplate() {
+        return new KafkaTemplate<>(dlqProducerFactory());
+    }
+
+    @Bean
+    public ProducerFactory<String, Object> dlqProducerFactory() {
+        Map<String, Object> config = new HashMap<>();
+        config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(config);
     }
 
@@ -90,23 +104,23 @@ public class KafkaConfig {
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, NewsInfoDto> newsInfoListenerContainerFactory(
             ConsumerFactory<String, NewsInfoDto> newsInfoConsumerFactory,
-            KafkaTemplate<String, String> kafkaTemplate
+            KafkaTemplate<String, Object> dlqKafkaTemplate
+
     ) {
         var factory = buildListenerContainerFactory(newsInfoConsumerFactory);
 
-        var recoverer = new DeadLetterPublishingRecoverer(kafkaTemplate,
+        var recoverer = new DeadLetterPublishingRecoverer(dlqKafkaTemplate,
                 (record, ex) -> {log.warn("[DLQ] 전송 대상 메시지 - key: {}, value: {}, error: {}", record.key(), record.value(), ex.getMessage());
                     return new TopicPartition("news-info-dlq.fct.v1", record.partition());
                 });
 
         var errorHandler = new DefaultErrorHandler(recoverer, new FixedBackOff(1000L, 3));
         errorHandler.addRetryableExceptions(RuntimeException.class);
-
         errorHandler.setRetryListeners((record, ex, deliveryAttempt) -> {
             log.warn("[Retrying] {}번째 재시도 중 - key: {}, value: {}", deliveryAttempt, record.key(), record.value());
         });
-        factory.setCommonErrorHandler(errorHandler);
 
+        factory.setCommonErrorHandler(errorHandler);
         factory.setConcurrency(1);
         return factory;
     }
@@ -120,14 +134,23 @@ public class KafkaConfig {
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, NewsTagDto> newsTagListenerContainerFactory(
             ConsumerFactory<String, NewsTagDto> newsTagConsumerFactory,
-            KafkaTemplate<String, String> kafkaTemplate
+            KafkaTemplate<String, Object> dlqKafkaTemplate
     ) {
         var factory = buildListenerContainerFactory(newsTagConsumerFactory);
 
-        var recoverer = new DeadLetterPublishingRecoverer(kafkaTemplate,
-                (record, ex) -> new TopicPartition("tag-dlq.fct.v1", record.partition()));
+        var recoverer = new DeadLetterPublishingRecoverer(dlqKafkaTemplate,
+                (record, ex) -> {log.warn("[DLQ] 전송 대상 메시지 - key: {}, value: {}, error: {}", record.key(), record.value(), ex.getMessage());
+                    return new TopicPartition("tag-dlq.fct.v1", record.partition());
+                });
+
         var errorHandler = new DefaultErrorHandler(recoverer, new FixedBackOff(1000L, 3));
+        errorHandler.addRetryableExceptions(RuntimeException.class);
+        errorHandler.setRetryListeners((record, ex, deliveryAttempt) -> {
+            log.warn("[Retrying] {}번째 재시도 중 - key: {}, value: {}", deliveryAttempt, record.key(), record.value());
+        });
+
         factory.setCommonErrorHandler(errorHandler);
+        factory.setConcurrency(1);
 
         return factory;
     }
