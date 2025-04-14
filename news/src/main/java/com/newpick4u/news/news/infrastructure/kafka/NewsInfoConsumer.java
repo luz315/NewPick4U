@@ -9,6 +9,8 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -26,7 +28,9 @@ public class NewsInfoConsumer {
             newsService.saveNewsInfo(record.value());
             ack.acknowledge();
         } catch (Exception e) {
+            ack.nack(Duration.ofSeconds(3));
             log.error("[Kafka] 뉴스 저장 실패 - 메시지: {}", record.value(), e);
+            throw e; // 이걸 넣자!
         }
     }
 }

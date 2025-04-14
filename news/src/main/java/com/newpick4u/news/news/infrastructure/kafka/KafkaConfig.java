@@ -95,7 +95,10 @@ public class KafkaConfig {
         var factory = buildListenerContainerFactory(newsInfoConsumerFactory);
 
         var recoverer = new DeadLetterPublishingRecoverer(kafkaTemplate,
-                (record, ex) -> new TopicPartition("news-info-dlq.fct.v1", record.partition()));
+                (record, ex) -> {log.warn("[DLQ] 전송 대상 메시지 - key: {}, value: {}, error: {}", record.key(), record.value(), ex.getMessage());
+                    return new TopicPartition("news-info-dlq.fct.v1", record.partition());
+                });
+
         var errorHandler = new DefaultErrorHandler(recoverer, new FixedBackOff(1000L, 3));
         errorHandler.addRetryableExceptions(RuntimeException.class);
 
