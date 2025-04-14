@@ -2,36 +2,49 @@ package com.newpick4u.news.news.infrastructure.kafka;
 
 import com.newpick4u.news.news.application.dto.NewsInfoDto;
 import com.newpick4u.news.news.application.dto.NewsTagDto;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
-import org.springframework.kafka.core.ConsumerFactory;
-import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.core.ProducerFactory;
+import org.springframework.kafka.core.*;
+import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
+import org.springframework.kafka.support.serializer.JsonSerializer;
 import org.springframework.util.backoff.FixedBackOff;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@EnableKafka
 @Configuration
+@Slf4j
 public class KafkaConfig {
-
     private static final String PACKAGE_TRUSTED = "*";
 
-    @Value("${KAFKA_BOOTSTRAP_SERVERS}")
+    @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
 
     @Bean
-    public KafkaTemplate<String, String> kafkaTemplate(ProducerFactory<String, String> producerFactory) {
-        return new KafkaTemplate<>(producerFactory);
+    public KafkaTemplate<String, String> kafkaTemplate() {
+        return new KafkaTemplate<>(producerFactory());
+    }
+
+    @Bean
+    public ProducerFactory<String, String> producerFactory() {
+        Map<String, Object> config = new HashMap<>();
+        config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        return new DefaultKafkaProducerFactory<>(config);
     }
 
     private Map<String, Object> commonConsumerProps(String groupId) {
@@ -40,6 +53,10 @@ public class KafkaConfig {
         props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 20);
+        props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 15000);
+        props.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG, 1000);
+        props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 60000);
         return props;
     }
 
@@ -60,6 +77,7 @@ public class KafkaConfig {
     ) {
         ConcurrentKafkaListenerContainerFactory<String, T> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory);
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
         return factory;
     }
 
@@ -76,15 +94,19 @@ public class KafkaConfig {
     ) {
         var factory = buildListenerContainerFactory(newsInfoConsumerFactory);
 
-        // DLQ 적용
         var recoverer = new DeadLetterPublishingRecoverer(kafkaTemplate,
                 (record, ex) -> new TopicPartition("news-info-dlq.fct.v1", record.partition()));
         var errorHandler = new DefaultErrorHandler(recoverer, new FixedBackOff(1000L, 3));
+        errorHandler.addRetryableExceptions(RuntimeException.class);
+
+        errorHandler.setRetryListeners((record, ex, deliveryAttempt) -> {
+            log.warn("[Retrying] {}번째 재시도 중 - key: {}, value: {}", deliveryAttempt, record.key(), record.value());
+        });
         factory.setCommonErrorHandler(errorHandler);
 
+        factory.setConcurrency(1);
         return factory;
     }
-
 
     // tag - news 카프카
     @Bean
@@ -99,7 +121,6 @@ public class KafkaConfig {
     ) {
         var factory = buildListenerContainerFactory(newsTagConsumerFactory);
 
-        // DLQ 적용
         var recoverer = new DeadLetterPublishingRecoverer(kafkaTemplate,
                 (record, ex) -> new TopicPartition("tag-dlq.fct.v1", record.partition()));
         var errorHandler = new DefaultErrorHandler(recoverer, new FixedBackOff(1000L, 3));
@@ -107,5 +128,4 @@ public class KafkaConfig {
 
         return factory;
     }
-
 }

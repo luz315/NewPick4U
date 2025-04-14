@@ -22,6 +22,7 @@ public class NewsInfoConsumer {
     )
     public void consume(ConsumerRecord<String, NewsInfoDto> record, Acknowledgment ack) {
         try {
+            log.info("Consumed Kafka Message: {}", record.value()); // 여기가 꼭 나와야 진짜 consume 된 것
             newsService.saveNewsInfo(record.value());
             ack.acknowledge();
         } catch (Exception e) {

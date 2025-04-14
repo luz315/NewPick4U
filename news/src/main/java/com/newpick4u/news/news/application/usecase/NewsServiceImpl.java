@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -82,12 +83,25 @@ public class NewsServiceImpl implements NewsService {
     }
 
     // 테스트용 시뮬레이션
-    private void simulateFailures(String aiNewsId) {
+    private static final Map<String, Integer> failureMap = new ConcurrentHashMap<>();
+
+    private static void simulateFailures(String aiNewsId) {
+        if ("fail-once".equals(aiNewsId)) {
+            int count = failureMap.getOrDefault(aiNewsId, 0);
+            log.info("[SimulateFail] 실행 카운트 - aiNewsId: {}, count: {}", aiNewsId, count);
+
+            if (count < 1) {
+                failureMap.put(aiNewsId, count + 1); // 첫 실패 기록
+                log.warn("[SimulateFail] 첫 번째 실패 유도: {}", aiNewsId);
+
+                throw new RuntimeException("첫 번째 실패 유도");
+            }
+        }
         if ("fail-me".equals(aiNewsId)) {
             throw new RuntimeException("무조건 실패 유도");
         }
-        if ("fail-once".equals(aiNewsId) && failedOnce.add(aiNewsId)) {
-            throw new RuntimeException("첫 번째 실패 유도");
-        }
+//        if ("fail-once".equals(aiNewsId) && failedOnce.add(aiNewsId)) {
+//            throw new RuntimeException("첫 번째 실패 유도");
+//        }
     }
 }
