@@ -60,6 +60,8 @@ public class News extends BaseEntity {
                 .aiNewsId(aiNewsId)
                 .title(title)
                 .content(content)
+                .url(url)
+                .publishedDate(publishedDate)
                 .view(view)
                 .status(NewsStatus.PENDING)
                 .build();

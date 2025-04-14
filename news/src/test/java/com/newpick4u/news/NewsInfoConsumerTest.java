@@ -69,10 +69,10 @@ class NewsInfoConsumerTest {
 
         String aiNewsId = "ai-normal-001";
         NewsInfoDto dto = new NewsInfoDto(aiNewsId, "정상 제목", "정상 내용", "https://test.com", "2025-04-13");
-//        String json = objectMapper.writeValueAsString(dto);
+        String json = objectMapper.writeValueAsString(dto);
 
         // when
-        kafkaTemplate.send(new ProducerRecord<>("news-info.fct.v1", aiNewsId, dto));
+        kafkaTemplate.send(new ProducerRecord<>("news-info.fct.v1", aiNewsId, json));
 
         // then
         Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
