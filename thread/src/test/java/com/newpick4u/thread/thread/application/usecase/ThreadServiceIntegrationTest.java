@@ -47,8 +47,8 @@ public class ThreadServiceIntegrationTest {
   @DisplayName("실제 Redis에 데이터를 넣고 Thread를 생성한다")
   void integrationTestUsingRealRedis() {
     // given
-    redisTemplate.opsForZSet().add("tag:comment:score", "AI", 42);
-    redisTemplate.opsForZSet().add("tag:comment:score", "게임", 55);
+    redisTemplate.opsForZSet().add("tag_count", "AI", 42);
+    redisTemplate.opsForZSet().add("tag_count", "게임", 55);
 
     // when
     threadService.saveThread();
@@ -67,7 +67,7 @@ public class ThreadServiceIntegrationTest {
     Thread existing = Thread.create("AI");
     threadRepository.save(existing);
 
-    redisTemplate.opsForZSet().add("tag:comment:score", "AI", 42);
+    redisTemplate.opsForZSet().add("tag_count", "AI", 42);
 
     // when
     threadService.saveThread();
@@ -93,7 +93,7 @@ public class ThreadServiceIntegrationTest {
       threadRepository.save(thread);
     }
 
-    redisTemplate.opsForZSet().add("tag:comment:score", "newHotTag", 42);
+    redisTemplate.opsForZSet().add("tag_count", "newHotTag", 42);
 
     // when
     threadService.saveThread();
@@ -122,7 +122,7 @@ public class ThreadServiceIntegrationTest {
       threadRepository.save(thread);
     }
 
-    redisTemplate.opsForZSet().add("tag:comment:score", "newHotTag", 42);
+    redisTemplate.opsForZSet().add("tag_count", "newHotTag", 42);
 
     // when
     threadService.saveThread();

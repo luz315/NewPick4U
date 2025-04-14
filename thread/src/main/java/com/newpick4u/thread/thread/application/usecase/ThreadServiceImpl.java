@@ -1,13 +1,12 @@
 package com.newpick4u.thread.thread.application.usecase;
 
-import com.newpick4u.thread.thread.application.dto.CommentResponse;
 import com.newpick4u.thread.thread.application.dto.ThreadResponseDto;
 import com.newpick4u.thread.thread.application.exception.ThreadException.NotFoundException;
 import com.newpick4u.thread.thread.domain.entity.Thread;
 import com.newpick4u.thread.thread.domain.entity.ThreadStatus;
 import com.newpick4u.thread.thread.domain.repository.ThreadRepository;
 import com.newpick4u.thread.thread.infrastructure.client.CommentClient;
-import com.newpick4u.thread.thread.infrastructure.client.GeminiClient;
+import com.newpick4u.thread.thread.infrastructure.client.dto.CommentResponse;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -37,11 +36,11 @@ public class ThreadServiceImpl implements ThreadService {
 
   private final ThreadRepository threadRepository;
   private final CommentClient commentClient;
-  private final GeminiClient geminiClient;
+  private final AiClient aiClient;
   private final RedisTemplate<String, String> redisTemplate;
 
   private static final String OPEN_THREAD_KEY = "thread:open:id";
-  private static final String HOT_TAG_KEY = "tag:comment:score";
+  private static final String HOT_TAG_KEY = "tag_count";
   private static final int MAX_THREADS = 5;
 
   @Override
@@ -79,13 +78,13 @@ public class ThreadServiceImpl implements ThreadService {
     for (String threadId : openThreadIds) {
       try {
         // 쓰레드에 달린 댓글들 가져오기
-        List<CommentResponse> comments = commentClient.getAllByThreadId(UUID.fromString(threadId));
-        if (comments == null || comments.isEmpty()) {
+        CommentResponse comments = commentClient.getAllByThreadId(UUID.fromString(threadId));
+        if (comments.commentList() == null || comments.commentList().isEmpty()) {
           throw new IllegalArgumentException("댓글이 없습니다.");
         }
 
         // ai에게 요약
-        String summary = geminiClient.analyzeSummary(UUID.fromString(threadId), comments);
+        String summary = aiClient.analyzeSummary(UUID.fromString(threadId), comments.commentList());
 
         // 요약 쓰레드에 저장
         Thread thread = threadRepository.findById(UUID.fromString(threadId))
@@ -160,6 +159,7 @@ public class ThreadServiceImpl implements ThreadService {
     return sortedTags.stream()
         .map(ZSetOperations.TypedTuple::getValue)
         .filter(Objects::nonNull)
+        .map(value -> value.replace("tag_count", ""))
         .collect(Collectors.toCollection(LinkedHashSet::new)); // 순서 유지
   }
 

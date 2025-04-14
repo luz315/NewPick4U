@@ -2,7 +2,7 @@ package com.newpick4u.thread.thread.infrastructure.client;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import com.newpick4u.thread.thread.application.dto.CommentResponse;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -23,18 +23,45 @@ class GeminiClientTest {
   void givenComments_whenAnalyzeSummary_thenReturnsValidSummary() {
     // given
     UUID threadId = UUID.randomUUID();
-    List<CommentResponse> comments = List.of(
-        new CommentResponse(threadId, "이 정책은 정말 좋은 것 같습니다."),
-        new CommentResponse(threadId, "더 많은 정보가 필요해요."),
-        new CommentResponse(threadId, "사람들 반응이 갈리네요.")
-    );
+    UUID threadId2 = UUID.randomUUID();
+    UUID threadId3 = UUID.randomUUID();
+    UUID threadId4 = UUID.randomUUID();
+    UUID threadId5 = UUID.randomUUID();
+
+    List<String> commentList = new ArrayList<>();
+    List<String> commentList2 = new ArrayList<>();
+    List<String> commentList3 = new ArrayList<>();
+    List<String> commentList4 = new ArrayList<>();
+    List<String> commentList5 = new ArrayList<>();
+
+    for (int i = 0; i < 10000; i++) {
+      commentList.add("이 정책은 정말 좋은 것 같습니다." + i);
+      commentList2.add("이 정책은 정말 좋은 것 같습니다." + i);
+      commentList3.add("이 정책은 정말 좋은 것 같습니다." + i);
+      commentList4.add("이 정책은 정말 좋은 것 같습니다." + i);
+      commentList5.add("이 정책은 정말 좋은 것 같습니다." + i);
+    }
+
+//    List<CommentResponse> comments = List.of(
+//        new CommentResponse(threadId, "이 정책은 정말 좋은 것 같습니다."),
+//        new CommentResponse(threadId, "더 많은 정보가 필요해요."),
+//        new CommentResponse(threadId, "사람들 반응이 갈리네요.")
+//    );
 
     // when
-    String result = geminiClient.analyzeSummary(threadId, comments);
+    String result = geminiClient.analyzeSummary(threadId, commentList);
+    String result1 = geminiClient.analyzeSummary(threadId2, commentList2);
+    String result2 = geminiClient.analyzeSummary(threadId3, commentList3);
+    String result3 = geminiClient.analyzeSummary(threadId4, commentList4);
+    String result4 = geminiClient.analyzeSummary(threadId5, commentList5);
 
     // then
     assertNotNull(result);
-    System.out.println("[Gemini 요약 결과] " + result);
+    System.out.println("[Gemini 요약 결과 0] " + result);
+    System.out.println("[Gemini 요약 결과 1] " + result1);
+    System.out.println("[Gemini 요약 결과 2] " + result2);
+    System.out.println("[Gemini 요약 결과 3] " + result3);
+    System.out.println("[Gemini 요약 결과 4] " + result4);
 
 //   [Gemini 요약 결과] 제공된 댓글들을 종합해 볼 때, 현재 여론은 다음과 같이 요약될 수 있습니다:
 //

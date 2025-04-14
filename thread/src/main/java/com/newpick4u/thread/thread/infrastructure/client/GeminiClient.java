@@ -2,11 +2,10 @@ package com.newpick4u.thread.thread.infrastructure.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.newpick4u.thread.thread.application.dto.CommentResponse;
+import com.newpick4u.thread.thread.application.usecase.AiClient;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -18,24 +17,23 @@ import org.springframework.web.client.RestTemplate;
 
 @Component
 @RequiredArgsConstructor
-public class GeminiClient {
+public class GeminiClient implements AiClient {
 
   @Value("${gemini.url}")
   private String geminiUrl;
 
   private final RestTemplate restTemplate;
 
-  public String analyzeSummary(UUID threadId, List<CommentResponse> comments) {
+  @Override
+  public String analyzeSummary(UUID threadId, List<String> commentList) {
     // Gemini API 호출 로직 (prompt 구성 → REST 호출 → 결과 반환)
     // 예: "이 쓰레드에 대한 여론을 한 문장으로 요약해줘"
-    String prompt = buildPrompt(comments);
+    String prompt = buildPrompt(commentList);
     return callGeminiApi(prompt); // 또는 HTTP 요청 등
   }
 
-  private String buildPrompt(List<CommentResponse> comments) {
-    String joined = comments.stream()
-        .map(CommentResponse::content)
-        .collect(Collectors.joining("\n"));
+  private String buildPrompt(List<String> commentList) {
+    String joined = String.join("\n", commentList);
     return "다음 댓글들을 보고 여론을 요약해줘:\n" + joined;
   }
 

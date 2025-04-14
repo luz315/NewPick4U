@@ -2,8 +2,7 @@ package com.newpick4u.thread.thread.infrastructure.client;
 
 import com.newpick4u.thread.global.config.CommentClientFallback;
 import com.newpick4u.thread.global.config.FeignClientConfig;
-import com.newpick4u.thread.thread.application.dto.CommentResponse;
-import java.util.List;
+import com.newpick4u.thread.thread.infrastructure.client.dto.CommentResponse;
 import java.util.UUID;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +12,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface CommentClient {
 
   @GetMapping("/internal/v1/comments/threads/{threadId}")
-  List<CommentResponse> getAllByThreadId(@PathVariable UUID threadId);
+  CommentResponse getAllByThreadId(@PathVariable UUID threadId);
 
 }
