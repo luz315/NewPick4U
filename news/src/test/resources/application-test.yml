@@ -2,8 +2,11 @@ server:
   port: 11001
 
 spring:
+  config:
+    import:
+      - file:.env.news[.properties]
   kafka:
-    bootstrap-servers: localhost:9092 # EmbeddedKafka 사용 시 필수
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     consumer:
       auto-offset-reset: earliest
       enable-auto-commit: false
@@ -11,9 +14,9 @@ spring:
       ack-mode: manual_immediate
 
   datasource:
-    url: jdbc:mysql://localhost:3306/newpick4u
-    username: usernewpick4u
-    password: usernewpick4u
+    url: ${DEVELOP_DB_URL}
+    username: ${DEVELOP_DB_USERNAME}
+    password: ${DEVELOP_DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
