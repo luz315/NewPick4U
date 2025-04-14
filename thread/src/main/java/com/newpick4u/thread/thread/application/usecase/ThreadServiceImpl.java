@@ -142,12 +142,10 @@ public class ThreadServiceImpl implements ThreadService {
 
     // Redis 초기화 후 저장
     redisTemplate.delete(OPEN_THREAD_KEY);
-    Set<String> ids = openThreads.stream()
-        .limit(MAX_THREADS) // 최대 5개만 저장
-        .map(t -> t.getId().toString())
-        .collect(Collectors.toSet());
 
-    redisTemplate.opsForSet().add(OPEN_THREAD_KEY, ids.toArray(new String[0]));
+    redisTemplate.opsForSet().add(OPEN_THREAD_KEY, openThreads.stream()
+        .limit(MAX_THREADS) // 최대 5개만 저장
+        .map(t -> t.getId().toString()).distinct().toArray(String[]::new));
   }
 
   /**
