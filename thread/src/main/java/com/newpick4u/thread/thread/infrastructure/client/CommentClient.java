@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 @FeignClient(name = "comment-service", configuration = FeignClientConfig.class, fallback = CommentClientFallback.class)
 public interface CommentClient {
 
-  @GetMapping("/api/internal/comments/threads/{threadId}")
+  @GetMapping("/internal/v1/comments/threads/{threadId}")
   List<CommentResponse> getAllByThreadId(@PathVariable UUID threadId);
 
 }
