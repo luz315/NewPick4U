@@ -13,6 +13,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 @FeignClient(name = "news-service", configuration = FeignConfig.class)
 public interface NewsClientImpl extends NewsClient {
 
-  @GetMapping("/api/internal/news/{newsId}")
+  @GetMapping("internal/v1/news/{newsId}")
   ResponseEntity<ApiResponse<GetNewsResponseDto>> getNews(@PathVariable("newsId") UUID newsId);
 }
