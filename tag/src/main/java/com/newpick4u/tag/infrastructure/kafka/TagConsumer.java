@@ -23,7 +23,7 @@ public class TagConsumer {
   private final ObjectMapper objectMapper;
 
   @Value("${spring.kafka.tag-topic.topic-name}")
-  private String TAG_TOPIC_NAME;
+  private String tagTopicName;
 
   @KafkaListener(
       topics = "${spring.kafka.consumer.topic.create}",
@@ -38,7 +38,7 @@ public class TagConsumer {
 
       tagMessageHandler.handle(dto);
 
-      kafkaTemplate.send(TAG_TOPIC_NAME, record.value());
+      kafkaTemplate.send(tagTopicName, record.value());
       log.info("Kafka 메시지 전송 완료: dto={}", record.value());
 
       ack.acknowledge();

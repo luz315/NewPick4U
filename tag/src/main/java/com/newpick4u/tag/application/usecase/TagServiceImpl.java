@@ -45,8 +45,6 @@ public class TagServiceImpl implements TagService {
   @Transactional
   public void createTagFromAi(AiNewsDto dto) {
     dto.tagList().forEach(tagName -> {
-      log.info("태그 조회 시도 중~~");
-      log.info("태그명 : {}", tagName);
       Optional<Tag> tag = tagRepository.findByTagName(tagName); // 존재하는 태그는 score +1 처리
       if (tag.isPresent()) {
         Tag existingTag = tag.get();
@@ -55,7 +53,6 @@ public class TagServiceImpl implements TagService {
       }
 
       // 존재하지 않는 태그의 경우는 새로 생성해서 db에 저장
-      log.info("태그 저장 시도 중~~");
       Tag newTag = Tag.create(tagName);
       tagRepository.save(newTag);
 

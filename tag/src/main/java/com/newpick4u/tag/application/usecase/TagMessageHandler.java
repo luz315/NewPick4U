@@ -2,9 +2,9 @@ package com.newpick4u.tag.application.usecase;
 
 import com.newpick4u.tag.application.dto.AiNewsDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
+@Component
 @RequiredArgsConstructor
 public class TagMessageHandler {
 
