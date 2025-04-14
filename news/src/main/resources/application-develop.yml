@@ -1,6 +1,10 @@
 server:
   port: 11001
 
+#eureka:
+#  client:
+#    enabled: false
+
 spring:
   kafka:
     bootstrap-servers: localhost:9092
@@ -31,3 +35,14 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
         default_batch_fetch_size: 100
         format_sql: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+
+  swagger-ui:
+    path: /doc
+    enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
