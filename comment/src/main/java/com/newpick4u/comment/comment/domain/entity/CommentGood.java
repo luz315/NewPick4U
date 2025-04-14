@@ -8,7 +8,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,5 +28,14 @@ public class CommentGood {
   @ManyToOne
   private Comment comment;
 
-  private UUID userId;
+  private Long userId;
+
+  private CommentGood(Comment comment, Long userId) {
+    this.comment = comment;
+    this.userId = userId;
+  }
+
+  public static CommentGood create(Comment comment, Long userId) {
+    return new CommentGood(comment, userId);
+  }
 }

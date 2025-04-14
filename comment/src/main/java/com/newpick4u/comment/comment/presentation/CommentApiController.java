@@ -2,6 +2,7 @@ package com.newpick4u.comment.comment.presentation;
 
 import com.newpick4u.comment.comment.application.dto.CommentSaveRequestDto;
 import com.newpick4u.comment.comment.application.dto.CommentUpdateDto;
+import com.newpick4u.comment.comment.application.usecase.CommentFacadeService;
 import com.newpick4u.comment.comment.application.usecase.CommentService;
 import com.newpick4u.common.resolver.annotation.CurrentUserInfo;
 import com.newpick4u.common.resolver.dto.CurrentUserInfoDto;
@@ -11,6 +12,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class CommentApiController {
 
   private final CommentService commentService;
+  private final CommentFacadeService commentFacadeService;
 
   // 댓글 등록 : 뉴스기사
   @PostMapping
@@ -74,8 +77,40 @@ public class CommentApiController {
 
   // TODO : 댓글 목록 조회
 
-  // TODO : 좋아요 등록
+  // 좋아요 등록
+  @PostMapping("/{commentId}/good")
+  public ResponseEntity<ApiResponse<Map<String, Long>>> createCommentGood(
+      @PathVariable("commentId") UUID commentId,
+      @CurrentUserInfo CurrentUserInfoDto currentUserInfoDto
+  ) {
+    Long currentGoodCount = commentFacadeService.createGood(commentId, currentUserInfoDto);
+    return ResponseEntity
+        .status(HttpStatus.CREATED.value())
+        .body(
+            ApiResponse.of(
+                HttpStatus.OK,
+                "Success",
+                Map.of("currentGoodCount", currentGoodCount)
+            )
+        );
+  }
 
-  // TODO : 좋아요 취소
+  // 좋아요 취소
+  @DeleteMapping("/{commentId}/good")
+  public ResponseEntity<ApiResponse<Map<String, Long>>> deleteCommentGood(
+      @PathVariable("commentId") UUID commentId,
+      @CurrentUserInfo CurrentUserInfoDto currentUserInfoDto
+  ) {
+    Long currentGoodCount = commentFacadeService.deleteGood(commentId, currentUserInfoDto);
+    return ResponseEntity
+        .status(HttpStatus.CREATED.value())
+        .body(
+            ApiResponse.of(
+                HttpStatus.OK,
+                "Success",
+                Map.of("currentGoodCount", currentGoodCount)
+            )
+        );
+  }
 
 }

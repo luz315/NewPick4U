@@ -14,6 +14,14 @@ public class CommentException extends CustomException {
     super(httpStatus, code, message);
   }
 
+  public static class ProcessFailException extends CommentException {
+
+    public ProcessFailException() {
+      super(HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR.value(),
+          "요청 처리에 실패하였습니다. 잠시 후 다시 시도해주세요.");
+    }
+  }
+
   public static class CommentNotFoundException extends CommentException {
 
     public CommentNotFoundException() {

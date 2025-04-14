@@ -1,6 +1,7 @@
 package com.newpick4u.comment.comment.domain.entity;
 
 import com.newpick4u.common.domain.BaseEntity;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -37,7 +38,8 @@ public class Comment extends BaseEntity {
 
   private Long goodCount = 0L;
 
-  @OneToMany(mappedBy = "comment")
+  @OneToMany(mappedBy = "comment",
+      cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval = true)
   private List<CommentGood> goodList = new ArrayList<>();
 
   @Builder
@@ -67,5 +69,19 @@ public class Comment extends BaseEntity {
 
   public void updateContent(String content) {
     this.content = content;
+  }
+
+  public Long addGood(Long userId) {
+    CommentGood commentGood = CommentGood.create(this, userId);
+    this.goodList.add(commentGood);
+    this.goodCount++;
+    return this.goodCount;
+  }
+
+  public Long deleteGood(CommentGood commentGood) {
+    if (this.goodList.remove(commentGood)) {
+      this.goodCount--;
+    }
+    return this.goodCount;
   }
 }

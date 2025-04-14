@@ -10,12 +10,17 @@ import com.newpick4u.comment.comment.application.dto.CommentSaveRequestDto;
 import com.newpick4u.comment.comment.application.dto.CommentUpdateDto;
 import com.newpick4u.comment.comment.application.dto.PointRequestDto;
 import com.newpick4u.comment.comment.domain.entity.Comment;
+import com.newpick4u.comment.comment.domain.entity.CommentGood;
+import com.newpick4u.comment.comment.domain.repository.CommentGoodRepository;
 import com.newpick4u.comment.comment.domain.repository.CommentRepository;
 import com.newpick4u.comment.global.exception.CommentException;
+import com.newpick4u.comment.global.exception.CommentException.CommentNotFoundException;
 import com.newpick4u.comment.global.exception.CommentException.ConvertMessageFailException;
+import com.newpick4u.comment.global.exception.CommentGoodException;
 import com.newpick4u.common.resolver.dto.CurrentUserInfoDto;
 import com.newpick4u.common.resolver.dto.UserRole;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +38,7 @@ public class CommentServiceImpl implements CommentService {
   private final AdvertisementMessageClient advertisementMessageClient;
   private final TagCacheRepository tagCacheRepository;
   private final CommentRepository commentRepository;
+  private final CommentGoodRepository commentGoodRepository;
 
   // 댓글 저장 : 뉴스 댓글
   @Transactional
@@ -120,6 +126,53 @@ public class CommentServiceImpl implements CommentService {
 
     comment.updateContent(updateDto.content());
     return comment.getId();
+  }
+
+  @Transactional
+  @Override
+  public Long createGood(UUID commentId, CurrentUserInfoDto currentUserInfoDto) {
+
+    // RDB 조회 및 중복체크
+    Optional<CommentGood> findCommentGoodOptional = commentGoodRepository.findByCommentIdAndUserId(
+        commentId, currentUserInfoDto.userId());
+    if (findCommentGoodOptional.isPresent()) {
+      throw new CommentGoodException.CommentGoodAlreadyExistException();
+    }
+
+    // 댓글 조회
+    Comment comment = commentRepository.findById(commentId)
+        .orElseThrow(() -> new CommentNotFoundException());
+
+    // 좋아요 추가 및 저장
+    Long currentGoodCount = comment.addGood(currentUserInfoDto.userId());
+
+    return currentGoodCount;
+  }
+
+  @Transactional
+  @Override
+  public Long deleteGood(UUID commentId, CurrentUserInfoDto currentUserInfoDto) {
+    // RDB 조회 및 중복체크
+    Optional<CommentGood> findCommentGoodOptional = commentGoodRepository.findByCommentIdAndUserId(
+        commentId, currentUserInfoDto.userId());
+    if (findCommentGoodOptional.isEmpty()) {
+      throw new CommentGoodException.CommentGoodAlreadyDeletedException();
+    }
+
+    // 권한 체크
+    CommentGood commentGood = findCommentGoodOptional.get();
+    if (!Objects.equals(commentGood.getUserId(), currentUserInfoDto.userId())
+        && currentUserInfoDto.role() != UserRole.ROLE_MASTER
+    ) {
+      throw new CommentGoodException.PermissionDeniedException();
+    }
+
+    // 댓글 조회
+    Comment comment = commentRepository.findById(commentId)
+        .orElseThrow(() -> new CommentNotFoundException());
+
+    Long currentGoodCount = comment.deleteGood(commentGood);
+    return currentGoodCount;
   }
 }
 
