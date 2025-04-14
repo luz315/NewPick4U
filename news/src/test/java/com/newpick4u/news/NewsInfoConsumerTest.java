@@ -25,6 +25,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.test.EmbeddedKafkaBroker;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
@@ -61,11 +62,30 @@ class NewsInfoConsumerTest {
 
     private KafkaTemplate<String, String> kafkaTemplate;
 
+    private Producer<String, String> newsInfoProducer;
+    private Consumer<String, NewsInfoDto> newsInfoConsumer;
+
     @BeforeEach
     void setup() {
+//        objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+
         Map<String, Object> producerProps = KafkaTestUtils.producerProps(embeddedKafkaBroker);
-        kafkaTemplate = new KafkaTemplate<>(
-                new DefaultKafkaProducerFactory<>(producerProps, new StringSerializer(), new StringSerializer()));
+        newsInfoProducer = new DefaultKafkaProducerFactory<>(producerProps, new StringSerializer(), new StringSerializer()).createProducer();
+
+        Map<String, Object> consumerProps = KafkaTestUtils.consumerProps("news-info-consumer", "false", embeddedKafkaBroker);
+        consumerProps.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
+        consumerProps.put(JsonDeserializer.VALUE_DEFAULT_TYPE, NewsInfoDto.class.getName());
+        consumerProps.put(JsonDeserializer.KEY_DEFAULT_TYPE, String.class.getName());
+        consumerProps.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
+        consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        consumerProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        consumerProps.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 20);
+        consumerProps.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 15000);
+        consumerProps.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG, 1000);
+        consumerProps.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 60000);
+
+        newsInfoConsumer = new DefaultKafkaConsumerFactory<>(consumerProps, new StringDeserializer(), new JsonDeserializer<>(NewsInfoDto.class)).createConsumer();
+        newsInfoConsumer.subscribe(Collections.singleton("news-info.fct.v1"));
     }
 
     @Test
@@ -77,9 +97,9 @@ class NewsInfoConsumerTest {
         String aiNewsId = "ai-normal-001";
         NewsInfoDto dto = new NewsInfoDto(aiNewsId, "정상 제목", "정상 내용", "https://test.com", "2025-04-13");
         String json = objectMapper.writeValueAsString(dto);
+        newsInfoProducer.send(new ProducerRecord<>("news-info.fct.v1", aiNewsId, json));
 
         // when
-        newsInfoProducer.send(new ProducerRecord<>("news-info.fct.v1", aiNewsId, json));
 
         // then
         Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
@@ -97,7 +117,6 @@ class NewsInfoConsumerTest {
         String json = objectMapper.writeValueAsString(dto);
 
         // when
-
         newsInfoProducer.send(new ProducerRecord<>("news-info.fct.v1", "fail-once", json));
 
         // then
