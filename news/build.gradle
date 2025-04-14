@@ -80,3 +80,5 @@ sourceSets {
 		}
 	}
 }
+
+apply from: "${rootDir}/common/jacoco.gradle"
