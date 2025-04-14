@@ -3,7 +3,7 @@ package com.newpick4u.client.advertisement.infrastructure.kafka;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.newpick4u.client.advertisement.application.message.consumer.PointUpdateConsumer;
-import com.newpick4u.client.advertisement.application.message.request.PointUpdateMessage;
+import com.newpick4u.client.advertisement.application.message.request.PointRequestMessage;
 import com.newpick4u.client.advertisement.application.usecase.AdvertisementService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +28,8 @@ public class PointUpdateConsumerImpl implements PointUpdateConsumer {
       throws JsonProcessingException {
     log.info("Kafka Raw Value: {}", record.value());
     try {
-      PointUpdateMessage message = objectMapper.readValue(record.value(), PointUpdateMessage.class);
+      PointRequestMessage message = objectMapper.readValue(record.value(),
+          PointRequestMessage.class);
       advertisementService.updatePointGrantedCount(message);
       acknowledgment.acknowledge();
     } catch (Exception e) {

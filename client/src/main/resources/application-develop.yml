@@ -45,3 +45,9 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
         default_batch_fetch_size: 100
         format_sql: true
+  eureka:
+    client:
+      register-with-eureka: false
+      fetch-registry: false
+      service-url:
+        defaultZone: ${DEVELOP_EUREKA_SERVER_URL}

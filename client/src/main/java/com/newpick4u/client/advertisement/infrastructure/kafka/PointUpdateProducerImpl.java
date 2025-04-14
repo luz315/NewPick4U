@@ -3,7 +3,7 @@ package com.newpick4u.client.advertisement.infrastructure.kafka;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.newpick4u.client.advertisement.application.message.producer.PointUpdateProducer;
-import com.newpick4u.client.advertisement.application.message.request.PointUpdateMessage;
+import com.newpick4u.client.advertisement.application.message.request.PointRequestMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -19,9 +19,11 @@ public class PointUpdateProducerImpl implements PointUpdateProducer {
   private String topic;
 
 
-  public void produce(PointUpdateMessage message) {
+  public void produce(PointRequestMessage message) {
     try {
-      String parsedMessage = parsedMessage(message);
+      PointUpdateMessage pointUpdateMessage = PointUpdateMessage.of(message.userId(),
+          message.point());
+      String parsedMessage = parsedMessage(pointUpdateMessage);
       kafkaTemplate.send(topic, parsedMessage);
     } catch (Exception e) {
       throw new RuntimeException(e);

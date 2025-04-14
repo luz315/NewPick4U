@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.newpick4u.client.advertisement.application.client.NewsClient;
 import com.newpick4u.client.advertisement.application.message.producer.PointUpdateProducer;
-import com.newpick4u.client.advertisement.application.message.request.PointUpdateMessage;
+import com.newpick4u.client.advertisement.application.message.request.PointRequestMessage;
 import com.newpick4u.client.advertisement.domain.entity.Advertisement;
 import com.newpick4u.client.advertisement.domain.entity.Advertisement.AdvertisementType;
 import com.newpick4u.client.advertisement.domain.repository.AdvertisementRepository;
@@ -46,9 +46,10 @@ public class PointGrantedCountUpdateTest {
     // when
     for (int i = 0; i < threadCount; i++) {
       executorService.submit(() -> {
-        PointUpdateMessage message = new PointUpdateMessage(1L,
+        PointRequestMessage message = new PointRequestMessage(1L,
             savedAdvertisement.getAdvertisementId(), 500);
         advertisementService.updatePointGrantedCount(message);
+        latch.countDown();
       });
     }
 

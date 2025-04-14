@@ -7,7 +7,7 @@ import com.newpick4u.client.advertisement.application.exception.AdvertisementExc
 import com.newpick4u.client.advertisement.application.exception.AdvertisementException.NotFoundException;
 import com.newpick4u.client.advertisement.application.exception.AdvertisementException.PointGrantFinishedException;
 import com.newpick4u.client.advertisement.application.message.producer.PointUpdateProducer;
-import com.newpick4u.client.advertisement.application.message.request.PointUpdateMessage;
+import com.newpick4u.client.advertisement.application.message.request.PointRequestMessage;
 import com.newpick4u.client.advertisement.domain.entity.Advertisement;
 import com.newpick4u.client.advertisement.domain.repository.AdvertisementRepository;
 import com.newpick4u.client.global.aop.DistributedLock;
@@ -44,7 +44,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
   // ToDo : 고도화 파트에서 파티션 정책 수정으로 인해 변경될 가능성 존재
   @Transactional
   @DistributedLock(key = "'advertise:' + #message.advertisementId")
-  public void updatePointGrantedCount(PointUpdateMessage message) {
+  public void updatePointGrantedCount(PointRequestMessage message) {
     Advertisement advertisement = advertisementRepository.findById(message.advertisementId())
         .orElseThrow(NotFoundException::new);
     if (advertisement.isPointGrantFinished()) {
