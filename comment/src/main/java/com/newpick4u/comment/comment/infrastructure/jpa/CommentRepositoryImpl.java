@@ -2,6 +2,7 @@ package com.newpick4u.comment.comment.infrastructure.jpa;
 
 import com.newpick4u.comment.comment.domain.entity.Comment;
 import com.newpick4u.comment.comment.domain.repository.CommentRepository;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,11 @@ public class CommentRepositoryImpl implements CommentRepository {
   @Override
   public Optional<Comment> findById(UUID commentId) {
     return commentJpaRepository.findById(commentId);
+  }
+
+  @Override
+  public List<Comment> findAllByThreadIdAndDeletedAtIsNull(UUID threadId) {
+    return commentJpaRepository.findAllByThreadIdAndDeletedAtIsNull(threadId);
   }
 
 }

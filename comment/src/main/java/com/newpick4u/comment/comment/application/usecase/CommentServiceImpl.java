@@ -8,6 +8,7 @@ import com.newpick4u.comment.comment.application.TagCacheRepository;
 import com.newpick4u.comment.comment.application.ThreadClient;
 import com.newpick4u.comment.comment.application.dto.CommentSaveRequestDto;
 import com.newpick4u.comment.comment.application.dto.CommentUpdateDto;
+import com.newpick4u.comment.comment.application.dto.GetCommentListForThreadResponseDto;
 import com.newpick4u.comment.comment.application.dto.PointRequestDto;
 import com.newpick4u.comment.comment.domain.entity.Comment;
 import com.newpick4u.comment.comment.domain.entity.CommentGood;
@@ -19,6 +20,7 @@ import com.newpick4u.comment.global.exception.CommentException.ConvertMessageFai
 import com.newpick4u.comment.global.exception.CommentGoodException;
 import com.newpick4u.common.resolver.dto.CurrentUserInfoDto;
 import com.newpick4u.common.resolver.dto.UserRole;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -173,6 +175,20 @@ public class CommentServiceImpl implements CommentService {
 
     Long currentGoodCount = comment.deleteGood(commentGood);
     return currentGoodCount;
+  }
+
+  // TODO : 단일 조회
+
+  // TODO : 목록 조회
+
+  // 쓰레드 댓글 전체 조회
+  @Transactional(readOnly = true)
+  @Override
+  public GetCommentListForThreadResponseDto getCommentByThreadId(UUID threadId) {
+    List<Comment> threadCommentList = commentRepository.findAllByThreadIdAndDeletedAtIsNull(
+        threadId);
+    List<String> contentList = threadCommentList.stream().map(Comment::getContent).toList();
+    return GetCommentListForThreadResponseDto.of(contentList, threadId);
   }
 }
 

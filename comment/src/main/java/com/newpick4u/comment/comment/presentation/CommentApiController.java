@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -73,9 +74,20 @@ public class CommentApiController {
         );
   }
 
-  // TODO : 댓글 단일 조회
+  // 댓글 단일 조회
+  @GetMapping("/{commentId}")
+  public ResponseEntity<ApiResponse<Map<String, UUID>>> getCommentById(
+      @PathVariable("commentId") UUID commentId
+  ) {
+    return null;
+  }
 
-  // TODO : 댓글 목록 조회
+  // 댓글 목록 조회
+  @GetMapping
+  public ResponseEntity<ApiResponse<Map<String, UUID>>> getCommentList(
+  ) {
+    return null;
+  }
 
   // 좋아요 등록
   @PostMapping("/{commentId}/good")

@@ -2,8 +2,10 @@ package com.newpick4u.comment.comment.application.usecase;
 
 import com.newpick4u.comment.comment.application.dto.CommentSaveRequestDto;
 import com.newpick4u.comment.comment.application.dto.CommentUpdateDto;
+import com.newpick4u.comment.comment.application.dto.GetCommentListForThreadResponseDto;
 import com.newpick4u.common.resolver.dto.CurrentUserInfoDto;
 import java.util.UUID;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface CommentService {
 
@@ -21,4 +23,8 @@ public interface CommentService {
   Long createGood(UUID commentId, CurrentUserInfoDto currentUserInfoDto);
 
   Long deleteGood(UUID commentId, CurrentUserInfoDto currentUserInfoDto);
+
+  // TODO : 쓰레드 댓글 전체 조회
+  @Transactional(readOnly = true)
+  GetCommentListForThreadResponseDto getCommentByThreadId(UUID threadId);
 }

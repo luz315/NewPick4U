@@ -3,6 +3,7 @@ package com.newpick4u.comment.comment.application.usecase;
 import com.newpick4u.comment.comment.application.NewsClient;
 import com.newpick4u.comment.comment.application.ThreadClient;
 import com.newpick4u.comment.comment.application.dto.CommentSaveRequestDto;
+import com.newpick4u.comment.comment.application.dto.GetCommentListForThreadResponseDto;
 import com.newpick4u.comment.comment.domain.entity.Comment;
 import com.newpick4u.comment.comment.infrastructure.jpa.CommentJpaRepository;
 import com.newpick4u.common.resolver.dto.CurrentUserInfoDto;
@@ -40,6 +41,8 @@ class CommentServiceImplTest {
 
   @Autowired
   RedisTemplate<String, String> redisTemplate;
+  @Autowired
+  private CommentServiceImpl commentServiceImpl;
 
   @Test
   @DisplayName("뉴스-댓글 생성 테스트")
@@ -135,6 +138,25 @@ class CommentServiceImplTest {
     Assertions.assertEquals(saveReqThreadIdList.size(), saveResultThreadIdList.size());
     for (UUID saveReqThreadId : saveReqThreadIdList) {
       Assertions.assertTrue(saveResultThreadIdList.contains(saveReqThreadId));
+    }
+  }
+
+  @Test
+  @DisplayName("쓰레드의 댓글 목록 조회 테스트")
+  void getCommentByThreadIdTest() {
+    // given
+    int commentCount = 3;
+    UUID threadId = UUID.randomUUID();
+    for (int i = 0; i < commentCount; i++) {
+      commentJpaRepository.save(Comment.createForThread(threadId, "이것은 쓰레드의 댓글 " + i + " 입니다."));
+    }
+
+    GetCommentListForThreadResponseDto commentByThreadId = commentServiceImpl.getCommentByThreadId(
+        threadId);
+    Assertions.assertEquals(threadId, commentByThreadId.threadId());
+    Assertions.assertEquals(commentCount, commentByThreadId.commentList().size());
+    for (String content : commentByThreadId.commentList()) {
+      log.info("thread={}, result = {}", threadId, content);
     }
   }
 }
