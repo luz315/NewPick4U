@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 @FeignClient(name = "thread-service", configuration = {FeignClientConfig.class})
 public interface ThreadFeignClient {
 
-  @GetMapping("/internal/v1/thread/{threadId}")
+  @GetMapping("/internal/v1/threads/{threadId}")
   ResponseEntity<ApiResponse<GetThreadResponseDto>> getThreadById(
       @PathVariable("threadId") UUID newsId);
 }

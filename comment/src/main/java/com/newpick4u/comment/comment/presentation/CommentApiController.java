@@ -90,7 +90,7 @@ public class CommentApiController {
   }
 
   // 좋아요 등록
-  @PostMapping("/{commentId}/good")
+  @PostMapping("/{commentId}/goods")
   public ResponseEntity<ApiResponse<Map<String, Long>>> createCommentGood(
       @PathVariable("commentId") UUID commentId,
       @CurrentUserInfo CurrentUserInfoDto currentUserInfoDto
@@ -108,7 +108,7 @@ public class CommentApiController {
   }
 
   // 좋아요 취소
-  @DeleteMapping("/{commentId}/good")
+  @DeleteMapping("/{commentId}/goods")
   public ResponseEntity<ApiResponse<Map<String, Long>>> deleteCommentGood(
       @PathVariable("commentId") UUID commentId,
       @CurrentUserInfo CurrentUserInfoDto currentUserInfoDto

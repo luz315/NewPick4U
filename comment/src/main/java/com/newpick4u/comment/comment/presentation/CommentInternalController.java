@@ -12,14 +12,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@RequestMapping("/internal/v1/comment")
+@RequestMapping("/internal/v1/comments")
 @RequiredArgsConstructor
 @RestController
 public class CommentInternalController {
 
   private final CommentService commentService;
-  
-  @GetMapping("/thread/{threadId}")
+
+  @GetMapping("/threads/{threadId}")
   public ResponseEntity<ApiResponse<GetCommentListForThreadResponseDto>> getCommentById(
       @PathVariable("threadId") UUID threadId
   ) {
