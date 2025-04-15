@@ -1,5 +1,6 @@
 package com.newpick4u.news.news.application.dto.response;
 
+import com.newpick4u.news.news.application.dto.response.NewsTagResponseDto;
 import com.newpick4u.news.news.domain.entity.News;
 import com.newpick4u.news.news.domain.entity.NewsStatus;
 

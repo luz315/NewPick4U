@@ -21,6 +21,4 @@ public interface NewsService {
      * 사용자 태그 로그 기반 추천 뉴스 리스트 반환 (최대 10개)
      */
     List<NewsSummaryDto> recommendTop10(CurrentUserInfoDto user);
-
-    void logUserTags(UUID newsId, Long userId);
 }
