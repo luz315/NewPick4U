@@ -17,11 +17,15 @@ import com.newpick4u.news.news.domain.model.Pagination;
 import com.newpick4u.news.news.domain.repository.NewsRepository;
 import com.newpick4u.news.news.domain.repository.TagInboxRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NewsServiceImpl implements NewsService {
@@ -32,7 +36,9 @@ public class NewsServiceImpl implements NewsService {
 
     @Transactional
       public void saveNewsInfo(NewsInfoDto dto) {
-          if (newsRepository.existsByAiNewsId(dto.aiNewsId())) {
+        simulateFailures(dto.aiNewsId()); // 테스트 조건 시뮬레이션
+
+        if (newsRepository.existsByAiNewsId(dto.aiNewsId())) {
               throw new IllegalStateException("이미 저장된 뉴스입니다: " + dto.aiNewsId());
           }
           News news = News.create(dto.aiNewsId(), dto.title(), dto.content(), dto.url(), dto.publishedDate(), 0L);
@@ -41,6 +47,8 @@ public class NewsServiceImpl implements NewsService {
 
     @Transactional
     public void updateNewsTagList(NewsTagDto dto) {
+        simulateFailures(dto.aiNewsId()); // 테스트 조건 시뮬레이션
+
         validateTagListSize(dto);
         newsRepository.findByAiNewsId(dto.aiNewsId())
                 .ifPresentOrElse(
@@ -90,5 +98,26 @@ public class NewsServiceImpl implements NewsService {
         boolean isMaster = userInfoDto.role() == UserRole.ROLE_MASTER;
         Pagination<News> pagination = newsRepository.searchNewsList(request, isMaster);
         return PageResponse.from(pagination).map(NewsSummaryDto::from);
+    }
+
+
+    // 테스트용 시뮬레이션
+    private static final Map<String, Integer> failureMap = new ConcurrentHashMap<>();
+
+    private static void simulateFailures(String aiNewsId) {
+        if ("fail-once".equals(aiNewsId)) {
+            int count = failureMap.getOrDefault(aiNewsId, 0);
+            log.info("[SimulateFail] 실행 카운트 - aiNewsId: {}, count: {}", aiNewsId, count);
+
+            if (count < 1) {
+                failureMap.put(aiNewsId, count + 1); // 첫 실패 기록
+                log.warn("[SimulateFail] 첫 번째 실패 유도: {}", aiNewsId);
+
+                throw new RuntimeException("첫 번째 실패 유도");
+            }
+        }
+        if ("fail-me".equals(aiNewsId)) {
+            throw new RuntimeException("무조건 실패 유도");
+        }
     }
 }

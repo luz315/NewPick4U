@@ -116,4 +116,19 @@ public class NewsRepositoryCustomImpl implements NewsRepositoryCustom {
             where.and(news.status.eq(NewsStatus.ACTIVE));
         }
     }
+
+    // 테스트용 메서드
+    @Override
+    public Optional<News> findWithTagsByAiNewsId(String aiNewsId) {
+        QNews news = QNews.news;
+        QNewsTag newsTag = QNewsTag.newsTag;
+
+        return Optional.ofNullable(
+                queryFactory
+                        .selectFrom(news)
+                        .leftJoin(news.newsTagList, newsTag).fetchJoin()
+                        .where(news.aiNewsId.eq(aiNewsId))
+                        .fetchOne()
+        );
+    }
 }

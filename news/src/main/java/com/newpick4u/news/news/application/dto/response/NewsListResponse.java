@@ -16,13 +16,13 @@ public record NewsListResponse(
         List<NewsSummary> contents
 ) {
     public static NewsListResponse from(Pagination<News> pagination) {
-        int size = pagination.getSize();
+        int size = pagination.getPageSize();
         return new NewsListResponse(
-                pagination.getPage(),
+                pagination.getPageNumber(),
                 size,
-                pagination.getTotal(),
-                (pagination.getTotal() + size - 1) / size,
-                pagination.getContent().stream().map(NewsSummary::from).toList()
+                pagination.getTotalElements(),
+                pagination.getTotalPages(),
+                pagination.getContents().stream().map(NewsSummary::from).toList()
         );
     }
 
