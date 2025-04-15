@@ -13,28 +13,25 @@ import com.newpick4u.news.news.domain.critria.NewsSearchCriteria;
 import com.newpick4u.news.news.domain.entity.News;
 import com.newpick4u.news.news.domain.entity.NewsTag;
 import com.newpick4u.news.news.domain.entity.TagInbox;
-import com.newpick4u.news.news.domain.entity.UserTagLog;
 import com.newpick4u.news.news.domain.model.Pagination;
 import com.newpick4u.news.news.domain.repository.NewsRepository;
 import com.newpick4u.news.news.domain.repository.TagInboxRepository;
-import com.newpick4u.news.news.domain.repository.UserTagLogRepository;
+import com.newpick4u.news.news.infrastructure.redis.UserTagRedisOperator;
 import com.newpick4u.news.news.infrastructure.util.NewsRecommender;
+import com.newpick4u.news.news.infrastructure.util.TagVectorConverter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class NewsServiceImpl implements NewsService {
     private final NewsRepository newsRepository;
-    private final UserTagLogRepository userTagLogRepository;
     private final TagInboxRepository tagInboxRepository;
     private final ObjectMapper objectMapper;
+    private final UserTagRedisOperator userTagRedisOperator;
 
     @Override
     @Transactional
@@ -91,6 +88,13 @@ public class NewsServiceImpl implements NewsService {
         boolean isMaster = userInfoDto.role() == UserRole.ROLE_MASTER;
         News news = newsRepository.findNewsByRole(id, isMaster)
                 .orElseThrow(() -> new IllegalArgumentException("뉴스를 찾을 수 없습니다."));
+
+        List<String> tags = news.getNewsTagList().stream()
+                .map(NewsTag::getName)
+                .toList();
+
+        userTagRedisOperator.incrementUserTags(userInfoDto.userId(), tags);
+
         return NewsResponseDto.from(news);
     }
 
@@ -102,51 +106,23 @@ public class NewsServiceImpl implements NewsService {
         return PageResponse.from(pagination).map(NewsSummaryDto::from);
     }
 
-    /**
-     * 사용자 태그 로그를 기반으로 KNN + Content-Based 추천 뉴스 10개 반환
-     */
     @Override
     @Transactional(readOnly = true)
     public List<NewsSummaryDto> recommendTop10(CurrentUserInfoDto userInfo) {
         Long userId = userInfo.userId();
-        UserTagLog userLog = userTagLogRepository.findByUserId(userId)
-                .orElse(null);
-        if (userLog==null) return List.of();
 
-        List<UserTagLog> allLogs = userTagLogRepository.findAll();
-        List<News> allNews = newsRepository.findAllActive();
+        // 1. Redis 캐시 먼저 조회
+        List<String> cachedNewsIds = userTagRedisOperator.getCachedRecommendedNews(userId);
+        if (cachedNewsIds != null && !cachedNewsIds.isEmpty()) {
+            List<UUID> ids = cachedNewsIds.stream().map(UUID::fromString).toList();
+            List<News> newsList = newsRepository.findByIds(ids);
+            return newsList.stream().map(NewsSummaryDto::from).toList();
+        }
 
-        // Content-Based 추천
-        List<News> contentBased = NewsRecommender.recommendContentBased(userLog, allNews);
-
-        // KNN 기반 추천
-        List<News> knnBased = NewsRecommender.recommendKnnBased(userId, userLog, allLogs, allNews);
-
-        // 통합 (중복 제거)
-        Set<News> combined = new LinkedHashSet<>();
-        combined.addAll(contentBased);
-        combined.addAll(knnBased);
-
-        return combined.stream()
-                .limit(10)
+        // 2. 캐시 없으면 최신 뉴스 fallback
+        List<News> fallbackNews = newsRepository.findLatestNews(10);
+        return fallbackNews.stream()
                 .map(NewsSummaryDto::from)
                 .toList();
-    }
-
-    @Override
-    @Transactional
-    public void logUserTags(UUID newsId, Long userId) {
-        News news = newsRepository.findNewsByRole(newsId, false)
-                .orElseThrow(() -> new IllegalArgumentException()); // 예외 처리
-
-        List<String> tags = news.getNewsTagList().stream()
-                .map(tag -> tag.getName())
-                .toList();
-
-        UserTagLog userTagLog = userTagLogRepository.findByUserId(userId)
-                .orElse(UserTagLog.create(userId));
-
-        userTagLog.addTags(tags);
-        userTagLogRepository.save(userTagLog);
     }
 }

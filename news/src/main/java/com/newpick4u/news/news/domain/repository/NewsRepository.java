@@ -15,5 +15,6 @@ public interface NewsRepository  {
     Pagination<News> searchNewsList(NewsSearchCriteria request, boolean isMaster);
     Optional<News> findNewsByRole(UUID id, boolean isMaster);
     List<News> findAllActive();
-
+    List<News> findLatestNews(int limit);
+    List<News> findByIds(List<UUID> ids);
 }
