@@ -35,7 +35,7 @@ public class Comment extends BaseEntity {
 
   @Column(columnDefinition = "TEXT")
   private String content;
-
+  
   private Long goodCount = 0L;
 
   @OneToMany(mappedBy = "comment",

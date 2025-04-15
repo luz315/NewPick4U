@@ -8,6 +8,7 @@ import com.newpick4u.newsorigin.newsorigin.infrastructure.jpa.NewsOriginJpaRepos
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -49,6 +50,7 @@ class NewsOriginServiceImplTest {
     LocalDateTime dateTime = LocalDateTime.of(
         2025, 4, 7, 23, 33, 29, 368_024_800);
     SendNewOriginDto sendNewOriginDto = SendNewOriginDto.of(
+        UUID.randomUUID(),
         "제목",
         "www.test.com",
         dateTime,
