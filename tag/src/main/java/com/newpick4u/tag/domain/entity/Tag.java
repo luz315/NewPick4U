@@ -22,7 +22,7 @@ public class Tag extends BaseEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   @Column(name = "tag_id", columnDefinition = "CHAR(36)")
-  private UUID tagId;
+  private UUID id;
 
   @Column(nullable = false, unique = true)
   private String tagName;
@@ -35,13 +35,21 @@ public class Tag extends BaseEntity {
     this.score = score;
   }
 
-  public static Tag create(String tagName, Long score) {
-    return new Tag(tagName, score);
+  public static Tag create(String tagName) {
+    return new Tag(tagName, 1L);
   }
 
   public void updateTagName(String newTagName) {
     if (newTagName != null && !newTagName.isBlank()) {
       this.tagName = newTagName;
     }
+  }
+
+  public void increaseScore() {
+    this.score++;
+  }
+
+  public void decreaseScore() {
+    this.score--;
   }
 }
