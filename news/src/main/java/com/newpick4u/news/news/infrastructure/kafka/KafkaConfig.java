@@ -78,7 +78,7 @@ public class KafkaConfig {
         JsonDeserializer<T> valueDeserializer = new JsonDeserializer<>(clazz);
         valueDeserializer.addTrustedPackages(PACKAGE_TRUSTED);
         valueDeserializer.setRemoveTypeHeaders(false);
-        valueDeserializer.setUseTypeMapperForKey(true);
+        valueDeserializer.setUseTypeMapperForKey(false);
         return new DefaultKafkaConsumerFactory<>(
                 commonConsumerProps(groupId),
                 new StringDeserializer(),

@@ -9,7 +9,9 @@ import java.util.UUID;
 public interface NewsRepository  {
     News save(News news);
     Optional<News> findByAiNewsId(String aiNewsId);
+    Optional<News> findWithTagsByAiNewsId(String aiNewsId);
     boolean existsByAiNewsId(String aiNewsId);
     Pagination<News> searchNewsList(NewsSearchCriteria request, boolean isMaster);
     Optional<News> findNewsByRole(UUID id, boolean isMaster);
+    void flush();
 }

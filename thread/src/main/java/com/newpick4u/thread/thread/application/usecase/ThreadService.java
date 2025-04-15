@@ -11,4 +11,6 @@ public interface ThreadService {
   Page<ThreadResponseDto> getThreads(Pageable pageable);
 
   Thread getThreadDetail(UUID threadId);
+
+  Boolean existThread(UUID threadId);
 }

@@ -5,10 +5,8 @@ spring:
   config:
     import:
       - file:.env.news[.properties]
-
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
-    # EmbeddedKafka 사용 시 필수
     consumer:
       auto-offset-reset: earliest
       enable-auto-commit: false

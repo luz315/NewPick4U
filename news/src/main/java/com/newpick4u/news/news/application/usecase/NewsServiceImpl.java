@@ -47,6 +47,8 @@ public class NewsServiceImpl implements NewsService {
 
     @Transactional
     public void updateNewsTagList(NewsTagDto dto) {
+        simulateFailures(dto.aiNewsId()); // 테스트 조건 시뮬레이션
+
         validateTagListSize(dto);
         newsRepository.findByAiNewsId(dto.aiNewsId())
                 .ifPresentOrElse(
