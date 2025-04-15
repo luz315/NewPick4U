@@ -116,6 +116,7 @@ public class NewsOriginServiceImpl implements NewsOriginService {
         String extractedMainBody = bodyParser.extractMainBody(originNewsBody,
             newsOrigin.getTitle());
         SendNewOriginDto sendNewOriginDto = SendNewOriginDto.of(
+            newsOrigin.getId(),
             newsOrigin.getTitle(),
             newsOrigin.getUrl(),
             newsOrigin.getNewsPublishedDate(),
