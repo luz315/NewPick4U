@@ -20,24 +20,7 @@ import java.util.UUID;
 public class NewsAPIController {
     private final NewsService newsService;
 
-    @GetMapping("/{id}")
-    public ResponseEntity<NewsResponseDto> getNews(
-            @PathVariable UUID id,
-            @CurrentUserInfo CurrentUserInfoDto userInfoDto
-    ) {
-        newsService.logUserTags(id, userInfoDto.userId());
-
-        return ResponseEntity.ok(newsService.getNews(id, userInfoDto));
-    }
-
-    @GetMapping
-    public ResponseEntity<PageResponse<NewsSummaryDto>> searchNewsList(
-            @ModelAttribute NewsSearchCriteria request,
-            @CurrentUserInfo CurrentUserInfoDto userInfoDto
-    ) {
-        return ResponseEntity.ok(newsService.searchNewsList(request, userInfoDto));
-    }
-
+    // 추천 뉴스 조회
     @GetMapping("/recommend")
     public List<NewsSummaryDto> recommend(@CurrentUserInfo CurrentUserInfoDto currentUser) {
         return newsService.recommendTop10(currentUser);
