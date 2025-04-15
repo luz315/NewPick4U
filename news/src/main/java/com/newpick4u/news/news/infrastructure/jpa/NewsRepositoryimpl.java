@@ -8,6 +8,7 @@ import com.newpick4u.news.news.domain.repository.NewsRepositoryCustom;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -51,5 +52,20 @@ public class NewsRepositoryimpl implements NewsRepository {
     @Override
     public void flush() {
         newsJpaRepository.flush();
+    }
+
+    @Override
+    public List<News> findAllActive() {
+        return newsRepositoryCustom.findAllActive();
+    }
+
+    @Override
+    public List<News> findLatestNews(int limit) {
+        return newsRepositoryCustom.findLatestNews(limit);
+    }
+
+    @Override
+    public List<News> findByIds(List<UUID> ids)  {
+        return newsRepositoryCustom.findByIds(ids);
     }
 }

@@ -131,4 +131,41 @@ public class NewsRepositoryCustomImpl implements NewsRepositoryCustom {
                         .fetchOne()
         );
     }
+
+    //추천알고리즘
+    @Override
+    public List<News> findAllActive() {
+        return queryFactory
+                .selectFrom(news)
+                .leftJoin(news.newsTagList, newsTag).fetchJoin()
+                .where(news.status.eq(NewsStatus.ACTIVE))
+                .distinct()
+                .fetch();
+    }
+
+    @Override
+    public List<News> findLatestNews(int limit) {
+        QNews news = QNews.news;
+
+        return queryFactory
+                .selectFrom(news)
+                .leftJoin(news.newsTagList, newsTag).fetchJoin()
+                .where(news.status.eq(NewsStatus.ACTIVE))
+                .orderBy(news.createdAt.desc())
+                .limit(limit)
+                .fetch();
+    }
+
+    @Override
+    public List<News> findByIds(List<UUID> ids) {
+        QNews news = QNews.news;
+        QNewsTag newsTag = QNewsTag.newsTag;
+
+        return queryFactory
+                .selectFrom(news)
+                .leftJoin(news.newsTagList, newsTag).fetchJoin()
+                .where(news.id.in(ids))
+                .distinct()
+                .fetch();
+    }
 }
