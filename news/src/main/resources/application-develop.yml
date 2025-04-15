@@ -2,6 +2,9 @@ server:
   port: 11001
 
 spring:
+  application:
+    name: news-service
+
   config:
     import:
       - file:.env.news[.properties]
@@ -35,3 +38,8 @@ spring:
           dialect: org.hibernate.dialect.MySQL8Dialect
           default_batch_fetch_size: 100
           format_sql: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6381
