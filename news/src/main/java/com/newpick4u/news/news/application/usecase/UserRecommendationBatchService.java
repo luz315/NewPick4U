@@ -60,11 +60,7 @@ public class UserRecommendationBatchService {
                     .map(news -> news.getId().toString())
                     .collect(Collectors.toList());
 
-            String redisKey = "user:" + userId + ":recommend";
-            redisTemplate.delete(redisKey);
-            redisTemplate.opsForList().rightPushAll(redisKey, recommendedIds);
-            redisTemplate.expire(redisKey, Duration.ofDays(1));
-
+            userTagRedisOperator.cacheRecommendedNews(userId, recommendedIds);
             log.info("[추천 저장 완료] userId={}, count={}", userId, recommendedIds.size());
         } catch (Exception e) {
             log.error("[추천 저장 실패] userId={}", userId, e);

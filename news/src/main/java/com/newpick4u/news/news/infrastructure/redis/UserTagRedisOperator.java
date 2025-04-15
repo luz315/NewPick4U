@@ -73,10 +73,15 @@ public class UserTagRedisOperator {
 
     // 추천 뉴스 캐시 저장
     public void cacheRecommendedNews(Long userId, List<String> newsIds) {
-        String key = recommendKey(userId);
-        redisTemplate.delete(key); // 덮어쓰기
-        redisTemplate.opsForList().rightPushAll(key, newsIds);
-        redisTemplate.expire(key, RECOMMEND_CACHE_TTL);
+        String realKey = recommendKey(userId);
+        String tempKey = realKey + ":tmp";
+
+        // 1. 임시 키에 먼저 데이터 삽입
+        redisTemplate.opsForList().rightPushAll(tempKey, newsIds);
+        redisTemplate.expire(tempKey, RECOMMEND_CACHE_TTL);
+
+        // 2. 임시 키 -> 실제 키로 원자적 전환
+        redisTemplate.rename(tempKey, realKey);
     }
 
     // 추천 뉴스 캐시 조회
