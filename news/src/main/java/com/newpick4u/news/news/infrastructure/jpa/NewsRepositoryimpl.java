@@ -43,5 +43,13 @@ public class NewsRepositoryimpl implements NewsRepository {
         return newsRepositoryCustom.findNewsByRole(id, isMaster);
     }
 
+    @Override
+    public Optional<News> findWithTagsByAiNewsId(String aiNewsId) {
+        return newsRepositoryCustom.findWithTagsByAiNewsId(aiNewsId);
+    }
 
+    @Override
+    public void flush() {
+        newsJpaRepository.flush();
+    }
 }

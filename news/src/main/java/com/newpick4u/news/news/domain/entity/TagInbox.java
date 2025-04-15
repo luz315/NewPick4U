@@ -22,7 +22,7 @@ public class TagInbox {
     private String aiNewsId;
 
     @Lob
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String jsonPayload; // 태그 데이터 전체를 JSON 형태로 보관 (ex. Jackson 사용)
 
     @Builder(access = AccessLevel.PRIVATE)
