@@ -2,8 +2,6 @@ package com.newpick4u.client.advertisement.application.usecase;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.newpick4u.client.advertisement.application.client.NewsClient;
-import com.newpick4u.client.advertisement.application.message.producer.PointUpdateProducer;
 import com.newpick4u.client.advertisement.application.message.request.PointRequestMessage;
 import com.newpick4u.client.advertisement.domain.entity.Advertisement;
 import com.newpick4u.client.advertisement.domain.entity.Advertisement.AdvertisementType;
@@ -16,20 +14,20 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest
-@Transactional
+//@Transactional
+@TestPropertySource(properties = {
+    "eureka.client.register-with-eureka=false",
+    "eureka.client.fetch-registry=false"
+})
 public class PointGrantedCountUpdateTest {
 
   @Autowired
   private AdvertisementService advertisementService;
   @Autowired
   private AdvertisementRepository advertisementRepository;
-  @Autowired
-  private PointUpdateProducer pointUpdateProducer;
-  @Autowired
-  private NewsClient newsClient;
 
   @Test
   @DisplayName("분산락을 이용한 포인트 지급 횟수 갱신 테스트")
@@ -37,7 +35,7 @@ public class PointGrantedCountUpdateTest {
 
     // given
     Advertisement advertisement = Advertisement.create(UUID.randomUUID(), UUID.randomUUID(), "예시",
-        "내용", AdvertisementType.BANNER, "www.com", 500000L, 50);
+        "내용", AdvertisementType.BANNER, "www.com", 500000L, 50, 500);
     int threadCount = 50;
     ExecutorService executorService = Executors.newFixedThreadPool(25);
     CountDownLatch latch = new CountDownLatch(threadCount);
@@ -47,7 +45,7 @@ public class PointGrantedCountUpdateTest {
     for (int i = 0; i < threadCount; i++) {
       executorService.submit(() -> {
         PointRequestMessage message = new PointRequestMessage(1L,
-            savedAdvertisement.getAdvertisementId(), 500);
+            UUID.randomUUID(), savedAdvertisement.getAdvertisementId());
         advertisementService.updatePointGrantedCount(message);
         latch.countDown();
       });

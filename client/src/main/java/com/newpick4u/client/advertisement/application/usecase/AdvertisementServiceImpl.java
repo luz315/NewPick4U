@@ -8,6 +8,7 @@ import com.newpick4u.client.advertisement.application.exception.AdvertisementExc
 import com.newpick4u.client.advertisement.application.exception.AdvertisementException.PointGrantFinishedException;
 import com.newpick4u.client.advertisement.application.message.producer.PointUpdateProducer;
 import com.newpick4u.client.advertisement.application.message.request.PointRequestMessage;
+import com.newpick4u.client.advertisement.application.message.request.PointUpdateMessage;
 import com.newpick4u.client.advertisement.domain.entity.Advertisement;
 import com.newpick4u.client.advertisement.domain.repository.AdvertisementRepository;
 import com.newpick4u.client.global.aop.DistributedLock;
@@ -36,13 +37,13 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     }
     Advertisement advertisement = Advertisement.create(request.clientId(), request.newsId(),
         request.title(), request.content(),
-        request.type(), request.url(), request.budget(), request.maxPointGrantCount());
+        request.type(), request.url(), request.budget(), request.maxPointGrantCount(),
+        request.point());
     Advertisement saveAdvertisement = advertisementRepository.save(advertisement);
     return saveAdvertisement.getAdvertisementId();
   }
 
   // ToDo : 고도화 파트에서 파티션 정책 수정으로 인해 변경될 가능성 존재
-  @Transactional
   @DistributedLock(key = "'advertise:' + #message.advertisementId")
   public void updatePointGrantedCount(PointRequestMessage message) {
     Advertisement advertisement = advertisementRepository.findById(message.advertisementId())
@@ -51,7 +52,9 @@ public class AdvertisementServiceImpl implements AdvertisementService {
       throw new PointGrantFinishedException();
     }
     IncreasePointGrantedCount(advertisement);
-    pointUpdateProducer.produce(message);
+    Advertisement updatedAdvertisement = advertisementRepository.save(advertisement);
+    pointUpdateProducer.produce(
+        PointUpdateMessage.of(message.userId(), updatedAdvertisement.getPoint()));
   }
 
   private void IncreasePointGrantedCount(Advertisement advertisement) {
