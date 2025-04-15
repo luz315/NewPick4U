@@ -3,7 +3,10 @@ package com.newpick4u.tag.infrastructure.kafka;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.newpick4u.tag.application.dto.AiNewsDto;
+import com.newpick4u.tag.application.dto.NewsTagDto;
+import com.newpick4u.tag.application.dto.NewsTagDto.TagDto;
 import com.newpick4u.tag.application.usecase.TagMessageHandler;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -36,10 +39,13 @@ public class TagConsumer {
     log.info("dto.tagList().get(0) : {}", dto.tagList().get(0));
     try {
 
-      tagMessageHandler.handle(dto);
+      List<TagDto> tagList = tagMessageHandler.handle(dto);
 
-      kafkaTemplate.send(tagTopicName, record.value());
-      log.info("Kafka 메시지 전송 완료: dto={}", record.value());
+      NewsTagDto newsTagDto = new NewsTagDto(String.valueOf(dto.newsId()), tagList);
+      String sendMessage = objectMapper.writeValueAsString(newsTagDto);
+      kafkaTemplate.send(tagTopicName, sendMessage);
+
+      log.info("Kafka 메시지 전송 완료: dto={}", sendMessage);
 
       ack.acknowledge();
 

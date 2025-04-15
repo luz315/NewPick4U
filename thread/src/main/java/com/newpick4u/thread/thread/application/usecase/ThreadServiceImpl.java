@@ -67,7 +67,7 @@ public class ThreadServiceImpl implements ThreadService {
   /**
    * 댓글 도메인에서 쓰레드 댓글들 가져와서 ai 에게 여론분석 해달라
    */
-  @Scheduled(cron = "0 5 * * * *") // 매 시 5분
+  @Scheduled(fixedDelay = 5 * 60 * 1000)
   @Transactional
   public void createSummaryFromAi() {
     Set<String> openThreadIds = getOpenThreadIdsFromRedis();
@@ -107,7 +107,7 @@ public class ThreadServiceImpl implements ThreadService {
   /**
    * 레디스로 핫태그 받아서 쓰레드 생성
    */
-  @Scheduled(cron = "0 0 * * * *")
+  @Scheduled(fixedDelay = 5 * 60 * 1000)
   @Transactional
   public void saveThread() {
     Set<String> hotTags = getHotTagsFromRedis();
