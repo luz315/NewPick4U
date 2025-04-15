@@ -16,6 +16,7 @@ import com.newpick4u.news.news.domain.entity.TagInbox;
 import com.newpick4u.news.news.domain.model.Pagination;
 import com.newpick4u.news.news.domain.repository.NewsRepository;
 import com.newpick4u.news.news.domain.repository.TagInboxRepository;
+import com.newpick4u.news.news.infrastructure.redis.UserTagRedisOperator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

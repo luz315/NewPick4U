@@ -1,12 +1,10 @@
 package com.newpick4u.news.news.infrastructure.util;
 
 import com.newpick4u.news.news.domain.entity.News;
-import com.newpick4u.news.news.domain.entity.UserTagLog;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
