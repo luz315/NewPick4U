@@ -36,6 +36,7 @@ public class JwtAuthenticationFilter implements WebFilter {
     log.info("[JwtAuthenticationFilter]{}", accessToken);
 
     if (tokenProvider.validAccessToken(accessToken)) {
+      accessToken = accessToken.substring(7);
       String userId = tokenProvider.getUserId(accessToken);
       String userRole = tokenProvider.getUserRole(accessToken);
       ServerHttpRequest modifiedRequest = createCustomRequest(exchange, userId, userRole);
