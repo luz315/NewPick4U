@@ -36,12 +36,12 @@ public class TagConsumer {
   public void consume(ConsumerRecord<String, String> record, Acknowledgment ack)
       throws JsonProcessingException {
     AiNewsDto dto = objectMapper.readValue(record.value(), AiNewsDto.class);
-    log.info("dto.tagList().get(0) : {}", dto.tagList().get(0));
+    log.info("dto.tagList().get(0) : {}", dto.tags().get(0));
     try {
 
       List<TagDto> tagList = tagMessageHandler.handle(dto);
 
-      NewsTagDto newsTagDto = new NewsTagDto(String.valueOf(dto.newsId()), tagList);
+      NewsTagDto newsTagDto = new NewsTagDto(String.valueOf(dto.aiNewsId()), tagList);
       String sendMessage = objectMapper.writeValueAsString(newsTagDto);
       kafkaTemplate.send(tagTopicName, sendMessage);
 

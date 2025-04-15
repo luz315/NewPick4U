@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.UUID;
 
 public record AiNewsDto(
-    UUID newsId,
-    List<String> tagList
+    UUID aiNewsId,
+    List<String> tags
 ) {
 
 }

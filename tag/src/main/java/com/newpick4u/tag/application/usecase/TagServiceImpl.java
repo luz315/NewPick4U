@@ -49,7 +49,7 @@ public class TagServiceImpl implements TagService {
   public List<TagDto> createTagFromAi(AiNewsDto dto) {
     List<TagDto> tagList = new ArrayList<>();
 
-    dto.tagList().forEach(tagName -> {
+    dto.tags().forEach(tagName -> {
       Optional<Tag> tag = tagRepository.findByTagName(tagName); // 존재하는 태그는 score +1 처리
       if (tag.isPresent()) {
         Tag existingTag = tag.get();
@@ -72,7 +72,7 @@ public class TagServiceImpl implements TagService {
   @Override
   @Transactional
   public void deleteTagFromAi(AiNewsDto dto) {
-    dto.tagList().forEach(tagName -> {
+    dto.tags().forEach(tagName -> {
       Tag tag = tagRepository.findByTagName(tagName)
           .orElseThrow(() -> new IllegalArgumentException("해당 태그가 존재하지 않습니다."));
 
