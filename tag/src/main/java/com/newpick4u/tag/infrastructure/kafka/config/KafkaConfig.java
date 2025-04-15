@@ -1,5 +1,6 @@
 package com.newpick4u.tag.infrastructure.kafka.config;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -71,7 +72,8 @@ public class KafkaConfig {
     DefaultErrorHandler handler = new DefaultErrorHandler(recoverer,
         backOff); // 카프카 메세지 처리 중 예외 발생 시 처리 담당
 
-    handler.addNotRetryableExceptions(IllegalArgumentException.class); // 즉시 DLQ로 보낼 예외
+    handler.addNotRetryableExceptions(IllegalArgumentException.class,
+        JsonProcessingException.class); // 즉시 DLQ로 보낼 예외
 
     handler.setRetryListeners((record, ex, deliveryAttempt) -> {
       log.warn("Retry #{} for record with key: {} due to {}", deliveryAttempt, record.key(),
