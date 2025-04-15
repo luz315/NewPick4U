@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -50,5 +51,14 @@ public class NewsAPIController {
             @CurrentUserInfo @Parameter(hidden = true) CurrentUserInfoDto userInfoDto
     ) {
         return ResponseEntity.ok(newsService.searchNewsList(request, userInfoDto));
+    }
+
+    @GetMapping("/recommend")
+    @Operation(summary = "추천 뉴스 리스트 조회", description = "10개의 추천 뉴스를 조회합니다.")
+    @ApiResponse(responseCode = "200", description = "뉴스 추천 리스트 조회 성공")
+    public List<NewsSummaryDto> recommend(
+            @CurrentUserInfo @Parameter(hidden = true) CurrentUserInfoDto currentUser
+    ) {
+        return newsService.recommendTop10(currentUser);
     }
 }
