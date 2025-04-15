@@ -5,11 +5,11 @@ import java.util.UUID;
 
 public record ThreadDetailResponseDto(
     UUID threadId,
-    UUID newsId,
+    String tagName,
     String summary
 ) {
 
   public static ThreadDetailResponseDto from(Thread thread) {
-    return new ThreadDetailResponseDto(thread.getId(), thread.getNewsId(), thread.getSummary());
+    return new ThreadDetailResponseDto(thread.getId(), thread.getTagName(), thread.getSummary());
   }
 }
