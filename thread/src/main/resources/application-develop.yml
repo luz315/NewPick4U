@@ -23,9 +23,9 @@ spring:
 
   data:
     redis:
-      host: localhost
-      port: 6379
-      password: root
+      host: ${DEVELOP_REDIS_HOST}
+      port: ${DEVELOP_REDIS_PORT}
+      password: ${DEVELOP_REDIS_PASSWORD}
 
 gemini:
   url: ${GEMINI_URL}
