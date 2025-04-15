@@ -42,12 +42,12 @@ class AdvertisementServiceImplTest {
     // given
     CreateAdvertiseRequestDto request = new CreateAdvertiseRequestDto(
         UUID.randomUUID(), UUID.randomUUID(), "스파르타 코딩클럽 모집", "스파르타1111",
-        AdvertisementType.BANNER, "www.ddd.ttt", 50000000L, 30); // 최대 지급 횟수 30 설정
+        AdvertisementType.BANNER, "www.ddd.ttt", 50000000L, 30, 500); // 최대 지급 횟수 30 설정
 
     Advertisement advertisement = Advertisement.create(request.clientId(), request.newsId(),
         request.title(),
         request.content(), request.type(), request.url(), request.budget(),
-        request.maxPointGrantCount());
+        request.maxPointGrantCount(), request.point());
 
     ReflectionTestUtils.setField(advertisement, "advertisementId", UUID.randomUUID());
     ReflectionTestUtils.setField(advertisement, "maxPointGrantCount",
@@ -74,7 +74,7 @@ class AdvertisementServiceImplTest {
     // given
     CreateAdvertiseRequestDto request = new CreateAdvertiseRequestDto(
         UUID.randomUUID(), UUID.randomUUID(), "스파르타 코딩클럽 모집", "스파르타1111",
-        AdvertisementType.BANNER, "www.ddd.ttt", 50000000L, 30); // 최대 지급 횟수 30 설정
+        AdvertisementType.BANNER, "www.ddd.ttt", 50000000L, 30, 500); // 최대 지급 횟수 30 설정
 
     when(newsClient.getNews(request.newsId())).thenThrow(
         AdvertisementException.NewsNotFoundException.class);
@@ -91,7 +91,7 @@ class AdvertisementServiceImplTest {
     // given
     CreateAdvertiseRequestDto request = new CreateAdvertiseRequestDto(
         UUID.randomUUID(), UUID.randomUUID(), "스파르타 코딩클럽 모집", "스파르타1111",
-        AdvertisementType.BANNER, "www.ddd.ttt", 50000000L, 30); // 최대 지급 횟수 30 설정
+        AdvertisementType.BANNER, "www.ddd.ttt", 50000000L, 30, 500); // 최대 지급 횟수 30 설정
 
     GetNewsResponseDto getNewsResponseDto = new GetNewsResponseDto(request.newsId());
     ResponseEntity<ApiResponse<GetNewsResponseDto>> getNewsResponseEntity = new ResponseEntity<>(

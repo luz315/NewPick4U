@@ -47,10 +47,12 @@ public class Advertisement extends BaseEntity {
   private boolean isPointGrantFinished;
   @Column(nullable = false)
   private Integer maxPointGrantCount;
+  @Column(nullable = false)
+  private Integer point;
 
   @Builder
   private Advertisement(UUID clientId, UUID newsId, String title, String content,
-      AdvertisementType type, String url, Long budget, Integer maxPointGrantCount) {
+      AdvertisementType type, String url, Long budget, Integer maxPointGrantCount, Integer point) {
     this.clientId = clientId;
     this.newsId = newsId;
     this.title = title;
@@ -61,11 +63,12 @@ public class Advertisement extends BaseEntity {
     this.maxPointGrantCount = maxPointGrantCount;
     this.pointGrantCount = 0;
     this.isPointGrantFinished = false;
+    this.point = point;
   }
 
 
   public static Advertisement create(UUID clientId, UUID newsId, String title, String content,
-      AdvertisementType type, String url, Long budget, Integer maxPointGrantCount) {
+      AdvertisementType type, String url, Long budget, Integer maxPointGrantCount, Integer point) {
     return Advertisement.builder()
         .clientId(clientId)
         .newsId(newsId)
@@ -75,6 +78,7 @@ public class Advertisement extends BaseEntity {
         .url(url)
         .budget(budget)
         .maxPointGrantCount(maxPointGrantCount)
+        .point(point)
         .build();
   }
 
