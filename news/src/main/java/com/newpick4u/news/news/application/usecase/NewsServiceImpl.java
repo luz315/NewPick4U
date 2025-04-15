@@ -32,8 +32,9 @@ public class NewsServiceImpl implements NewsService {
     private final NewsRepository newsRepository;
     private final TagInboxRepository tagInboxRepository;
     private final ObjectMapper objectMapper;
+    private final UserTagRedisOperator userTagRedisOperator;
 
-
+    @Override
     @Transactional
       public void saveNewsInfo(NewsInfoDto dto) {
         simulateFailures(dto.aiNewsId()); // 테스트 조건 시뮬레이션
@@ -44,7 +45,7 @@ public class NewsServiceImpl implements NewsService {
           News news = News.create(dto.aiNewsId(), dto.title(), dto.content(), dto.url(), dto.publishedDate(), 0L);
           newsRepository.save(news);
       }
-
+    @Override
     @Transactional
     public void updateNewsTagList(NewsTagDto dto) {
         simulateFailures(dto.aiNewsId()); // 테스트 조건 시뮬레이션
@@ -85,14 +86,23 @@ public class NewsServiceImpl implements NewsService {
         }
     }
 
+    @Override
     @Transactional(readOnly = true)
     public NewsResponseDto getNews(UUID id, CurrentUserInfoDto userInfoDto) {
         boolean isMaster = userInfoDto.role() == UserRole.ROLE_MASTER;
         News news = newsRepository.findNewsByRole(id, isMaster)
                 .orElseThrow(() -> new IllegalArgumentException("뉴스를 찾을 수 없습니다."));
+
+        List<String> tags = news.getNewsTagList().stream()
+                .map(NewsTag::getName)
+                .toList();
+
+        userTagRedisOperator.incrementUserTags(userInfoDto.userId(), tags);
+
         return NewsResponseDto.from(news);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public PageResponse<NewsSummaryDto> searchNewsList(NewsSearchCriteria request, CurrentUserInfoDto userInfoDto) {
         boolean isMaster = userInfoDto.role() == UserRole.ROLE_MASTER;
@@ -119,5 +129,26 @@ public class NewsServiceImpl implements NewsService {
         if ("fail-me".equals(aiNewsId)) {
             throw new RuntimeException("무조건 실패 유도");
         }
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<NewsSummaryDto> recommendTop10(CurrentUserInfoDto userInfo) {
+        Long userId = userInfo.userId();
+
+        // 1. Redis 캐시 먼저 조회
+        List<String> cachedNewsIds = userTagRedisOperator.getCachedRecommendedNews(userId);
+        if (cachedNewsIds != null && !cachedNewsIds.isEmpty()) {
+            List<UUID> ids = cachedNewsIds.stream().map(UUID::fromString).toList();
+            List<News> newsList = newsRepository.findByIds(ids);
+            return newsList.stream().map(NewsSummaryDto::from).toList();
+        }
+
+        // 2. 캐시 없으면 최신 뉴스 fallback
+        List<News> fallbackNews = newsRepository.findLatestNews(10);
+        return fallbackNews.stream()
+                .map(NewsSummaryDto::from)
+                .toList();
     }
 }

@@ -9,6 +9,7 @@ import com.newpick4u.news.news.application.dto.response.NewsSummaryDto;
 import com.newpick4u.news.news.application.dto.response.PageResponse;
 import com.newpick4u.news.news.domain.critria.NewsSearchCriteria;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface NewsService {
@@ -16,4 +17,5 @@ public interface NewsService {
     void updateNewsTagList(NewsTagDto dto);
     NewsResponseDto getNews(UUID id, CurrentUserInfoDto userInfo);
     PageResponse<NewsSummaryDto> searchNewsList(NewsSearchCriteria request, CurrentUserInfoDto userInfoDto);
+    List<NewsSummaryDto> recommendTop10(CurrentUserInfoDto user);
 }
