@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
 
 @Configuration
 public class FeignClientConfig {
@@ -24,6 +25,11 @@ public class FeignClientConfig {
   Retryer.Default retryOptions() {
     // 0.1초의 간격으로 시작해 최대 3초의 간격으로 점점 증가하며, 최대 3회 재시도한다.
     return new Retryer.Default(100L, TimeUnit.SECONDS.toMillis(3L), 2);
+  }
+
+  @Bean
+  public RestTemplate restTemplate() {
+    return new RestTemplate();
   }
 
 }

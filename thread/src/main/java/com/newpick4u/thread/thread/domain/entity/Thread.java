@@ -1,8 +1,13 @@
 package com.newpick4u.thread.thread.domain.entity;
 
+import static com.newpick4u.thread.thread.domain.entity.ThreadStatus.CLOSED;
+import static com.newpick4u.thread.thread.domain.entity.ThreadStatus.OPEN;
+
 import com.newpick4u.common.domain.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -22,17 +27,36 @@ public class Thread extends BaseEntity {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  @Column(name = "news_id")
-  private UUID newsId;
+  @Column(name = "tag_name", unique = true, nullable = false)
+  private String tagName;
 
+  @Column(columnDefinition = "TEXT")
   private String summary;
 
-  public static Thread create(UUID newsId, String summary) {
-    return new Thread(newsId, summary);
+  private Long score;
+
+  @Enumerated(EnumType.STRING)
+  private ThreadStatus status;
+
+  public static Thread create(String tagName) {
+    return new Thread(tagName);
   }
 
-  private Thread(UUID newsId, String summary) {
-    this.newsId = newsId;
+  private Thread(String tagName) {
+    this.tagName = tagName;
+    this.score = 1L;
+    this.status = OPEN;
+  }
+
+  public void closedThread() {
+    this.status = CLOSED;
+  }
+
+  public void plusScore() {
+    this.score++;
+  }
+
+  public void addSummary(String summary) {
     this.summary = summary;
   }
 }
