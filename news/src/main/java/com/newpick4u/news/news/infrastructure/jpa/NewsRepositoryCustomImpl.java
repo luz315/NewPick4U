@@ -1,6 +1,6 @@
 package com.newpick4u.news.news.infrastructure.jpa;
 
-import com.newpick4u.news.news.domain.critria.NewsSearchCriteria;
+import com.newpick4u.news.news.application.dto.NewsSearchCriteria;
 import com.newpick4u.news.news.domain.entity.News;
 import com.newpick4u.news.news.domain.entity.NewsStatus;
 import com.newpick4u.news.news.domain.entity.QNews;

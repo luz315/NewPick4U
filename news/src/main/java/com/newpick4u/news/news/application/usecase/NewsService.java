@@ -1,13 +1,12 @@
 package com.newpick4u.news.news.application.usecase;
 
-import com.newpick4u.common.resolver.annotation.CurrentUserInfo;
 import com.newpick4u.common.resolver.dto.CurrentUserInfoDto;
 import com.newpick4u.news.news.application.dto.NewsInfoDto;
 import com.newpick4u.news.news.application.dto.NewsTagDto;
 import com.newpick4u.news.news.application.dto.response.NewsResponseDto;
 import com.newpick4u.news.news.application.dto.response.NewsSummaryDto;
 import com.newpick4u.news.news.application.dto.response.PageResponse;
-import com.newpick4u.news.news.domain.critria.NewsSearchCriteria;
+import com.newpick4u.news.news.application.dto.NewsSearchCriteria;
 
 import java.util.List;
 import java.util.UUID;

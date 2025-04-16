@@ -9,7 +9,7 @@ import com.newpick4u.news.news.application.dto.NewsTagDto;
 import com.newpick4u.news.news.application.dto.response.NewsResponseDto;
 import com.newpick4u.news.news.application.dto.response.NewsSummaryDto;
 import com.newpick4u.news.news.application.dto.response.PageResponse;
-import com.newpick4u.news.news.domain.critria.NewsSearchCriteria;
+import com.newpick4u.news.news.application.dto.NewsSearchCriteria;
 import com.newpick4u.news.news.domain.entity.News;
 import com.newpick4u.news.news.domain.entity.NewsTag;
 import com.newpick4u.news.news.domain.entity.TagInbox;
