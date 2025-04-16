@@ -1,6 +1,6 @@
 package com.newpick4u.news.news.infrastructure.jpa;
 
-import com.newpick4u.news.news.domain.critria.NewsSearchCriteria;
+import com.newpick4u.news.news.application.dto.NewsSearchCriteria;
 import com.newpick4u.news.news.domain.entity.News;
 import com.newpick4u.news.news.domain.entity.NewsStatus;
 import com.newpick4u.news.news.domain.entity.QNews;
@@ -22,8 +22,9 @@ import java.util.UUID;
 public class NewsRepositoryCustomImpl implements NewsRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
-    static QNews news;
-    static QNewsTag newsTag;
+    static final QNews news = QNews.news;
+    static final QNewsTag newsTag = QNewsTag.newsTag;
+
 
     // 복수조회
     @Override
@@ -120,9 +121,6 @@ public class NewsRepositoryCustomImpl implements NewsRepositoryCustom {
     // 테스트용 메서드
     @Override
     public Optional<News> findWithTagsByAiNewsId(String aiNewsId) {
-        QNews news = QNews.news;
-        QNewsTag newsTag = QNewsTag.newsTag;
-
         return Optional.ofNullable(
                 queryFactory
                         .selectFrom(news)
@@ -131,4 +129,49 @@ public class NewsRepositoryCustomImpl implements NewsRepositoryCustom {
                         .fetchOne()
         );
     }
+
+    //추천알고리즘
+    @Override
+    public List<News> findAllActive() {
+        return queryFactory
+                .selectFrom(news)
+                .leftJoin(news.newsTagList, newsTag).fetchJoin()
+                .where(news.status.eq(NewsStatus.ACTIVE))
+                .distinct()
+                .fetch();
+    }
+
+    @Override
+    public List<News> findLatestNews(int limit) {
+        return queryFactory
+                .selectFrom(news)
+                .leftJoin(news.newsTagList, newsTag).fetchJoin()
+                .where(news.status.eq(NewsStatus.ACTIVE))
+                .orderBy(news.createdAt.desc())
+                .limit(limit)
+                .fetch();
+    }
+
+    @Override
+    public List<News> findByIds(List<UUID> ids) {
+        return queryFactory
+                .selectFrom(news)
+                .leftJoin(news.newsTagList, newsTag).fetchJoin()
+                .where(news.id.in(ids))
+                .distinct()
+                .fetch();
+    }
+
+    // 테스트용
+    @Override
+    public Optional<News> findWithTagsById(UUID id) {
+        return Optional.ofNullable(
+                queryFactory
+                        .selectFrom(news)
+                        .leftJoin(news.newsTagList, newsTag).fetchJoin()
+                        .where(news.id.eq(id))
+                        .fetchOne()
+        );
+    }
+
 }

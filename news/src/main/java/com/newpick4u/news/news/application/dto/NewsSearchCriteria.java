@@ -1,4 +1,4 @@
-package com.newpick4u.news.news.domain.critria;
+package com.newpick4u.news.news.application.dto;
 
 public record NewsSearchCriteria(
         String keyword,

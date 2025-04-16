@@ -7,7 +7,6 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-
   kafka:
     image: wurstmeister/kafka:latest
     platform: linux/amd64
@@ -21,7 +20,6 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     platform: linux/amd64

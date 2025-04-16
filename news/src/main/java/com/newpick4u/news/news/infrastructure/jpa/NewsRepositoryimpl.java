@@ -1,6 +1,6 @@
 package com.newpick4u.news.news.infrastructure.jpa;
 
-import com.newpick4u.news.news.domain.critria.NewsSearchCriteria;
+import com.newpick4u.news.news.application.dto.NewsSearchCriteria;
 import com.newpick4u.news.news.domain.entity.News;
 import com.newpick4u.news.news.domain.model.Pagination;
 import com.newpick4u.news.news.domain.repository.NewsRepository;
@@ -8,6 +8,7 @@ import com.newpick4u.news.news.domain.repository.NewsRepositoryCustom;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -52,4 +53,36 @@ public class NewsRepositoryimpl implements NewsRepository {
     public void flush() {
         newsJpaRepository.flush();
     }
+
+    @Override
+    public List<News> findAllActive() {
+        return newsRepositoryCustom.findAllActive();
+    }
+
+    @Override
+    public List<News> findLatestNews(int limit) {
+        return newsRepositoryCustom.findLatestNews(limit);
+    }
+
+    @Override
+    public List<News> findByIds(List<UUID> ids)  {
+        return newsRepositoryCustom.findByIds(ids);
+    }
+
+    @Override
+    public List<News> saveAll(List<News> newsList) {
+        return newsJpaRepository.saveAll(newsList);
+    }
+
+    @Override
+    public void deleteAll() {
+        newsJpaRepository.deleteAll();
+    }
+
+    @Override
+    public Optional<News> findById(UUID id) {
+        return newsJpaRepository.findById(id);
+    }
+
+
 }

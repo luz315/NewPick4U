@@ -1,6 +1,11 @@
 package com.newpick4u.news.news.domain.entity;
 
 import com.newpick4u.common.domain.BaseEntity;
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.BatchSize;
+
+import java.util.ArrayList;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -39,8 +44,8 @@ public class News extends BaseEntity {
   @Column(nullable = false, columnDefinition = "TEXT")
   private String content;
 
-  @Column(nullable = false)
-  private String url;
+    @Column(nullable = false,  columnDefinition = "TEXT")
+    private String url;
 
   @Column(nullable = false)
   private String publishedDate;
@@ -52,9 +57,9 @@ public class News extends BaseEntity {
   @Column
   private Long view;
 
-  @OneToMany(mappedBy = "news", cascade = CascadeType.ALL, orphanRemoval = true)
-  @BatchSize(size = 10)
-  private List<NewsTag> newsTagList;
+    @OneToMany(mappedBy = "news", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 10)
+    private List<NewsTag> newsTagList = new ArrayList<>(); ;
 
   @Builder(access = AccessLevel.PRIVATE)
   private News(String aiNewsId, String title, String content, String url, String publishedDate,
