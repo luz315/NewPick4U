@@ -39,11 +39,11 @@ spring:
         - id: comment-service
           uri: lb://comment-service
           predicates:
-            - Path=/api/v1/comment/**,/internal/v1/comment/**
+            - Path=/api/v1/comments/**,/internal/v1/comments/**
         - id: news-service
           uri: lb://news-service
           predicates:
-            - Path=/api/v1/news/**
+            - Path=/api/v1/news/**,/internal/v1/news/**
   datasource:
     url: ${DEVELOP_DB_URL}
     username: ${DEVELOP_DB_USERNAME}

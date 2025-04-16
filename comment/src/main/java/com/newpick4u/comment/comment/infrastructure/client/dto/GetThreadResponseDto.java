@@ -1,12 +1,17 @@
 package com.newpick4u.comment.comment.infrastructure.client.dto;
 
-import java.util.UUID;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record GetThreadResponseDto(
-    UUID id
+    Boolean isExist
 ) {
 
-  public boolean isExist() {
-    return id != null;
+  public Boolean isExist() {
+    if (isExist == null) {
+      return false;
+    }
+    
+    return isExist;
   }
 }

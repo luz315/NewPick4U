@@ -10,7 +10,7 @@ eureka:
   client:
     register-with-eureka: true
     fetch-registry: true
-    
+
 spring:
   config:
     import:
@@ -22,7 +22,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     show-sql: true
     open-in-view: false
     defer-datasource-initialization: true # hibernate가 초기화되기 전 data.sql 실행하는 것을 방지

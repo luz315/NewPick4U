@@ -1,5 +1,6 @@
 package com.newpick4u.thread.thread.application.usecase;
 
+import com.newpick4u.common.response.ApiResponse;
 import com.newpick4u.thread.thread.application.dto.ThreadResponseDto;
 import com.newpick4u.thread.thread.application.exception.ThreadException.NotFoundException;
 import com.newpick4u.thread.thread.domain.entity.Thread;
@@ -25,6 +26,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,15 +37,18 @@ import org.springframework.util.CollectionUtils;
 @Slf4j
 public class ThreadServiceImpl implements ThreadService {
 
+  private static final String OPEN_THREAD_KEY = "thread:open:id";
+  private static final String HOT_TAG_KEY = "tag_count";
+  private static final int MAX_THREADS = 5;
+  private static final int MIN_HOT_TAG_COUNT = 30;
   private final ThreadRepository threadRepository;
   private final CommentClient commentClient;
   private final AiClient aiClient;
   private final RedisTemplate<String, String> redisTemplate;
 
-  private static final String OPEN_THREAD_KEY = "thread:open:id";
-  private static final String HOT_TAG_KEY = "tag_count";
-  private static final int MAX_THREADS = 5;
-  private static final int MIN_HOT_TAG_COUNT = 30;
+  private static int getThreadsToCreate(List<Thread> openThreads) {
+    return MAX_THREADS - openThreads.size();
+  }
 
   @Override
   @Transactional(readOnly = true)
@@ -80,9 +85,13 @@ public class ThreadServiceImpl implements ThreadService {
     for (String threadId : openThreadIds) {
       try {
         // 쓰레드에 달린 댓글들 가져오기
-        CommentResponse comments = commentClient.getAllByThreadId(UUID.fromString(threadId));
+        ResponseEntity<ApiResponse<CommentResponse>> resposeEntity = commentClient.getAllByThreadId(
+            UUID.fromString(threadId));
+        ApiResponse<CommentResponse> body = resposeEntity.getBody();
+        CommentResponse comments = body.data();
         if (CollectionUtils.isEmpty(comments.commentList())) {
-          throw new IllegalArgumentException("댓글이 없습니다.");
+          log.info("분석할 댓글 없음 [threadId={}]", threadId);
+          continue;
         }
 
         // ai에게 요약
@@ -94,6 +103,7 @@ public class ThreadServiceImpl implements ThreadService {
         thread.addSummary(summary);
 
       } catch (Exception e) {
+        log.error("", e);
         throw new IllegalArgumentException("여론 분석 실패");
       }
     }
@@ -132,10 +142,6 @@ public class ThreadServiceImpl implements ThreadService {
     if (!openThreads.isEmpty()) {
       cacheOpenThreadsToRedis(openThreads);
     }
-  }
-
-  private static int getThreadsToCreate(List<Thread> openThreads) {
-    return MAX_THREADS - openThreads.size();
   }
 
   private void cacheOpenThreadsToRedis(List<Thread> openThreads) {

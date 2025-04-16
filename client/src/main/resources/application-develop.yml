@@ -22,11 +22,11 @@ spring:
       auto-offset-reset: earliest
       enable-auto-commit: false
       groups:
-        point-request: advertisement-point-request-1
-        point-request-dlq: advertisement-point-request-dlq-1
+        point-request: point-request-1
+        point-request-dlq: point-request-dlq-1
       topics:
-        point-request: advertisement-point-request.fct.v1
-        point-request-dlq: advertisement-point-request-dlq.fct.v1
+        point-request: point-request.fct.v1
+        point-request-dlq: point-request-dlq.fct.v1
         point-update: user-point-update.fct.v1
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -39,7 +39,7 @@ spring:
       ack-mode: manual_immediate
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     show-sql: true
     open-in-view: false
     defer-datasource-initialization: true # hibernate가 초기화되기 전 data.sql 실행하는 것을 방지
