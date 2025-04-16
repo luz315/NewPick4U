@@ -16,7 +16,6 @@ import com.newpick4u.news.news.domain.entity.TagInbox;
 import com.newpick4u.news.news.domain.model.Pagination;
 import com.newpick4u.news.news.domain.repository.NewsRepository;
 import com.newpick4u.news.news.domain.repository.TagInboxRepository;
-import com.newpick4u.news.news.infrastructure.redis.UserTagRedisOperator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,7 +32,7 @@ public class NewsServiceImpl implements NewsService {
     private final NewsRepository newsRepository;
     private final TagInboxRepository tagInboxRepository;
     private final ObjectMapper objectMapper;
-    private final UserTagRedisOperator userTagRedisOperator;
+    private final TagLogRedisProvider tagLogRedisProvider;
 
     @Override
     @Transactional
@@ -98,7 +97,7 @@ public class NewsServiceImpl implements NewsService {
                 .map(NewsTag::getName)
                 .toList();
 
-        userTagRedisOperator.incrementUserTags(userInfoDto.userId(), tags);
+        tagLogRedisProvider.incrementUserTags(userInfoDto.userId(), tags);
 
         return NewsResponseDto.from(news);
     }
@@ -139,7 +138,7 @@ public class NewsServiceImpl implements NewsService {
         Long userId = userInfo.userId();
 
         // 1. Redis 캐시 먼저 조회
-        List<String> cachedNewsIds = userTagRedisOperator.getCachedRecommendedNews(userId);
+        List<String> cachedNewsIds = tagLogRedisProvider.getCachedRecommendedNews(userId);
         if (cachedNewsIds != null && !cachedNewsIds.isEmpty()) {
             List<UUID> ids = cachedNewsIds.stream().map(UUID::fromString).toList();
             List<News> newsList = newsRepository.findByIds(ids);

@@ -1,5 +1,6 @@
 package com.newpick4u.news.news.infrastructure.redis;
 
+import com.newpick4u.news.news.application.usecase.TagLogRedisProvider;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -12,11 +13,10 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class UserTagRedisOperator {
+public class TagLogRedisOperator implements TagLogRedisProvider {
 
     private final RedisTemplate<String, String> redisTemplate;
     private final RedissonClient redissonClient;
@@ -28,6 +28,7 @@ public class UserTagRedisOperator {
     private static final String TAG_KEY_PATTERN = "user:*:tags";
 
     // 태그 카운트 증가 (태그 기록 + 제한 개수 초과 시 삭제 + TTL 설정 (원자적 처리))
+    @Override
     public void incrementUserTags(Long userId, List<String> tagNames) {
         String key = buildKey(userId);
         String lockKey = LOCK_PREFIX + userId;
@@ -55,6 +56,7 @@ public class UserTagRedisOperator {
     }
 
     // 유저 태그 점수 맵 가져오기
+    @Override
     public Map<String, Double> getUserTagScoreMap(Long userId) {
         String key = buildKey(userId);
         Set<ZSetOperations.TypedTuple<String>> rawTags =
@@ -72,6 +74,7 @@ public class UserTagRedisOperator {
     }
 
     // 추천 뉴스 캐시 저장
+    @Override
     public void cacheRecommendedNews(Long userId, List<String> newsIds) {
         String realKey = recommendKey(userId);
         String tempKey = realKey + ":tmp";
@@ -85,12 +88,14 @@ public class UserTagRedisOperator {
     }
 
     // 추천 뉴스 캐시 조회
+    @Override
     public List<String> getCachedRecommendedNews(Long userId) {
         String key = recommendKey(userId);
         return redisTemplate.opsForList().range(key, 0, -1);
     }
 
     // 추천 캐시용 사용자 ID 목록 조회 (SCAN 기반)
+    @Override
     public Set<Long> getAllUserIds() {
         Set<Long> userIds = new HashSet<>();
         ScanOptions scanOptions = ScanOptions.scanOptions().match(TAG_KEY_PATTERN).count(1000).build();
@@ -117,7 +122,6 @@ public class UserTagRedisOperator {
 
 
     // 내부메서드
-
 
     // 태그 개수 제한 초과 시 오래된 태그 제거
     private void trimTagLimit(String key) {
