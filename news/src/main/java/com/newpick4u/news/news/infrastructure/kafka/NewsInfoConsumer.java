@@ -13,22 +13,23 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class NewsInfoConsumer {
-    private final NewsService newsService;
 
-    @KafkaListener(
-            topics = "news-info.fct.v1",
-            groupId = "news-info-consumer",
-            containerFactory = "newsInfoListenerContainerFactory"
-    )
-    public void consume(ConsumerRecord<String, NewsInfoDto> record, Acknowledgment ack) {
-        try {
-            log.info("Consumed Kafka Message: {}", record.value());
-            newsService.saveNewsInfo(record.value());
-            ack.acknowledge();
-        } catch (Exception e) {
+  private final NewsService newsService;
+
+  @KafkaListener(
+      topics = "news-info.fct.v1",
+      groupId = "news-info-consumer",
+      containerFactory = "newsInfoListenerContainerFactory"
+  )
+  public void consume(ConsumerRecord<String, NewsInfoDto> record, Acknowledgment ack) {
+    try {
+      log.info("Consumed Kafka Message: {}", record.value());
+      newsService.saveNewsInfo(record.value());
+      ack.acknowledge();
+    } catch (Exception e) {
 //            ack.nack(Duration.ofSeconds(3));
-            log.error("[Kafka] 뉴스 저장 실패 - 메시지: {}", record.value(), e);
-            throw e; // 이걸 넣자!
-        }
+      log.error("[Kafka] 뉴스 저장 실패 - 메시지: {}", record.value(), e);
+      throw e; // 이걸 넣자!
     }
+  }
 }

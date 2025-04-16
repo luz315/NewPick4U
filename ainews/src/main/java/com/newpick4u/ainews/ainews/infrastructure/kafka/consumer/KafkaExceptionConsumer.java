@@ -35,17 +35,19 @@ public class KafkaExceptionConsumer {
       groupId = "${app.kafka.consumer.exception.topic.originnews-info-dlq.group-id}",
       containerFactory = "exceptionKafkaListenerContainerFactory"
   )
-  public void listenOriginNewsDLQ(ConsumerRecord<String, String> record, Acknowledgment ack) {
+  public void listenOriginNewsDLQ(ConsumerRecord<String, String> record
+      // , Acknowledgment ack
+  ) {
     String message = null;
     try {
       message = record.value();
       aiNewsService.processAiNews(message);
 
       // 수동 커밋 모드에서만 실행
-      if (EXCEPTION_ACKMODE_IMMEDIATE
-          && !EXCEPTION_ENABLE_AUTO_COMMIT) {
-        ack.acknowledge();
-      }
+//      if (EXCEPTION_ACKMODE_IMMEDIATE
+//          && !EXCEPTION_ENABLE_AUTO_COMMIT) {
+//        ack.acknowledge();
+//      }
     } catch (Exception e) {
       log.error("OriginNewsDLQ Consume Fail : -> Retry {}", message, e);
     }

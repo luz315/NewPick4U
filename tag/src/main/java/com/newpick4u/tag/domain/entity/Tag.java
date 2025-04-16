@@ -21,7 +21,7 @@ public class Tag extends BaseEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  @Column(name = "tag_id", columnDefinition = "CHAR(36)")
+  @Column(name = "tag_id")
   private UUID id;
 
   @Column(nullable = false, unique = true)

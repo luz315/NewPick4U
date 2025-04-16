@@ -1,7 +1,17 @@
 server:
-  port: 10001
-
+  port: 8080
+eureka:
+  instance:
+    hostname: ${DEVELOP_EUREKA_HOSTNAME}
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+    appname: ${spring.application.name}
+  client:
+    register-with-eureka: true
+    fetch-registry: true
 spring:
+  application:
+    name: gateway-service
   config:
     import:
       - file:.env.gateway[.properties]
@@ -29,11 +39,11 @@ spring:
         - id: comment-service
           uri: lb://comment-service
           predicates:
-            - Path=/api/v1/comment/**,/internal/v1/comment/**
+            - Path=/api/v1/comments/**,/internal/v1/comments/**
         - id: news-service
           uri: lb://news-service
           predicates:
-            - Path=/api/v1/news/**
+            - Path=/api/v1/news/**,/internal/v1/news/**
   datasource:
     url: ${DEVELOP_DB_URL}
     username: ${DEVELOP_DB_USERNAME}

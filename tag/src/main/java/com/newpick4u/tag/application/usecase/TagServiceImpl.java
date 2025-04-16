@@ -3,10 +3,13 @@ package com.newpick4u.tag.application.usecase;
 import com.newpick4u.common.exception.CustomException;
 import com.newpick4u.common.exception.type.ApiErrorCode;
 import com.newpick4u.tag.application.dto.AiNewsDto;
+import com.newpick4u.tag.application.dto.NewsTagDto.TagDto;
 import com.newpick4u.tag.application.dto.UpdateTagRequestDto;
 import com.newpick4u.tag.domain.criteria.SearchTagCriteria;
 import com.newpick4u.tag.domain.entity.Tag;
 import com.newpick4u.tag.domain.repository.TagRepository;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -43,26 +46,33 @@ public class TagServiceImpl implements TagService {
 
   @Override
   @Transactional
-  public void createTagFromAi(AiNewsDto dto) {
-    dto.tagList().forEach(tagName -> {
+  public List<TagDto> createTagFromAi(AiNewsDto dto) {
+    List<TagDto> tagList = new ArrayList<>();
+
+    dto.tags().forEach(tagName -> {
       Optional<Tag> tag = tagRepository.findByTagName(tagName); // 존재하는 태그는 score +1 처리
       if (tag.isPresent()) {
         Tag existingTag = tag.get();
         existingTag.increaseScore();
+        TagDto tagDto = new TagDto(existingTag.getId(), tagName);
+        tagList.add(tagDto);
         return;
       }
 
       // 존재하지 않는 태그의 경우는 새로 생성해서 db에 저장
       Tag newTag = Tag.create(tagName);
-      tagRepository.save(newTag);
-
+      Tag savedTag = tagRepository.save(newTag);
+      TagDto tagDto = new TagDto(savedTag.getId(), tagName);
+      tagList.add(tagDto);
     });
+
+    return tagList;
   }
 
   @Override
   @Transactional
   public void deleteTagFromAi(AiNewsDto dto) {
-    dto.tagList().forEach(tagName -> {
+    dto.tags().forEach(tagName -> {
       Tag tag = tagRepository.findByTagName(tagName)
           .orElseThrow(() -> new IllegalArgumentException("해당 태그가 존재하지 않습니다."));
 

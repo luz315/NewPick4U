@@ -1,5 +1,16 @@
 server:
   port: 13001
+
+eureka:
+  instance:
+    hostname: ${DEVELOP_EUREKA_HOSTNAME}
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+    appname: ${spring.application.name}
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+
 spring:
   config:
     import:
@@ -11,7 +22,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     show-sql: true
     open-in-view: false
     defer-datasource-initialization: true # hibernate가 초기화되기 전 data.sql 실행하는 것을 방지
@@ -23,9 +34,9 @@ spring:
 
   data:
     redis:
-      host: localhost
-      port: 6379
-      password: root
+      host: ${DEVELOP_REDIS_HOST}
+      port: ${DEVELOP_REDIS_PORT}
+      password: ${DEVELOP_REDIS_PASSWORD}
 
 gemini:
   url: ${GEMINI_URL}

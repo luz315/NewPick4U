@@ -44,6 +44,7 @@ public class GeminiClient implements AiClient {
       throws JsonProcessingException {
     String parsedAnswerData = getAnswerFromResponse(geminiResponseString, objectMapper);
 
+    // TODO : 방어로직 작성 필요 : Null 케이스
     ProceedFields proceedFields = objectMapper.readValue(parsedAnswerData, ProceedFields.class);
 
     ProceedAiNewsDto proceedAiNewsDto = ProceedAiNewsDto.of(geminiResponseString, proceedFields);

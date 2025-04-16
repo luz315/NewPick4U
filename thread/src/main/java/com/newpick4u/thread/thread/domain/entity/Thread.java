@@ -25,9 +25,10 @@ public class Thread extends BaseEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
+  @Column(name = "thread_id")
   private UUID id;
 
-  @Column(name = "tag_name", unique = true, nullable = false)
+  @Column(name = "tag_name", nullable = false)
   private String tagName;
 
   @Column(columnDefinition = "TEXT")
