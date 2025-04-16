@@ -9,24 +9,18 @@ import com.newpick4u.news.news.domain.entity.News;
 import com.newpick4u.news.news.domain.entity.NewsTag;
 import com.newpick4u.news.news.domain.repository.NewsRepository;
 import com.newpick4u.news.news.domain.repository.NewsRepositoryCustom;
-import com.newpick4u.news.news.infrastructure.redis.RedisConfig;
-import com.newpick4u.news.news.infrastructure.redis.RedissonConfig;
-import com.newpick4u.news.news.infrastructure.redis.UserTagRedisOperator;
+import com.newpick4u.news.news.infrastructure.redis.TagLogRedisOperator;
 import com.newpick4u.news.news.infrastructure.util.NewsRecommender;
 import com.newpick4u.news.news.infrastructure.util.VectorSimilarityCalculator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import java.time.LocalDateTime;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -35,21 +29,13 @@ import java.util.stream.IntStream;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@TestPropertySource(properties = {
-        "spring.data.redis.host=localhost",
-        "spring.data.redis.port=6379",
-        "spring.data.redis.password=systempass"
-})
-//
-//@TestPropertySource(properties = "spring.config.import=")
-//@ImportAutoConfiguration(exclude = {RedisConfig.class, RedissonConfig.class })
 class NewsRecommendationTest {
 
     @Autowired
     NewsRepository newsRepository;
 
     @Autowired
-    UserTagRedisOperator userTagRedisOperator;
+    TagLogRedisOperator tagLogRedisOperator;
 
     @Autowired
     NewsService newsService;
@@ -87,7 +73,7 @@ class NewsRecommendationTest {
         // 2. 관심 태그 기록
         Long userId = 123L;
         List<String> interestedTags = tagsPool.subList(0, 20);
-        userTagRedisOperator.incrementUserTags(userId, interestedTags);
+        tagLogRedisOperator.incrementUserTags(userId, interestedTags);
 
         // 3. 추천 호출
         CurrentUserInfoDto user = new CurrentUserInfoDto(userId, UserRole.ROLE_USER);
@@ -96,7 +82,7 @@ class NewsRecommendationTest {
         // 4. 추천 결과 10개인지 검증
         assertThat(recommended).hasSize(10);
 
-        // ✅ 5. 유사도가 높은 뉴스가 먼저 오는지 (간접검증: 태그 포함 개수 체크)
+        // 5. 유사도가 높은 뉴스가 먼저 오는지 (간접검증: 태그 포함 개수 체크)
         List<String> userTags = new ArrayList<>(interestedTags);
         for (NewsSummaryDto dto : recommended) {
             News news = newsRepositoryCustom.findWithTagsById(dto.id())
@@ -114,7 +100,7 @@ class NewsRecommendationTest {
     void 캐시_적용_결과_검증() {
         Long userId = 456L;
         List<String> tagList = List.of("tag1", "tag2", "tag3");
-        userTagRedisOperator.incrementUserTags(userId, tagList);
+        tagLogRedisOperator.incrementUserTags(userId, tagList);
 
         // 실제 뉴스 10개 저장
         List<News> newsList = IntStream.range(0, 10)
@@ -133,7 +119,7 @@ class NewsRecommendationTest {
         List<String> savedNewsIds = newsList.stream()
                 .map(n -> n.getId().toString())
                 .toList();
-        userTagRedisOperator.cacheRecommendedNews(userId, savedNewsIds);
+        tagLogRedisOperator.cacheRecommendedNews(userId, savedNewsIds);
 
         // 2. recommendTop10 호출 시 캐시 사용되는지 검증
         CurrentUserInfoDto user = new CurrentUserInfoDto(userId, UserRole.ROLE_USER);
@@ -148,11 +134,11 @@ class NewsRecommendationTest {
         Long userId = 789L;
         List<String> manyTags = IntStream.range(0, 100).mapToObj(i -> "tag" + i).toList();
 
-        userTagRedisOperator.incrementUserTags(userId, manyTags);
+        tagLogRedisOperator.incrementUserTags(userId, manyTags);
 
-        Map<String, Double> tagScoreMap = userTagRedisOperator.getUserTagScoreMap(userId);
+        Map<String, Double> tagScoreMap = tagLogRedisOperator.getUserTagScoreMap(userId);
 
-        assertThat(tagScoreMap).hasSizeLessThanOrEqualTo(50); // ✅ 최대 50개 제한 확인
+        assertThat(tagScoreMap).hasSizeLessThanOrEqualTo(50); // 최대 50개 제한 확인
     }
 
     @Test
@@ -164,7 +150,7 @@ class NewsRecommendationTest {
         double sim12 = VectorSimilarityCalculator.cosineSimilarity(vec1, vec2);
         double sim13 = VectorSimilarityCalculator.cosineSimilarity(vec1, vec3);
 
-        assertThat(sim12).isGreaterThan(sim13); // ✅ vec1과 vec2가 더 유사함
+        assertThat(sim12).isGreaterThan(sim13); // vec1과 vec2가 더 유사함
         assertThat(sim12).isCloseTo(0.816, within(0.01));
     }
 }
