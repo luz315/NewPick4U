@@ -5,8 +5,6 @@ import com.newpick4u.news.news.application.dto.NewsInfoDto;
 import com.newpick4u.news.news.domain.entity.News;
 import com.newpick4u.news.news.domain.entity.NewsStatus;
 import com.newpick4u.news.news.domain.repository.NewsRepository;
-import com.newpick4u.news.news.infrastructure.kafka.KafkaConfig;
-import com.newpick4u.news.news.infrastructure.kafka.NewsInfoConsumer;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -16,7 +14,6 @@ import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.test.EmbeddedKafkaBroker;
@@ -32,15 +29,10 @@ import java.util.stream.StreamSupport;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-
-
-@SpringBootTest(properties = {
-        "eureka.client.enabled=false"
-})
+@SpringBootTest
 @ActiveProfiles("test")
 @EmbeddedKafka(partitions = 1, topics = {"news-info.fct.v1", "news-info-dlq.fct.v1"})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD) // 이게 있으면 상태가 초기화됩니다
-@Import({KafkaConfig.class, NewsInfoConsumer.class})
 class NewsInfoConsumerTest {
 
     @Autowired
