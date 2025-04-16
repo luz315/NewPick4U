@@ -1,6 +1,6 @@
 package com.newpick4u.news.news.infrastructure.redis;
 
-import com.newpick4u.news.news.application.usecase.TagLogRedisProvider;
+import com.newpick4u.news.news.application.usecase.TagLogCacheOperator;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
-public class TagLogRedisOperator implements TagLogRedisProvider {
+public class TagLogCacheOperatorImpl implements TagLogCacheOperator {
 
     private final RedisTemplate<String, String> redisTemplate;
     private final RedissonClient redissonClient;

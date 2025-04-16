@@ -1,7 +1,7 @@
 package com.newpick4u.news.news.infrastructure.util;
 
-import com.newpick4u.news.news.application.usecase.NewsRecommenderProvider;
-import com.newpick4u.news.news.application.usecase.TagVectorConverterProvider;
+import com.newpick4u.news.news.application.usecase.NewsRecommender;
+import com.newpick4u.news.news.application.usecase.TagVectorConverter;
 import com.newpick4u.news.news.domain.entity.News;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -10,9 +10,9 @@ import java.util.*;
 
 @Component
 @RequiredArgsConstructor
-public class NewsRecommender implements NewsRecommenderProvider {
+public class NewsRecommenderImpl implements NewsRecommender {
 
-    private final TagVectorConverterProvider tagVectorConverterProvider;
+    private final TagVectorConverter tagVectorConverterProvider;
 
     @Override
     public List<News> recommendByContentVector(

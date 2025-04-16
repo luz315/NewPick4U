@@ -18,16 +18,16 @@ import java.util.stream.Collectors;
 public class UserRecommendationBatchService {
 
     private final NewsRepository newsRepository;
-    private final TagLogRedisProvider tagLogRedisProvider;
-    private final TagVectorConverterProvider tagVectorConverterProvider;
-    private final NewsRecommenderProvider newsRecommenderProvider;
+    private final TagLogCacheOperator tagLogCacheOperator;
+    private final TagVectorConverter tagVectorConverterProvider;
+    private final NewsRecommender newsRecommender;
     private final ExecutorService executorService = Executors.newFixedThreadPool(10);
 
     @Scheduled(cron = "0 0 3 * * *")
     public void updateAllUserRecommendations() {
         log.info("[배치 시작] 사용자 추천 뉴스 계산");
 
-        List<Long> userIds = new ArrayList<>(tagLogRedisProvider.getAllUserIds());
+        List<Long> userIds = new ArrayList<>(tagLogCacheOperator.getAllUserIds());
         List<News> allNews = newsRepository.findAllActive();
 
         for (Long userId : userIds) {
@@ -37,7 +37,7 @@ public class UserRecommendationBatchService {
 
     private void updateSingleUserRecommendation(Long userId, List<News> allNews) {
         try {
-            Map<String, Double> userTagMap = tagLogRedisProvider.getUserTagScoreMap(userId);
+            Map<String, Double> userTagMap = tagLogCacheOperator.getUserTagScoreMap(userId);
             if (userTagMap.isEmpty()) return;
 
             Set<String> globalTagSet = tagVectorConverterProvider.extractGlobalTagSetFromNews(userTagMap, allNews);
@@ -46,14 +46,14 @@ public class UserRecommendationBatchService {
             double[] userVector = tagVectorConverterProvider.toUserVector(userTagMap, tagIndexList);
 
             // 2. 유사도 계산
-            List<News> recommended = newsRecommenderProvider.recommendByContentVector(userVector, allNews, tagIndexList);
+            List<News> recommended = newsRecommender.recommendByContentVector(userVector, allNews, tagIndexList);
 
             // 3. Redis에 캐싱
             List<String> recommendedIds = recommended.stream()
                     .map(news -> news.getId().toString())
                     .collect(Collectors.toList());
 
-            tagLogRedisProvider.cacheRecommendedNews(userId, recommendedIds);
+            tagLogCacheOperator.cacheRecommendedNews(userId, recommendedIds);
             log.info("[추천 저장 완료] userId={}, count={}", userId, recommendedIds.size());
         } catch (Exception e) {
             log.error("[추천 저장 실패] userId={}", userId, e);

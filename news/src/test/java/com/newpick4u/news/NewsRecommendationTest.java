@@ -9,8 +9,8 @@ import com.newpick4u.news.news.domain.entity.News;
 import com.newpick4u.news.news.domain.entity.NewsTag;
 import com.newpick4u.news.news.domain.repository.NewsRepository;
 import com.newpick4u.news.news.domain.repository.NewsRepositoryCustom;
-import com.newpick4u.news.news.infrastructure.redis.TagLogRedisOperator;
-import com.newpick4u.news.news.infrastructure.util.NewsRecommender;
+import com.newpick4u.news.news.infrastructure.redis.TagLogCacheOperatorImpl;
+import com.newpick4u.news.news.infrastructure.util.NewsRecommenderImpl;
 import com.newpick4u.news.news.infrastructure.util.VectorSimilarityCalculator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,7 +35,7 @@ class NewsRecommendationTest {
     NewsRepository newsRepository;
 
     @Autowired
-    TagLogRedisOperator tagLogRedisOperator;
+    TagLogCacheOperatorImpl tagLogCacheOperatorImpl;
 
     @Autowired
     NewsService newsService;
@@ -44,7 +44,7 @@ class NewsRecommendationTest {
     NewsRepositoryCustom newsRepositoryCustom;
 
     @Autowired
-    NewsRecommender newsRecommender;
+    NewsRecommenderImpl newsRecommenderImpl;
 
     @Autowired
     RedisTemplate<String, String> redisTemplate;
@@ -73,7 +73,7 @@ class NewsRecommendationTest {
         // 2. 관심 태그 기록
         Long userId = 123L;
         List<String> interestedTags = tagsPool.subList(0, 20);
-        tagLogRedisOperator.incrementUserTags(userId, interestedTags);
+        tagLogCacheOperatorImpl.incrementUserTags(userId, interestedTags);
 
         // 3. 추천 호출
         CurrentUserInfoDto user = new CurrentUserInfoDto(userId, UserRole.ROLE_USER);
@@ -100,7 +100,7 @@ class NewsRecommendationTest {
     void 캐시_적용_결과_검증() {
         Long userId = 456L;
         List<String> tagList = List.of("tag1", "tag2", "tag3");
-        tagLogRedisOperator.incrementUserTags(userId, tagList);
+        tagLogCacheOperatorImpl.incrementUserTags(userId, tagList);
 
         // 실제 뉴스 10개 저장
         List<News> newsList = IntStream.range(0, 10)
@@ -119,7 +119,7 @@ class NewsRecommendationTest {
         List<String> savedNewsIds = newsList.stream()
                 .map(n -> n.getId().toString())
                 .toList();
-        tagLogRedisOperator.cacheRecommendedNews(userId, savedNewsIds);
+        tagLogCacheOperatorImpl.cacheRecommendedNews(userId, savedNewsIds);
 
         // 2. recommendTop10 호출 시 캐시 사용되는지 검증
         CurrentUserInfoDto user = new CurrentUserInfoDto(userId, UserRole.ROLE_USER);
@@ -134,9 +134,9 @@ class NewsRecommendationTest {
         Long userId = 789L;
         List<String> manyTags = IntStream.range(0, 100).mapToObj(i -> "tag" + i).toList();
 
-        tagLogRedisOperator.incrementUserTags(userId, manyTags);
+        tagLogCacheOperatorImpl.incrementUserTags(userId, manyTags);
 
-        Map<String, Double> tagScoreMap = tagLogRedisOperator.getUserTagScoreMap(userId);
+        Map<String, Double> tagScoreMap = tagLogCacheOperatorImpl.getUserTagScoreMap(userId);
 
         assertThat(tagScoreMap).hasSizeLessThanOrEqualTo(50); // 최대 50개 제한 확인
     }

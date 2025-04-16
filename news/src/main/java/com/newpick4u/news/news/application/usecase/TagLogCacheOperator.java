@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public interface TagLogRedisProvider {
+public interface TagLogCacheOperator {
     void incrementUserTags(Long userId, List<String> tags);
     Map<String, Double> getUserTagScoreMap(Long userId);
     List<String> getCachedRecommendedNews(Long userId);
