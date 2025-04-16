@@ -36,13 +36,17 @@ public class JwtAuthenticationFilter implements WebFilter {
     log.info("[JwtAuthenticationFilter]{}", accessToken);
 
     if (tokenProvider.validAccessToken(accessToken)) {
-      accessToken = accessToken.substring(7);
+      accessToken = extractToken(accessToken);
       String userId = tokenProvider.getUserId(accessToken);
       String userRole = tokenProvider.getUserRole(accessToken);
       ServerHttpRequest modifiedRequest = createCustomRequest(exchange, userId, userRole);
       ServerWebExchange modifiedExchange = exchange.mutate().request(modifiedRequest).build();
       return chain.filter(modifiedExchange);
     }
-    throw CustomException.from(GatewayErrorCode.EXPIRED_JWT_TOKEN);
+    throw CustomException.from(GatewayErrorCode.MISSING_AUTHORIZATION_HEADER);
+  }
+
+  private String extractToken(String accessToken) {
+    return accessToken.substring(7);
   }
 }
