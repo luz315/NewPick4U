@@ -68,4 +68,21 @@ public class NewsRepositoryimpl implements NewsRepository {
     public List<News> findByIds(List<UUID> ids)  {
         return newsRepositoryCustom.findByIds(ids);
     }
+
+    @Override
+    public List<News> saveAll(List<News> newsList) {
+        return newsJpaRepository.saveAll(newsList);
+    }
+
+    @Override
+    public void deleteAll() {
+        newsJpaRepository.deleteAll();
+    }
+
+    @Override
+    public Optional<News> findById(UUID id) {
+        return newsJpaRepository.findById(id);
+    }
+
+
 }

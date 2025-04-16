@@ -19,4 +19,8 @@ public interface NewsRepository  {
     List<News> findAllActive();
     List<News> findLatestNews(int limit);
     List<News> findByIds(List<UUID> ids);
+    List<News> saveAll(List<News> newsList);
+    void deleteAll();
+    Optional<News> findById(UUID id);
+
 }
