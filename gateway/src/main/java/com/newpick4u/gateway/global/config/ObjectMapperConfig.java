@@ -1,4 +1,4 @@
-package com.newpick4u.common.config;
+package com.newpick4u.gateway.global.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
