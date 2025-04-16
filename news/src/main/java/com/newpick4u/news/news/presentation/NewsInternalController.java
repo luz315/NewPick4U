@@ -6,8 +6,8 @@ import com.newpick4u.news.news.application.dto.response.NewsResponseDto;
 import com.newpick4u.news.news.application.usecase.NewsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import com.newpick4u.common.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,11 +26,11 @@ public class NewsInternalController {
 
     @GetMapping("/{id}")
     @Operation(summary = "뉴스 조회", description = "특정 뉴스를 조회합니다.")
-    @ApiResponse(responseCode = "200", description = "뉴스 조회 성공")
-    public ResponseEntity<NewsResponseDto> getNews(
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "뉴스 조회 성공")
+    public ResponseEntity<ApiResponse<NewsResponseDto>> getNews(
             @PathVariable UUID id,
             @CurrentUserInfo @Parameter(hidden = true) CurrentUserInfoDto userInfoDto
     ) {
-        return ResponseEntity.ok(newsService.getNews(id, userInfoDto));
+        return ResponseEntity.ok(ApiResponse.ok(newsService.getNews(id, userInfoDto)));
     }
 }
