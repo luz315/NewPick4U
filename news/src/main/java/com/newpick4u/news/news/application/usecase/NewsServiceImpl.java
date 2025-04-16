@@ -16,77 +16,76 @@ import com.newpick4u.news.news.domain.entity.TagInbox;
 import com.newpick4u.news.news.domain.model.Pagination;
 import com.newpick4u.news.news.domain.repository.NewsRepository;
 import com.newpick4u.news.news.domain.repository.TagInboxRepository;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class NewsServiceImpl implements NewsService {
-  private final NewsRepository newsRepository;
-  private final TagInboxRepository tagInboxRepository;
-  private final ObjectMapper objectMapper;
-  private final TagLogRedisProvider tagLogRedisProvider;
+    private final NewsRepository newsRepository;
+    private final TagInboxRepository tagInboxRepository;
+    private final ObjectMapper objectMapper;
+    private final TagLogCacheOperator tagLogCacheOperator;
+    private final ViewCountCacheOperator viewCountCacheOperator;
 
+    @Override
+    @Transactional
+      public void saveNewsInfo(NewsInfoDto dto) {
+        simulateFailures(dto.aiNewsId()); // 테스트 조건 시뮬레이션
 
-  @Override
-  @Transactional
-  public void saveNewsInfo(NewsInfoDto dto) {
-    simulateFailures(dto.aiNewsId()); // 테스트 조건 시뮬레이션
-
-    if (newsRepository.existsByAiNewsId(dto.aiNewsId())) {
-          throw new IllegalStateException("이미 저장된 뉴스입니다: " + dto.aiNewsId());
+        if (newsRepository.existsByAiNewsId(dto.aiNewsId())) {
+              throw new IllegalStateException("이미 저장된 뉴스입니다: " + dto.aiNewsId());
+          }
+          News news = News.create(dto.aiNewsId(), dto.title(), dto.content(), dto.url(), dto.publishedDate(), 0L);
+          newsRepository.save(news);
       }
-      News news = News.create(dto.aiNewsId(), dto.title(), dto.content(), dto.url(), dto.publishedDate(), 0L);
-      newsRepository.save(news);
-  }
+    @Override
+    @Transactional
+    public void updateNewsTagList(NewsTagDto dto) {
+        simulateFailures(dto.aiNewsId()); // 테스트 조건 시뮬레이션
 
-  @Override
-  @Transactional
-  public void updateNewsTagList(NewsTagDto dto) {
-      simulateFailures(dto.aiNewsId()); // 테스트 조건 시뮬레이션
-
-    validateTagListSize(dto);
-    newsRepository.findByAiNewsId(dto.aiNewsId())
-        .ifPresentOrElse(
-            news -> applyTagList(news, dto),
-            () -> saveInbox(dto)
-        );
-  }
-
-  // 내부 메서드
-  private void validateTagListSize(NewsTagDto dto) {
-      if (dto.tagList() == null || dto.tagList().size() > 10) {
-          throw new IllegalArgumentException("뉴스 태그는 최대 10개까지 존재합니다.");
-      }
-  }
-
-  private void applyTagList(News news, NewsTagDto dto) {
-    List<NewsTag> tags = dto.tagList().stream()
-        .map(tag -> NewsTag.create(tag.id(), tag.name(), news))
-        .toList();
-    news.addTags(tags);
-  }
-
-  private void saveInbox(NewsTagDto dto) {
-    String json = serializeToJson(dto);
-    TagInbox inbox = TagInbox.create(dto.aiNewsId(), json);
-    tagInboxRepository.save(inbox);
-  }
-
-  private String serializeToJson(NewsTagDto dto) {
-    try {
-      return objectMapper.writeValueAsString(dto);
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException("태그 인박스 직렬화 실패", e);
+        validateTagListSize(dto);
+        newsRepository.findByAiNewsId(dto.aiNewsId())
+                .ifPresentOrElse(
+                        news -> applyTagList(news, dto),
+                        () -> saveInbox(dto)
+                );
     }
-  }
+
+    // 내부 메서드
+    private void validateTagListSize(NewsTagDto dto) {
+        if (dto.tagList() == null || dto.tagList().size() > 10) {
+            throw new IllegalArgumentException("뉴스 태그는 최대 10개까지 존재합니다.");
+        }
+    }
+
+    private void applyTagList(News news, NewsTagDto dto) {
+        List<NewsTag> tags = dto.tagList().stream()
+                .map(tag -> NewsTag.create(tag.id(), tag.name(), news))
+                .toList();
+        news.addTags(tags);
+    }
+
+    private void saveInbox(NewsTagDto dto) {
+        String json = serializeToJson(dto);
+        TagInbox inbox = TagInbox.create(dto.aiNewsId(), json);
+        tagInboxRepository.save(inbox);
+    }
+
+    private String serializeToJson(NewsTagDto dto) {
+        try {
+            return objectMapper.writeValueAsString(dto);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("태그 인박스 직렬화 실패", e);
+        }
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -99,7 +98,12 @@ public class NewsServiceImpl implements NewsService {
                 .map(NewsTag::getName)
                 .toList();
 
-        tagLogRedisProvider.incrementUserTags(userInfoDto.userId(), tags);
+        tagLogCacheOperator.incrementUserTags(userInfoDto.userId(), tags);
+
+        if (viewCountCacheOperator.canIncreaseView(id, userInfoDto.userId())) {
+            viewCountCacheOperator.incrementViewCount(id);
+        }
+        news.setView(viewCountCacheOperator.getViewCount(news.getId()));
 
         return NewsResponseDto.from(news);
     }
@@ -140,7 +144,7 @@ public class NewsServiceImpl implements NewsService {
         Long userId = userInfo.userId();
 
         // 1. Redis 캐시 먼저 조회
-        List<String> cachedNewsIds = tagLogRedisProvider.getCachedRecommendedNews(userId);
+        List<String> cachedNewsIds = tagLogCacheOperator.getCachedRecommendedNews(userId);
         if (cachedNewsIds != null && !cachedNewsIds.isEmpty()) {
             List<UUID> ids = cachedNewsIds.stream().map(UUID::fromString).toList();
             List<News> newsList = newsRepository.findByIds(ids);
