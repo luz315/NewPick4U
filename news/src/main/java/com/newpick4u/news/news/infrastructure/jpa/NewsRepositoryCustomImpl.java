@@ -22,8 +22,9 @@ import java.util.UUID;
 public class NewsRepositoryCustomImpl implements NewsRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
-    static QNews news;
-    static QNewsTag newsTag;
+    static final QNews news = QNews.news;
+    static final QNewsTag newsTag = QNewsTag.newsTag;
+
 
     // 복수조회
     @Override
@@ -120,9 +121,6 @@ public class NewsRepositoryCustomImpl implements NewsRepositoryCustom {
     // 테스트용 메서드
     @Override
     public Optional<News> findWithTagsByAiNewsId(String aiNewsId) {
-        QNews news = QNews.news;
-        QNewsTag newsTag = QNewsTag.newsTag;
-
         return Optional.ofNullable(
                 queryFactory
                         .selectFrom(news)
@@ -145,8 +143,6 @@ public class NewsRepositoryCustomImpl implements NewsRepositoryCustom {
 
     @Override
     public List<News> findLatestNews(int limit) {
-        QNews news = QNews.news;
-
         return queryFactory
                 .selectFrom(news)
                 .leftJoin(news.newsTagList, newsTag).fetchJoin()
@@ -158,9 +154,6 @@ public class NewsRepositoryCustomImpl implements NewsRepositoryCustom {
 
     @Override
     public List<News> findByIds(List<UUID> ids) {
-        QNews news = QNews.news;
-        QNewsTag newsTag = QNewsTag.newsTag;
-
         return queryFactory
                 .selectFrom(news)
                 .leftJoin(news.newsTagList, newsTag).fetchJoin()
@@ -168,4 +161,17 @@ public class NewsRepositoryCustomImpl implements NewsRepositoryCustom {
                 .distinct()
                 .fetch();
     }
+
+    // 테스트용
+    @Override
+    public Optional<News> findWithTagsById(UUID id) {
+        return Optional.ofNullable(
+                queryFactory
+                        .selectFrom(news)
+                        .leftJoin(news.newsTagList, newsTag).fetchJoin()
+                        .where(news.id.eq(id))
+                        .fetchOne()
+        );
+    }
+
 }

@@ -10,10 +10,16 @@ import java.util.UUID;
 
 public interface NewsRepositoryCustom {
     Pagination<News> searchNewsList(NewsSearchCriteria request, boolean isMaster);
+
     Optional<News> findNewsByRole(UUID id, boolean isMaster);
+
     Optional<News> findWithTagsByAiNewsId(String aiNewsId);
+
     List<News> findAllActive();
+
     List<News> findLatestNews(int limit);
+
     List<News> findByIds(List<UUID> ids);
 
+    Optional<News> findWithTagsById(UUID id);
 }
