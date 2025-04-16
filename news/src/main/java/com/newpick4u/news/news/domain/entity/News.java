@@ -4,6 +4,8 @@ import com.newpick4u.common.domain.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -42,7 +44,7 @@ public class News extends BaseEntity {
 
     @OneToMany(mappedBy = "news", cascade = CascadeType.ALL, orphanRemoval = true)
     @BatchSize(size = 10)
-    private List<NewsTag> newsTagList;
+    private List<NewsTag> newsTagList = new ArrayList<>(); ;
 
     @Builder(access = AccessLevel.PRIVATE)
     private News(String aiNewsId, String title, String content,String url, String publishedDate, Long view, NewsStatus status) {
