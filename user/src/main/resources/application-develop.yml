@@ -2,6 +2,8 @@ server:
   port: 10001
 
 spring:
+  application:
+    name: user-service
   config:
     import:
       - file:.env.user[.properties]
@@ -43,3 +45,13 @@ jwt:
   secret: bXktdmVyeS1zZWN1cmUtYW5kLWxvbmcgc2VjcmV0LWtleS12YWx1ZSE=  # Base64로 인코딩된 문자열
   issuer: newpick4u
   access-token-expiration: 3600000  # 1시간 (단위: milliseconds)
+
+eureka:
+  instance:
+    hostname: ${DEVELOP_EUREKA_HOSTNAME}
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+    appname: ${spring.application.name}
+  client:
+    register-with-eureka: true
+    fetch-registry: true

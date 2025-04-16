@@ -28,11 +28,14 @@ spring:
         default_batch_fetch_size: 100
         format_sql: true
 eureka:
+  instance:
+    hostname: ${DEVELOP_EUREKA_HOSTNAME}
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+    appname: ${spring.application.name}
   client:
-    register-with-eureka: false
-    fetch-registry: false
-    service-url:
-      defaultZone: ${DEVELOP_EUREKA_SERVER_URL}
+    register-with-eureka: true
+    fetch-registry: true
 
 app:
   kafka:

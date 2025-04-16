@@ -1,6 +1,16 @@
 server:
   port: 14001
 
+eureka:
+  instance:
+    hostname: ${DEVELOP_EUREKA_HOSTNAME}
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+    appname: ${spring.application.name}
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+
 spring:
   config:
     import:
