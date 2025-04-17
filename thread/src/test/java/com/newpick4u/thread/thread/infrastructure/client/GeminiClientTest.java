@@ -17,7 +17,7 @@ class GeminiClientTest {
   private GeminiClient geminiClient;
 
   @MockitoBean
-  private CommentClient commentClient;
+  private CommentClientImpl commentClient;
 
   @Test
   void givenComments_whenAnalyzeSummary_thenReturnsValidSummary() {
