@@ -50,7 +50,6 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     Advertisement advertisement = advertisementRepository.findById(message.advertisementId())
         .orElseThrow(NotFoundException::new);
     if (advertisement.isPointGrantFinished()) {
-      log.error("해당 광고는 포인트 지급기간이 만료되었습니다.");
       return;
     }
     IncreasePointGrantedCount(advertisement);
