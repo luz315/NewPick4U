@@ -137,6 +137,7 @@ public class NewsOriginServiceImpl implements NewsOriginService {
           // 기사 본문 파싱 불가 케이스 : 기사 본문이 자바스크립트로 이루어진 케이스
           newsOrigin.sendFail();
           newsOriginRepository.save(newsOrigin); // update
+          return;
         }
 
         String jsonMessage = null;

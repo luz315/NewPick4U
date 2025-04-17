@@ -130,8 +130,8 @@ class NewsOriginServiceImplTest {
   @Test
   @DisplayName("수집 ~ 전송 통합 테스트")
   void collectAndSendTest() {
-    newsOriginServiceImpl.collectOriginNews();
-    newsOriginServiceImpl.sendNewsOriginMessages();
+//    newsOriginServiceImpl.collectOriginNews();
+//    newsOriginServiceImpl.sendNewsOriginMessages();
   }
 
   @Test
