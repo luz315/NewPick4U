@@ -2,6 +2,8 @@ package com.newpick4u.user.infrastructure.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.newpick4u.user.application.dto.request.PointUpdateMessage;
+import com.newpick4u.user.application.message.producer.PointRequestFailureProducer;
+import com.newpick4u.user.application.message.request.PointRequestFailureMessage;
 import com.newpick4u.user.application.usecase.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,19 +19,22 @@ public class RetryPointUpdateConsumer {
 
   private final ObjectMapper objectMapper;
   private final UserService userService;
+  private final PointRequestFailureProducer pointRequestFailureProducer;
 
   @KafkaListener(topics = "${spring.kafka.consumer.topics.point-update-dlq}",
       groupId = "${spring.kafka.consumer.groups.user-point-update-dlq}")
   public void consume(ConsumerRecord<String, String> record, Acknowledgment ack) {
-    log.info("Kafka Raw Value: {}", record.value());
     try {
       PointUpdateMessage request = objectMapper.readValue(record.value(),
           PointUpdateMessage.class);
-      log.info("[DLQ Retry] 포인트 DLQ 재처리 시작:{}", request);
+      PointRequestFailureMessage message = PointRequestFailureMessage.of(request.userId(),
+          request.advertisementId());
+
+      pointRequestFailureProducer.produce(message);
       userService.updatePoint(request);
       ack.acknowledge();
     } catch (Exception e) {
-      log.error("[DLQ Retry] 포인트 DLQ 재처리 실패", e);
+      log.error("포인트 업데이트 취소 이벤트 발행 실패", e);
       ack.acknowledge();
     }
 

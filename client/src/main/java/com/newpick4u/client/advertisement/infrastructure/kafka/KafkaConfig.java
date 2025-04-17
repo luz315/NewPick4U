@@ -1,6 +1,7 @@
 package com.newpick4u.client.advertisement.infrastructure.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.newpick4u.client.advertisement.application.exception.AdvertisementException;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -30,7 +31,9 @@ public class KafkaConfig {
   @Value("${spring.kafka.bootstrap-servers}")
   private String bootstrapServers;
   @Value("${spring.kafka.consumer.groups.point-request}")
-  private String groupId;
+  private String pointRequestGroupId;
+  @Value("${spring.kafka.consumer.groups.point-request-failure}")
+  private String pointRequestFailureGroupId;
   @Value("${spring.kafka.consumer.auto-offset-reset}")
   private String autoOffsetReset;
   @Value("${spring.kafka.consumer.enable-auto-commit}")
@@ -55,7 +58,12 @@ public class KafkaConfig {
 
   @Bean
   public ConsumerFactory<String, String> pointRequestConsumerFactory() {
-    return buildConsumerFactory(groupId);
+    return buildConsumerFactory(pointRequestGroupId);
+  }
+
+  @Bean
+  public ConsumerFactory<String, String> pointRequestFailureConsumerFactory() {
+    return buildConsumerFactory(pointRequestFailureGroupId);
   }
 
   private <T> ConcurrentKafkaListenerContainerFactory<String, String> buildListenerContainerFactory(
@@ -106,4 +114,26 @@ public class KafkaConfig {
     return factory;
   }
 
+  @Bean
+  public ConcurrentKafkaListenerContainerFactory<String, String> pointRequestFailureMessageConcurrentKafkaListenerContainerFactory(
+      KafkaTemplate<String, String> kafkaTemplate,
+      @Value("${spring.kafka.consumer.topics.point-request-failure}") String topic) {
+    ConcurrentKafkaListenerContainerFactory<String, String> factory = buildListenerContainerFactory(
+        pointRequestFailureConsumerFactory());
+
+    DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(
+        kafkaTemplate,
+        (record, ex) -> new TopicPartition(topic, record.partition()));
+    DefaultErrorHandler errorHandler = new DefaultErrorHandler(recoverer,
+        new FixedBackOff(1000L, 3));
+    errorHandler.addNotRetryableExceptions(AdvertisementException.NotFoundException.class);
+    factory.setCommonErrorHandler(errorHandler);
+    factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
+
+    return factory;
+  }
+
+
 }
+
+

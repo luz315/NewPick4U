@@ -6,6 +6,7 @@ import com.newpick4u.client.advertisement.application.dto.response.GetNewsRespon
 import com.newpick4u.client.advertisement.application.exception.AdvertisementException;
 import com.newpick4u.client.advertisement.application.exception.AdvertisementException.NotFoundException;
 import com.newpick4u.client.advertisement.application.message.producer.PointUpdateProducer;
+import com.newpick4u.client.advertisement.application.message.request.PointRequestFailureMessage;
 import com.newpick4u.client.advertisement.application.message.request.PointRequestMessage;
 import com.newpick4u.client.advertisement.application.message.request.PointUpdateMessage;
 import com.newpick4u.client.advertisement.domain.entity.Advertisement;
@@ -46,22 +47,43 @@ public class AdvertisementServiceImpl implements AdvertisementService {
 
   // ToDo : 고도화 파트에서 파티션 정책 수정으로 인해 변경될 가능성 존재
   @DistributedLock(key = "'advertise:' + #message.advertisementId")
+  @Override
   public void updatePointGrantedCount(PointRequestMessage message) {
     Advertisement advertisement = advertisementRepository.findById(message.advertisementId())
         .orElseThrow(NotFoundException::new);
     if (advertisement.isPointGrantFinished()) {
       return;
     }
-    IncreasePointGrantedCount(advertisement);
+    increasePointGrantedCount(advertisement);
     Advertisement updatedAdvertisement = advertisementRepository.save(advertisement);
     pointUpdateProducer.produce(
-        PointUpdateMessage.of(message.userId(), updatedAdvertisement.getPoint()));
+        PointUpdateMessage.of(message.userId(), updatedAdvertisement.getPoint(),
+            updatedAdvertisement.getAdvertisementId()));
   }
 
-  private void IncreasePointGrantedCount(Advertisement advertisement) {
+  @DistributedLock(key = "'advertise:' + #message.advertisementId")
+  @Override
+  public void cancelPointRequest(PointRequestFailureMessage message) {
+    Advertisement advertisement = advertisementRepository.findById(message.advertisementId())
+        .orElseThrow(NotFoundException::new);
+    if (advertisement.isPointGrantFinished()) {
+      advertisement.reopenPointGrant();
+    }
+    reducePointGrantedCount(advertisement);
+    advertisementRepository.save(advertisement);
+  }
+
+  private void increasePointGrantedCount(Advertisement advertisement) {
     advertisement.incrementPointGrantCount();
     if (advertisement.isMaxPointGrantCountEqualToCurrentPointGrantCount()) {
       advertisement.updateIsPointGrantFinished();
+    }
+  }
+
+  private void reducePointGrantedCount(Advertisement advertisement) {
+    final int minimumValue = 0;
+    if (advertisement.getPointGrantCount() > minimumValue) {
+      advertisement.reducePointGrantCount();
     }
   }
 
