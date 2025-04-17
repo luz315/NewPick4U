@@ -35,8 +35,8 @@ public class RetryPointUpdateConsumer {
       ack.acknowledge();
     } catch (Exception e) {
       log.error("포인트 업데이트 취소 이벤트 발행 실패", e);
+    } finally {
       ack.acknowledge();
     }
-
   }
 }

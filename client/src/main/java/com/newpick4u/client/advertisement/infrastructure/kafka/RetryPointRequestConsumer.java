@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class RetryPointRequestConsumer {
-  
+
   private final ObjectMapper objectMapper;
   private final AdvertisementService advertisementService;
 
@@ -31,8 +31,8 @@ public class RetryPointRequestConsumer {
       acknowledgment.acknowledge();
     } catch (Exception e) {
       log.error("[DLQ Retry] 최대 재시도 횟수 초과로 인한 메시지 폐기");
+    } finally {
       acknowledgment.acknowledge();
-      return;
     }
   }
 }
