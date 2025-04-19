@@ -2,7 +2,6 @@ package com.newpick4u.client.advertisement.infrastructure.kafka;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.newpick4u.client.advertisement.application.message.consumer.PointUpdateConsumer;
 import com.newpick4u.client.advertisement.application.message.request.PointRequestMessage;
 import com.newpick4u.client.advertisement.application.usecase.AdvertisementService;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +14,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class PointUpdateConsumerImpl implements PointUpdateConsumer {
+public class PointRequestConsumer {
 
   private final ObjectMapper objectMapper;
   private final AdvertisementService advertisementService;

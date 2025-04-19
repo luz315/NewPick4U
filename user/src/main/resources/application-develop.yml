@@ -27,6 +27,11 @@ spring:
         point-update-dlq: user-point-update-dlq.fct.v1
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      topics:
+        point-request-failure: point-request-failure.fct.v1
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
     listener:
       ack-mode: manual_immediate
   jpa:

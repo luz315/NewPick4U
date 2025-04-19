@@ -22,14 +22,13 @@ public class PointUpdateConsumer {
       groupId = "${spring.kafka.consumer.groups.user-point-update}",
       containerFactory = "updatePointMessageConcurrentKafkaListenerContainerFactory")
   public void consume(ConsumerRecord<String, String> record, Acknowledgment ack) {
-    log.info("Kafka Raw Value: {}", record.value());
     try {
       PointUpdateMessage request = objectMapper.readValue(record.value(),
           PointUpdateMessage.class);
       userService.updatePoint(request);
       ack.acknowledge();
     } catch (Exception e) {
-      log.error("Kafka consume error", e);
+      log.error("포인트 업데이트 이벤트 처리 실패", e);
       throw new RuntimeException();
     }
   }

@@ -86,9 +86,18 @@ public class Advertisement extends BaseEntity {
     this.pointGrantCount++;
   }
 
+  public void reducePointGrantCount() {
+    this.pointGrantCount--;
+  }
+
   public void updateIsPointGrantFinished() {
     this.isPointGrantFinished = true;
   }
+
+  public void reopenPointGrant() {
+    this.isPointGrantFinished = false;
+  }
+
 
   public boolean isMaxPointGrantCountEqualToCurrentPointGrantCount() {
     return Objects.equals(this.maxPointGrantCount, this.pointGrantCount);
