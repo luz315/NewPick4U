@@ -60,3 +60,12 @@ eureka:
   client:
     register-with-eureka: true
     fetch-registry: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true
