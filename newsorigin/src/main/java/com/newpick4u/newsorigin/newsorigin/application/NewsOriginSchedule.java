@@ -13,14 +13,14 @@ public class NewsOriginSchedule {
 
   private final NewsOriginService newsOriginService;
 
-  @Scheduled(cron = "0 */5 * * * *")
+  @Scheduled(cron = "2 0 * * * *")
   public void originNewsCollectSchedule() {
     log.info("Start OriginNews Collect =========================");
     int collectCount = newsOriginService.collectOriginNews();
     log.info("End OriginNews Collect : collectCount = {} =====", collectCount);
   }
 
-  @Scheduled(fixedDelay = 2 * 60 * 1000)
+  @Scheduled(cron = "2 * * * * *")
   public void sendNewsOriginMessagesSchedule() {
     log.info("Start Send News Origin Task =========================");
     int updateCount = newsOriginService.sendNewsOriginMessages();

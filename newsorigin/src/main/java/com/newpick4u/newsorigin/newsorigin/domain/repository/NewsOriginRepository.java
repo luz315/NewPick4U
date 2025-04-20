@@ -9,5 +9,5 @@ public interface NewsOriginRepository {
 
   List<NewsOrigin> saveAll(List<NewsOrigin> newsOriginList);
 
-  List<NewsOrigin> getAllByBeforeSentQueue();
+  List<NewsOrigin> getAllByBeforeSentQueue(int limit);
 }

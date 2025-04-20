@@ -49,8 +49,7 @@ public class OriginCollectClientImpl implements OriginCollectClient {
       String title = item.get("title").asText().replace("<b>", "").replace("</b>", "");
       String url = item.get("originallink").asText();
       String pubDateString = item.get("pubDate").asText();
-      if (StringUtils.isBlank(title) || StringUtils.isBlank(url) || StringUtils.isBlank(
-          pubDateString)) {
+      if (isNotValidFields(title, url, pubDateString)) {
         // 방어로직 : Naver API 에서 url 을 안주는 케이스 발생 : 2025.04.16
         continue;
       }
@@ -69,5 +68,10 @@ public class OriginCollectClientImpl implements OriginCollectClient {
         "sort", searchSort,
         "display", searchDisplay
     );
+  }
+
+  private boolean isNotValidFields(String title, String url, String pubDateString) {
+    return StringUtils.isBlank(title) || StringUtils.isBlank(url)
+        || StringUtils.isBlank(pubDateString);
   }
 }

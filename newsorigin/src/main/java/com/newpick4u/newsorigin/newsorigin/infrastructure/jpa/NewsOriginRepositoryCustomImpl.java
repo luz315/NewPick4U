@@ -16,11 +16,15 @@ public class NewsOriginRepositoryCustomImpl implements NewsOriginRepositoryCusto
   private final JPAQueryFactory queryFactory;
 
   @Override
-  public List<NewsOrigin> getAllByBeforeSentQueue() {
+  public List<NewsOrigin> getAllByBeforeSentQueue(int limit) {
     return queryFactory.selectFrom(newsOrigin)
         .where(
             newsOrigin.status.eq(Status.PENDING)
                 .and(newsOrigin.deletedAt.isNull())
+        )
+        .limit(limit)
+        .orderBy(
+            newsOrigin.newsPublishedDate.asc()
         )
         .fetch();
   }
