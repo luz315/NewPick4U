@@ -24,13 +24,13 @@ public class GeminiClient implements AiClient {
   private final GeminiFeignClient geminiFeignClient;
 
   @Value("${app.client.gemini.max-request-count-per-min:15}")
-  private int MAX_AVAILABLE_REQUEST_COUNT_PER_MIN;
+  private int maxAvailableRequestCountPerMin;
 
   @Value("${app.client.gemini.key}")
-  private String API_KEY;
+  private String apiKey;
 
   @Value("${app.client.gemini.request-body-base}")
-  private String REQUEST_BODY_BASE;
+  private String requestBodyBase;
 
   private int remainAvailableRequestCountPerMin;
 
@@ -41,7 +41,7 @@ public class GeminiClient implements AiClient {
 
   @Override
   public void initRemainAvailableRequestCountPerMin() {
-    remainAvailableRequestCountPerMin = MAX_AVAILABLE_REQUEST_COUNT_PER_MIN;
+    remainAvailableRequestCountPerMin = maxAvailableRequestCountPerMin;
   }
 
   @Override
@@ -52,7 +52,7 @@ public class GeminiClient implements AiClient {
     }
 
     String geminiResponseString = geminiFeignClient.processGemini(
-        API_KEY,
+        apiKey,
         GeminiRequestDto.of(
             getResultRequestBody(newsBody)
         )
@@ -67,7 +67,7 @@ public class GeminiClient implements AiClient {
   private ProceedAiNewsDto getProceedAiNewsDto(String geminiResponseString)
       throws JsonProcessingException {
     String parsedAnswerData = getAnswerFromResponse(geminiResponseString, objectMapper);
-    
+
     ProceedFields proceedFields = objectMapper.readValue(parsedAnswerData, ProceedFields.class);
 
     ProceedAiNewsDto proceedAiNewsDto = ProceedAiNewsDto.of(geminiResponseString, proceedFields);
@@ -89,7 +89,7 @@ public class GeminiClient implements AiClient {
 
 
   private String getResultRequestBody(String newsBody) {
-    return REQUEST_BODY_BASE
+    return requestBodyBase
         .replace("{category}", NewsCategory.getKoreanNames())
         .replace("{news-body}", newsBody);
   }

@@ -31,7 +31,7 @@ public class AiNewsServiceImpl
   private final ObjectMapper objectMapper;
 
   @Value("${app.tag.max-size:10}")
-  private int MAX_TAG_SIZE;
+  private int maxTagSize;
 
   @Override
   public void processAiNews(String originalMessage) {
@@ -55,7 +55,7 @@ public class AiNewsServiceImpl
 
     AiNews aiNews = createAiNewsByDto(newsOriginDto, proceedAiNewsDto);
 
-    startProcess(aiNews, proceedAiNewsDto.getTagStringListByMaxSize(MAX_TAG_SIZE));
+    startProcess(aiNews, proceedAiNewsDto.getTagStringListByMaxSize(maxTagSize));
   }
 
   @Override
@@ -144,7 +144,7 @@ public class AiNewsServiceImpl
         UUID.fromString(newsOriginDto.originNewsId()),
         newsOriginDto.url(),
         newsOriginDto.title(),
-        proceedAiNewsDto.proceedFields().getTagsString(MAX_TAG_SIZE),
+        proceedAiNewsDto.proceedFields().getTagsString(maxTagSize),
         proceedAiNewsDto.proceedFields().summary(),
         newsOriginDto.publishedDate(),
         proceedAiNewsDto.originalString()
