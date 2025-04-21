@@ -11,6 +11,7 @@ import com.newpick4u.client.advertisement.application.message.request.PointUpdat
 import com.newpick4u.client.advertisement.domain.entity.Advertisement;
 import com.newpick4u.client.advertisement.domain.repository.AdvertisementRepository;
 import com.newpick4u.client.global.aop.DistributedLock;
+import com.newpick4u.client.global.exception.DomainExceptionFactory;
 import com.newpick4u.common.response.ApiResponse;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.Objects;
@@ -54,7 +55,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
   public void updatePointGrantedCount(PointRequestMessage message) {
     final String pointRequestMetric = "point_request_processed_total";
     Advertisement advertisement = advertisementRepository.findById(message.advertisementId())
-        .orElseThrow(NotFoundException::new);
+        .orElseThrow(() -> DomainExceptionFactory.getDomainException(NotFoundException.class));
     if (advertisement.isPointGrantFinished()) {
       return;
     }
@@ -71,7 +72,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
   @Override
   public void cancelPointRequest(PointRequestFailureMessage message) {
     Advertisement advertisement = advertisementRepository.findById(message.advertisementId())
-        .orElseThrow(NotFoundException::new);
+        .orElseThrow(() -> DomainExceptionFactory.getDomainException(NotFoundException.class));
     if (advertisement.isPointGrantFinished()) {
       advertisement.reopenPointGrant();
     }
