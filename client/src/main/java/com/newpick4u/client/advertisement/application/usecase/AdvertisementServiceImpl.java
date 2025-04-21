@@ -13,6 +13,7 @@ import com.newpick4u.client.advertisement.domain.entity.Advertisement;
 import com.newpick4u.client.advertisement.domain.repository.AdvertisementRepository;
 import com.newpick4u.client.global.aop.DistributedLock;
 import com.newpick4u.common.response.ApiResponse;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,8 @@ public class AdvertisementServiceImpl implements AdvertisementService {
   private final AdvertisementRepository advertisementRepository;
   private final PointUpdateProducer pointUpdateProducer;
   private final NewsClient newsClient;
+  private final MeterRegistry meterRegistry;
+
 
   @Transactional
   public UUID createAdvertisement(CreateAdvertiseRequestDto request) {
@@ -49,6 +52,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
   @DistributedLock(key = "'advertise:' + #message.advertisementId")
   @Override
   public void updatePointGrantedCount(PointRequestMessage message) {
+    final String pointRequestMetric = "point_request_processed_total";
     Advertisement advertisement = advertisementRepository.findById(message.advertisementId())
         .orElseThrow(NotFoundException::new);
     if (advertisement.isPointGrantFinished()) {
@@ -56,6 +60,8 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     }
     increasePointGrantedCount(advertisement);
     Advertisement updatedAdvertisement = advertisementRepository.save(advertisement);
+    // ✅ TPS 측정을 위한 카운터 증가
+    meterRegistry.counter(pointRequestMetric).increment();
     pointUpdateProducer.produce(
         PointUpdateMessage.of(message.userId(), updatedAdvertisement.getPoint(),
             updatedAdvertisement.getAdvertisementId()));
