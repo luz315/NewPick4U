@@ -1,7 +1,8 @@
 server:
   port: 15001
-
 spring:
+  application:
+    name: newsorigin-service
   config:
     import:
       - file:.env.newsorigin[.properties]
@@ -20,16 +21,9 @@ spring:
       hibernate:
         default_batch_fetch_size: 100
         format_sql: true
-  kafka:
-    newsorigin-topic:
-      topic-name: test.originnews-info.fct.1
-    # Kafka 클러스터의 진입 지점 역할을 하는 브로커 주소 목록
-    # 최소 하나의 브로커 주소만 있어도 클러스터 전체 메타데이터 조회 가능
-    bootstrap-servers: ${TEST_SPRING_KAFKA_BOOTSTRAP_SERVERS}
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
 app:
+  news-origin:
+    send-limit-per-min: 10
   client:
     naver:
       host: ${TEST_NAVER_HOST}
@@ -47,3 +41,17 @@ app:
       connection-timeout: 5000
       read-timeout: 20000
       max-buffer-size-MB: 20
+  kafka:
+    producer:
+      bootstrap-servers: ${TEST_SPRING_KAFKA_BOOTSTRAP_SERVERS} # Kafka 브로커 주소 (복수 개일 경우 쉼표로 구분)
+      acks: all                                                 # 메시지 전송 확인 수준 (0: 확인 안 함, 1: 리더만 확인, all: 모든 ISR 복제본 확인)
+      retries: 3                                                # 전송 실패 시 재시도 횟수
+      retry-backoff-ms: 1000                                    # 재시도 간 대기 시간 (ms)
+      enable-idempotence: true                                  # 멱등성 활성화 (중복 메시지 전송 방지, 순서 보장에 필수)
+      max-in-flight-requests-per-connection: 5                  # 커넥션당 병렬 전송 요청 수 (enable-idempotence=true 시 5 이하 권장)
+      linger-ms: 20                                             # 배치 전송을 위한 지연 시간 (ms) - 일정 시간 동안 데이터를 모아 전송
+      batch-size: 16384                                         # 배치 최대 크기 (byte) - 지정된 크기만큼 쌓이면 즉시 전송 (예: 16KB)
+      compression-type: none                                    # 메시지 압축 방식 (none, gzip, snappy, lz4, zstd 등)
+      topic:
+        news-origin:
+          topic-name: ${TEST_NEWSORIGIN_TOPIC_NAME}

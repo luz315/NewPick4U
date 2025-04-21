@@ -24,7 +24,7 @@ public class NewsOriginRepositoryImpl implements NewsOriginRepository {
   }
 
   @Override
-  public List<NewsOrigin> getAllByBeforeSentQueue() {
-    return newsOriginRepositoryCustom.getAllByBeforeSentQueue();
+  public List<NewsOrigin> getAllByBeforeSentQueue(int limit) {
+    return newsOriginRepositoryCustom.getAllByBeforeSentQueue(limit);
   }
 }

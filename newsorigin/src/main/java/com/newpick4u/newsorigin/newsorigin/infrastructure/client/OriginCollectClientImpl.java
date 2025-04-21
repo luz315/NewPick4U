@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.newpick4u.newsorigin.global.common.CommonUtil;
 import com.newpick4u.newsorigin.newsorigin.application.OriginCollectClient;
 import com.newpick4u.newsorigin.newsorigin.application.dto.NewNewsOriginDto;
+import io.micrometer.common.util.StringUtils;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Map;
@@ -47,8 +48,12 @@ public class OriginCollectClientImpl implements OriginCollectClient {
     for (JsonNode item : items) {
       String title = item.get("title").asText().replace("<b>", "").replace("</b>", "");
       String url = item.get("originallink").asText();
-
       String pubDateString = item.get("pubDate").asText();
+      if (isNotValidFields(title, url, pubDateString)) {
+        // 방어로직 : Naver API 에서 url 을 안주는 케이스 발생 : 2025.04.16
+        continue;
+      }
+
       LocalDateTime publishedDate = CommonUtil.convertStringToLocalDateTime(pubDateString);
 
       NewNewsOriginDto newNewsOriginDto = new NewNewsOriginDto(title, url, publishedDate);
@@ -63,5 +68,10 @@ public class OriginCollectClientImpl implements OriginCollectClient {
         "sort", searchSort,
         "display", searchDisplay
     );
+  }
+
+  private boolean isNotValidFields(String title, String url, String pubDateString) {
+    return StringUtils.isBlank(title) || StringUtils.isBlank(url)
+        || StringUtils.isBlank(pubDateString);
   }
 }
