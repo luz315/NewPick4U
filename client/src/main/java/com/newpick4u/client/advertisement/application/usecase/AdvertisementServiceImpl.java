@@ -5,7 +5,6 @@ import com.newpick4u.client.advertisement.application.dto.request.CreateAdvertis
 import com.newpick4u.client.advertisement.application.dto.response.GetNewsResponseDto;
 import com.newpick4u.client.advertisement.application.exception.AdvertisementException;
 import com.newpick4u.client.advertisement.application.exception.AdvertisementException.NotFoundException;
-import com.newpick4u.client.advertisement.application.message.producer.PointUpdateProducer;
 import com.newpick4u.client.advertisement.application.message.request.PointRequestFailureMessage;
 import com.newpick4u.client.advertisement.application.message.request.PointRequestMessage;
 import com.newpick4u.client.advertisement.application.message.request.PointUpdateMessage;
@@ -18,6 +17,7 @@ import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,9 +28,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdvertisementServiceImpl implements AdvertisementService {
 
   private final AdvertisementRepository advertisementRepository;
-  private final PointUpdateProducer pointUpdateProducer;
   private final NewsClient newsClient;
   private final MeterRegistry meterRegistry;
+  private final ApplicationEventPublisher eventPublisher;
 
 
   @Transactional
@@ -62,7 +62,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     Advertisement updatedAdvertisement = advertisementRepository.save(advertisement);
     // ✅ TPS 측정을 위한 카운터 증가
     meterRegistry.counter(pointRequestMetric).increment();
-    pointUpdateProducer.produce(
+    eventPublisher.publishEvent(
         PointUpdateMessage.of(message.userId(), updatedAdvertisement.getPoint(),
             updatedAdvertisement.getAdvertisementId()));
   }
