@@ -2,23 +2,27 @@ server:
   port: 14001
 
 eureka:
-  instance:
-    hostname: ${DEVELOP_EUREKA_HOSTNAME}
-    prefer-ip-address: false
-    instance-id: ${spring.application.name}:${server.port}
-    appname: ${spring.application.name}
+  #  instance:
+  #    #    hostname: ${DEVELOP_EUREKA_HOSTNAME}
+  #    hostname: localhost
+  #    prefer-ip-address: false
+  #    instance-id: ${spring.application.name}:${server.port}
+  #    appname: ${spring.application.name}
   client:
     register-with-eureka: true
     fetch-registry: true
 
 spring:
-  config:
-    import:
-      - file:.env.tag[.properties]
+  #  config:
+  #    import:
+  #      - file:.env.tag[.properties]
   datasource:
-    url: ${DEVELOP_DB_URL}
-    username: ${DEVELOP_DB_USERNAME}
-    password: ${DEVELOP_DB_PASSWORD}
+    #    url: ${DEVELOP_DB_URL}
+    url: jdbc:mysql://localhost:3306/newpick4u
+    #    username: ${DEVELOP_DB_USERNAME}
+    username: usernewpick4u
+    #    password: ${DEVELOP_DB_PASSWORD}
+    password: usernewpick4u
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
@@ -36,7 +40,8 @@ spring:
       topic-name: tag.fct.v1
     dlq-topic:
       topic-name: dev.tag.fct.dql.v1
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    #    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    bootstrap-servers: localhost:9092
     #    producer:
     #      key-serializer: org.apache.kafka.common.serialization.StringSerializer
     #      value-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -44,12 +49,16 @@ spring:
     
     consumer:
       create:
-        group-id: ${KAFKA_CREATE_GROUP_ID}
+        #        group-id: ${KAFKA_CREATE_GROUP_ID}
+        group-id: tag-create-consumer
       delete:
-        group-id: ${KAFKA_DELETE_GROUP_ID}
+        #        group-id: ${KAFKA_DELETE_GROUP_ID}
+        group-id: tag-delete-consumer
       topic:
-        create: "${CREATE_TAG_TOPIC}"
-        delete: "${DELETE_TAG_TOPIC}"
+        #        create: "${CREATE_TAG_TOPIC}"
+        create: tag-info.fct.v1
+        #        delete: "${DELETE_TAG_TOPIC}"
+        delete: tag-info.del.v1
     #      auto-offset-reset: earliest
     #      max-poll-records: 20 # 한번에 가져오는 메세지 수
     #      max-poll-interval-ms: 15000 # 지정한 시간 넘게 poll() 호출 안하면 리밸런싱 발생
