@@ -31,6 +31,31 @@ services:
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
       KAFKA_CLUSTERS_0_READONLY: "false"
 
+  kafka-exporter:
+    image: danielqsj/kafka-exporter
+    ports:
+      - "9308:9308"
+    environment:
+      KAFKA_SERVER: kafka:9092
+    depends_on:
+      - kafka
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - kafka-exporter
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
   redis-stack:
     image: redis/redis-stack
     container_name: redis-stack-auth
@@ -40,3 +65,21 @@ services:
     ports:
       - 6379:6379
       - 8001:8001
+
+  news-service:
+    build:
+      context: .
+    network_mode: host
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DEVELOP_DB_URL: jdbc:mysql://host.docker.internal:3306/newpick4u
+      DEVELOP_DB_USERNAME: usernewpick4u
+      DEVELOP_DB_PASSWORD: usernewpick4u
+      KAFKA_BOOTSTRAP_SERVERS: localhost:9092
+      KAFKA_GROUP_ID: news-consumer
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: systempass
+    depends_on:
+      - kafka
+      - redis-stack
