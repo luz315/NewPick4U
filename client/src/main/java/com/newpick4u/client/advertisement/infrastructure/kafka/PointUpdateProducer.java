@@ -21,14 +21,14 @@ public class PointUpdateProducer {
   @EventListener
   public void produce(PointUpdateMessage message) {
     try {
-      String parsedMessage = parsedMessage(message);
+      String parsedMessage = serializeMessage(message);
       kafkaTemplate.send(topic, parsedMessage);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
   }
 
-  private String parsedMessage(PointUpdateMessage message) throws JsonProcessingException {
+  private String serializeMessage(PointUpdateMessage message) throws JsonProcessingException {
     return objectMapper.writeValueAsString(message);
   }
 }
