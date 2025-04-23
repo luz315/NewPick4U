@@ -5,4 +5,6 @@ import java.util.List;
 public interface TagCacheRepository {
 
   void increaseTagCount(List<String> tags);
+
+  Long deleteTagScoreCacheByTTL();
 }

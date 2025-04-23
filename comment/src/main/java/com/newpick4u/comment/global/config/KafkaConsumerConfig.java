@@ -18,54 +18,54 @@ public class KafkaConsumerConfig {
   // -------------------- [ NORMAL CONSUMER 설정값 주입 ] --------------------
 
   @Value("${app.kafka.consumer.normal.bootstrap-servers}")
-  private String NORMAL_BOOTSTRAP_SERVERS;
+  private String normalBootstrapServers;
 
   @Value("${app.kafka.consumer.normal.enable-auto-commit:true}")
-  private boolean NORMAL_ENABLE_AUTO_COMMIT;
+  private boolean normalEnableAutoCommit;
 
   @Value("${app.kafka.consumer.normal.enable-spring-ackmode-immediate:false}")
-  private boolean NORMAL_ENABLE_SPRING_ACKMODE_IMMEDIATE;
+  private boolean normalEnableSpringAckmodeImmediate;
 
   @Value("${app.kafka.consumer.normal.auto-offset-reset:latest}")
-  private String NORMAL_AUTO_OFFSET_RESET;
+  private String normalAutoOffsetReset;
 
   @Value("${app.kafka.consumer.normal.max-poll-records:500}")
-  private int NORMAL_MAX_POLL_RECORDS;
+  private int normalMaxPollRecords;
 
   @Value("${app.kafka.consumer.normal.max-poll-interval-ms:300000}")
-  private int NORMAL_MAX_POLL_INTERVAL_MS;
+  private int normalMaxPollIntervalMs;
 
   @Value("${app.kafka.consumer.normal.session-timeout-ms:10000}")
-  private int NORMAL_SESSION_TIMEOUT_MS;
+  private int normalSessionTimeoutMs;
 
   @Value("${app.kafka.consumer.normal.concurrency:1}")
-  private int NORMAL_CONCURRENCY;
+  private int normalConcurrency;
 
 // -------------------- [ EXCEPTION CONSUMER 설정값 주입 ] --------------------
 
   @Value("${app.kafka.consumer.exception.bootstrap-servers}")
-  private String EXCEPTION_BOOTSTRAP_SERVERS;
+  private String exceptionBootstrapServers;
 
   @Value("${app.kafka.consumer.exception.enable-auto-commit:true}")
-  private boolean EXCEPTION_ENABLE_AUTO_COMMIT;
+  private boolean exceptionEnableAutoCommit;
 
   @Value("${app.kafka.consumer.exception.enable-spring-ackmode-immediate:false}")
-  private boolean EXCEPTION_ENABLE_SPRING_ACKMODE_IMMEDIATE;
+  private boolean exceptionEnableSpringAckmodeImmediate;
 
   @Value("${app.kafka.consumer.exception.auto-offset-reset:latest}")
-  private String EXCEPTION_AUTO_OFFSET_RESET;
+  private String exceptionAutoOffsetReset;
 
   @Value("${app.kafka.consumer.exception.max-poll-records:500}")
-  private int EXCEPTION_MAX_POLL_RECORDS;
+  private int exceptionMaxPollRecords;
 
   @Value("${app.kafka.consumer.exception.max-poll-interval-ms:300000}")
-  private int EXCEPTION_MAX_POLL_INTERVAL_MS;
+  private int exceptionMaxPollIntervalMs;
 
   @Value("${app.kafka.consumer.exception.session-timeout-ms:10000}")
-  private int EXCEPTION_SESSION_TIMEOUT_MS;
+  private int exceptionSessionTimeoutMs;
 
   @Value("${app.kafka.consumer.exception.concurrency:1}")
-  private int EXCEPTION_CONCURRENCY;
+  private int exceptionConcurrency;
 
   // -------------------- [ 공통 설정 생성 메서드 ] --------------------
 
@@ -139,9 +139,9 @@ public class KafkaConsumerConfig {
     ConcurrentKafkaListenerContainerFactory<String, String> factory =
         new ConcurrentKafkaListenerContainerFactory<>();
     factory.setConsumerFactory(normalConsumerFactory());
-    factory.setConcurrency(NORMAL_CONCURRENCY);
-    if (NORMAL_ENABLE_SPRING_ACKMODE_IMMEDIATE
-        && !NORMAL_ENABLE_AUTO_COMMIT) {
+    factory.setConcurrency(normalConcurrency);
+    if (normalEnableSpringAckmodeImmediate
+        && !normalEnableAutoCommit) {
       factory.getContainerProperties().setAckMode(AckMode.MANUAL_IMMEDIATE); // 수동 커밋 즉시 적용
     }
     return factory;
@@ -151,12 +151,12 @@ public class KafkaConsumerConfig {
   public ConsumerFactory<String, String> normalConsumerFactory() {
     return new DefaultKafkaConsumerFactory<>(
         consumerConfigs(
-            NORMAL_BOOTSTRAP_SERVERS,
-            NORMAL_ENABLE_AUTO_COMMIT,
-            NORMAL_AUTO_OFFSET_RESET,
-            NORMAL_MAX_POLL_RECORDS,
-            NORMAL_MAX_POLL_INTERVAL_MS,
-            NORMAL_SESSION_TIMEOUT_MS
+            normalBootstrapServers,
+            normalEnableAutoCommit,
+            normalAutoOffsetReset,
+            normalMaxPollRecords,
+            normalMaxPollIntervalMs,
+            normalSessionTimeoutMs
         )
     );
   }
@@ -168,9 +168,9 @@ public class KafkaConsumerConfig {
     ConcurrentKafkaListenerContainerFactory<String, String> factory =
         new ConcurrentKafkaListenerContainerFactory<>();
     factory.setConsumerFactory(exceptionConsumerFactory());
-    factory.setConcurrency(EXCEPTION_CONCURRENCY);
-    if (EXCEPTION_ENABLE_SPRING_ACKMODE_IMMEDIATE
-        && !EXCEPTION_ENABLE_AUTO_COMMIT) {
+    factory.setConcurrency(exceptionConcurrency);
+    if (exceptionEnableSpringAckmodeImmediate
+        && !exceptionEnableAutoCommit) {
       factory.getContainerProperties().setAckMode(AckMode.MANUAL_IMMEDIATE); // 수동 커밋 즉시 적용
     }
     return factory;
@@ -180,12 +180,12 @@ public class KafkaConsumerConfig {
   public ConsumerFactory<String, String> exceptionConsumerFactory() {
     return new DefaultKafkaConsumerFactory<>(
         consumerConfigs(
-            EXCEPTION_BOOTSTRAP_SERVERS,
-            EXCEPTION_ENABLE_AUTO_COMMIT,
-            EXCEPTION_AUTO_OFFSET_RESET,
-            EXCEPTION_MAX_POLL_RECORDS,
-            EXCEPTION_MAX_POLL_INTERVAL_MS,
-            EXCEPTION_SESSION_TIMEOUT_MS
+            exceptionBootstrapServers,
+            exceptionEnableAutoCommit,
+            exceptionAutoOffsetReset,
+            exceptionMaxPollRecords,
+            exceptionMaxPollIntervalMs,
+            exceptionSessionTimeoutMs
         )
     );
   }

@@ -1,12 +1,16 @@
 package com.newpick4u.comment.comment.presentation;
 
+import com.newpick4u.comment.comment.application.CommentSearchCriteria;
+import com.newpick4u.comment.comment.application.dto.CommentListPageDto.CommentContentDto;
 import com.newpick4u.comment.comment.application.dto.CommentSaveRequestDto;
 import com.newpick4u.comment.comment.application.dto.CommentUpdateDto;
+import com.newpick4u.comment.comment.application.dto.GetCommentResponseDto;
 import com.newpick4u.comment.comment.application.usecase.CommentFacadeService;
 import com.newpick4u.comment.comment.application.usecase.CommentService;
 import com.newpick4u.common.resolver.annotation.CurrentUserInfo;
 import com.newpick4u.common.resolver.dto.CurrentUserInfoDto;
 import com.newpick4u.common.response.ApiResponse;
+import com.newpick4u.common.response.PageResponse;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,7 +43,7 @@ public class CommentApiController {
 
     UUID savedCommentId;
     if (requestDto.isNewsComment()) {
-      savedCommentId = commentService.saveCommentForNews(requestDto, currentUserInfo);
+      savedCommentId = commentFacadeService.saveCommentForNews(requestDto, currentUserInfo);
     } else {
       savedCommentId = commentService.saveCommentForThread(requestDto, currentUserInfo);
     }
@@ -76,17 +81,41 @@ public class CommentApiController {
 
   // 댓글 단일 조회
   @GetMapping("/{commentId}")
-  public ResponseEntity<ApiResponse<Map<String, UUID>>> getCommentById(
-      @PathVariable("commentId") UUID commentId
+  public ResponseEntity<ApiResponse<GetCommentResponseDto>> getCommentById(
+      @PathVariable("commentId") UUID commentId,
+      @CurrentUserInfo CurrentUserInfoDto currentUserInfo
   ) {
-    return null;
+    GetCommentResponseDto commentDto = commentService.getComment(commentId, currentUserInfo);
+
+    return ResponseEntity
+        .status(HttpStatus.CREATED.value())
+        .body(
+            ApiResponse.of(
+                HttpStatus.OK,
+                "Success",
+                commentDto
+            )
+        );
   }
 
   // 댓글 목록 조회
   @GetMapping
-  public ResponseEntity<ApiResponse<Map<String, UUID>>> getCommentList(
+  public ResponseEntity<ApiResponse<PageResponse<CommentContentDto>>> getCommentList(
+      @ModelAttribute CommentSearchCriteria commentSearchCriteria,
+      @CurrentUserInfo CurrentUserInfoDto currentUserInfo
   ) {
-    return null;
+    PageResponse<CommentContentDto> commentList = commentService.getCommentList(
+        commentSearchCriteria, currentUserInfo);
+
+    return ResponseEntity
+        .status(HttpStatus.CREATED.value())
+        .body(
+            ApiResponse.of(
+                HttpStatus.OK,
+                "Success",
+                commentList
+            )
+        );
   }
 
   // 좋아요 등록

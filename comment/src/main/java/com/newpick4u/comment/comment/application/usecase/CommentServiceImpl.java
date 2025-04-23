@@ -2,13 +2,15 @@ package com.newpick4u.comment.comment.application.usecase;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.newpick4u.comment.comment.application.AdvertisementMessageClient;
+import com.newpick4u.comment.comment.application.CommentSearchCriteria;
 import com.newpick4u.comment.comment.application.NewsClient;
 import com.newpick4u.comment.comment.application.TagCacheRepository;
 import com.newpick4u.comment.comment.application.ThreadClient;
+import com.newpick4u.comment.comment.application.dto.CommentListPageDto.CommentContentDto;
 import com.newpick4u.comment.comment.application.dto.CommentSaveRequestDto;
 import com.newpick4u.comment.comment.application.dto.CommentUpdateDto;
 import com.newpick4u.comment.comment.application.dto.GetCommentListForThreadResponseDto;
+import com.newpick4u.comment.comment.application.dto.GetCommentResponseDto;
 import com.newpick4u.comment.comment.application.dto.PointRequestDto;
 import com.newpick4u.comment.comment.domain.entity.Comment;
 import com.newpick4u.comment.comment.domain.entity.CommentGood;
@@ -20,7 +22,9 @@ import com.newpick4u.comment.global.exception.CommentException.ConvertMessageFai
 import com.newpick4u.comment.global.exception.CommentGoodException;
 import com.newpick4u.common.resolver.dto.CurrentUserInfoDto;
 import com.newpick4u.common.resolver.dto.UserRole;
+import com.newpick4u.common.response.PageResponse;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -37,7 +41,6 @@ public class CommentServiceImpl implements CommentService {
   private final ObjectMapper objectMapper;
   private final ThreadClient threadClient;
   private final NewsClient newsClient;
-  private final AdvertisementMessageClient advertisementMessageClient;
   private final TagCacheRepository tagCacheRepository;
   private final CommentRepository commentRepository;
   private final CommentGoodRepository commentGoodRepository;
@@ -45,7 +48,7 @@ public class CommentServiceImpl implements CommentService {
   // 댓글 저장 : 뉴스 댓글
   @Transactional
   @Override
-  public UUID saveCommentForNews(CommentSaveRequestDto saveDto,
+  public Map<String, Object> saveCommentForNews(CommentSaveRequestDto saveDto,
       CurrentUserInfoDto currentUserInfo) {
 
     // 뉴스 조회
@@ -57,22 +60,22 @@ public class CommentServiceImpl implements CommentService {
     Comment comment = Comment.createForNews(saveDto.newsId(), saveDto.content());
     Comment savedComment = commentRepository.save(comment);
 
+    String message = null;
     if (saveDto.isAdSet()) {
-      // 메세지 큐 전송
-      // TODO : 아웃박스 적용 예정
-      String message = getPointRequestMessage(saveDto, currentUserInfo, savedComment);
-      advertisementMessageClient.sendPointRequestMessage(message);
+      message = getPointRequestMessage(saveDto, currentUserInfo, savedComment);
     }
 
     // 캐싱
-    // TODO : 캐싱 로직 분리 예정
     try {
       tagCacheRepository.increaseTagCount(saveDto.newsTags());
     } catch (Exception e) {
       log.error("Cache Save Fail : {}", saveDto.newsTags(), e);
+      throw e;
     }
 
-    return savedComment.getId();
+    return Map.of(
+        "commentId", savedComment.getId(),
+        "eventMessage", message);
   }
 
   private String getPointRequestMessage(CommentSaveRequestDto saveDto,
@@ -177,9 +180,24 @@ public class CommentServiceImpl implements CommentService {
     return currentGoodCount;
   }
 
-  // TODO : 단일 조회
+  // 단일 조회
+  @Override
+  public GetCommentResponseDto getComment(UUID commentId, CurrentUserInfoDto currentUserInfoDto) {
+    Comment comment = commentRepository.findById(commentId)
+        .orElseThrow(() -> new CommentNotFoundException());
+    Optional<CommentGood> existCommentGood = commentGoodRepository.findByCommentIdAndUserId(
+        comment.getId(), currentUserInfoDto.userId());
+    return GetCommentResponseDto.of(comment, existCommentGood.isPresent());
+  }
 
-  // TODO : 목록 조회
+  // 목록 조회
+  @Override
+  public PageResponse<CommentContentDto> getCommentList(
+      CommentSearchCriteria commentSearchCriteria,
+      CurrentUserInfoDto currentUserInfoDto) {
+    return commentRepository.findCommentsWithUserGood(
+        currentUserInfoDto.userId(), commentSearchCriteria);
+  }
 
   // 쓰레드 댓글 전체 조회
   @Transactional(readOnly = true)
