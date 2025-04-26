@@ -1,6 +1,6 @@
 package com.newpick4u.news.news.infrastructure.util;
 
-public class VectorSimilarityCalculator {
+public class CosineSimilarityUtil {
 
     /**
      * 코사인 유사도 계산

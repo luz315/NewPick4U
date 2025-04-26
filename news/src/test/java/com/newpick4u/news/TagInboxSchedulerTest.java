@@ -2,7 +2,7 @@ package com.newpick4u.news;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.newpick4u.news.news.application.dto.NewsTagDto;
-import com.newpick4u.news.news.application.usecase.TagInboxScheduler;
+import com.newpick4u.news.news.application.scheduler.TagInboxScheduler;
 import com.newpick4u.news.news.domain.entity.News;
 import com.newpick4u.news.news.domain.entity.TagInbox;
 import com.newpick4u.news.news.domain.repository.NewsRepository;

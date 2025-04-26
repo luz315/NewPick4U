@@ -130,14 +130,13 @@ public class NewsRepositoryCustomImpl implements NewsRepositoryCustom {
         );
     }
 
-    //추천알고리즘
+    //추천 알고리즘 게산을 위해 모든 활성 뉴스 인덱스 가져오기
     @Override
-    public List<News> findAllActive() {
+    public List<UUID> findAllActiveNewsIds() {
         return queryFactory
-                .selectFrom(news)
-                .leftJoin(news.newsTagList, newsTag).fetchJoin()
+                .select(news.id)
+                .from(news)
                 .where(news.status.eq(NewsStatus.ACTIVE))
-                .distinct()
                 .fetch();
     }
 

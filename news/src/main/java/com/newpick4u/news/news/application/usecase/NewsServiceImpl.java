@@ -32,8 +32,10 @@ public class NewsServiceImpl implements NewsService {
     private final NewsRepository newsRepository;
     private final TagInboxRepository tagInboxRepository;
     private final ObjectMapper objectMapper;
-    private final TagLogCacheOperator tagLogCacheOperator;
+    private final RecommendationCacheOperator recommendationCacheOperator;
     private final ViewCountCacheOperator viewCountCacheOperator;
+    private final TagIndexQueueOperator tagIndexQueueOperator;
+    private final NewsVectorQueueOperator newsVectorQueueOperator;
 
     @Override
     @Transactional
@@ -54,7 +56,11 @@ public class NewsServiceImpl implements NewsService {
         validateTagListSize(dto);
         newsRepository.findByAiNewsId(dto.aiNewsId())
                 .ifPresentOrElse(
-                        news -> applyTagList(news, dto),
+                        news -> {
+                            applyTagList(news, dto);
+                            // 벡터 생성 요청을 대기열에 등록
+                            newsVectorQueueOperator.enqueueNewsVector(news.getId());
+                        },
                         () -> saveInbox(dto)
                 );
     }
@@ -71,6 +77,9 @@ public class NewsServiceImpl implements NewsService {
                 .map(tag -> NewsTag.create(tag.id(), tag.name(), news))
                 .toList();
         news.addTags(tags);
+
+        // Redis 대기열(Set)에 태그 추가
+        dto.tagList().forEach(tag -> tagIndexQueueOperator.enqueuePendingTag(tag.name()));
     }
 
     private void saveInbox(NewsTagDto dto) {
@@ -86,36 +95,6 @@ public class NewsServiceImpl implements NewsService {
             throw new RuntimeException("태그 인박스 직렬화 실패", e);
         }
     }
-
-    @Override
-    @Transactional(readOnly = true)
-    public NewsResponseDto getNews(UUID id, CurrentUserInfoDto userInfoDto) {
-        boolean isMaster = userInfoDto.role() == UserRole.ROLE_MASTER;
-        News news = newsRepository.findNewsByRole(id, isMaster)
-                .orElseThrow(() -> new IllegalArgumentException("뉴스를 찾을 수 없습니다."));
-
-        List<String> tags = news.getNewsTagList().stream()
-                .map(NewsTag::getName)
-                .toList();
-
-        tagLogCacheOperator.incrementUserTags(userInfoDto.userId(), tags);
-
-        if (viewCountCacheOperator.canIncreaseView(id, userInfoDto.userId())) {
-            viewCountCacheOperator.incrementViewCount(id);
-        }
-        news.setView(viewCountCacheOperator.getViewCount(news.getId()));
-
-        return NewsResponseDto.from(news);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public PageResponse<NewsSummaryDto> searchNewsList(NewsSearchCriteria request, CurrentUserInfoDto userInfoDto) {
-        boolean isMaster = userInfoDto.role() == UserRole.ROLE_MASTER;
-        Pagination<News> pagination = newsRepository.searchNewsList(request, isMaster);
-        return PageResponse.from(pagination).map(NewsSummaryDto::from);
-    }
-
 
     // 테스트용 시뮬레이션
     private static final Map<String, Integer> failureMap = new ConcurrentHashMap<>();
@@ -137,24 +116,54 @@ public class NewsServiceImpl implements NewsService {
         }
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public NewsResponseDto getNews(UUID id, CurrentUserInfoDto userInfoDto) {
+        boolean isMaster = userInfoDto.role() == UserRole.ROLE_MASTER;
+        News news = newsRepository.findNewsByRole(id, isMaster)
+                .orElseThrow(() -> new IllegalArgumentException("뉴스를 찾을 수 없습니다."));
+
+        List<String> tags = news.getNewsTagList().stream()
+                .map(NewsTag::getName)
+                .toList();
+
+        recommendationCacheOperator.incrementUserTagScore(userInfoDto.userId(), tags);
+
+        if (viewCountCacheOperator.canIncreaseView(id, userInfoDto.userId())) {
+            viewCountCacheOperator.incrementViewCount(id);
+        }
+        news.setView(viewCountCacheOperator.getViewCount(news.getId()));
+
+        return NewsResponseDto.from(news);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<NewsSummaryDto> searchNewsList(NewsSearchCriteria request, CurrentUserInfoDto userInfoDto) {
+        boolean isMaster = userInfoDto.role() == UserRole.ROLE_MASTER;
+        Pagination<News> pagination = newsRepository.searchNewsList(request, isMaster);
+        return PageResponse.from(pagination).map(NewsSummaryDto::from);
+    }
 
     @Override
     @Transactional(readOnly = true)
     public List<NewsSummaryDto> recommendTop10(CurrentUserInfoDto userInfo) {
         Long userId = userInfo.userId();
 
-        // 1. Redis 캐시 먼저 조회
-        List<String> cachedNewsIds = tagLogCacheOperator.getCachedRecommendedNews(userId);
+        // 1. Redis에서 추천된 뉴스 ID 가져옴
+        List<String> cachedNewsIds = recommendationCacheOperator.getRecommendedNews(userId);
         if (cachedNewsIds != null && !cachedNewsIds.isEmpty()) {
             List<UUID> ids = cachedNewsIds.stream().map(UUID::fromString).toList();
+            // 2. DB에서 추천 뉴스 조회
             List<News> newsList = newsRepository.findByIds(ids);
             return newsList.stream().map(NewsSummaryDto::from).toList();
         }
 
-        // 2. 캐시 없으면 최신 뉴스 fallback
+        // 3. 추천 뉴스 캐시 없으면 최신 뉴스 fallback
         List<News> fallbackNews = newsRepository.findLatestNews(10);
         return fallbackNews.stream()
                 .map(NewsSummaryDto::from)
                 .toList();
     }
 }
+

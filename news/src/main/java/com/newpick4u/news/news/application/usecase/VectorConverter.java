@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public interface TagVectorConverter {
+public interface VectorConverter {
     Set<String> extractGlobalTagSetFromNews(Map<String, Double> userTagMap, List<News> newsList);
     double[] toUserVector(Map<String, Double> tagScoreMap, List<String> tagIndexList);
     double[] toNewsVector(News news, List<String> tagIndexList);

@@ -1,35 +1,40 @@
 package com.newpick4u.news.news.infrastructure.util;
 
 import com.newpick4u.news.news.application.usecase.NewsRecommender;
-import com.newpick4u.news.news.application.usecase.TagVectorConverter;
-import com.newpick4u.news.news.domain.entity.News;
+import com.newpick4u.news.news.infrastructure.redis.NewsVectorQueueOperatorImpl;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class NewsRecommenderImpl implements NewsRecommender {
 
-    private final TagVectorConverter tagVectorConverterProvider;
+    private final NewsVectorQueueOperatorImpl newsVectorQueueOperator;
 
     @Override
-    public List<News> recommendByContentVector(
+    public List<UUID> recommendByContentVector(
             double[] userVector,
-            List<News> candidates,
-            List<String> tagIndexList
+            List<UUID> candidates
     ) {
         return candidates.stream()
-                .map(news -> new AbstractMap.SimpleEntry<>(
-                        news,
-                        VectorSimilarityCalculator.cosineSimilarity(
-                                userVector,
-                                tagVectorConverterProvider.toNewsVector(news, tagIndexList)
-                        )))
+                .map(newsId -> {
+                    Optional<double[]> vectorOpt = newsVectorQueueOperator.getVector(newsId);
+
+                    return vectorOpt.map(vec -> Map.entry(newsId,
+                                    CosineSimilarityUtil.cosineSimilarity(userVector, vec)))
+                            .orElseGet(() -> {
+                                log.warn("[뉴스 벡터 없음] 캐시 누락 → newsId={}", newsId);
+                                return null;
+                            });
+                })
+                .filter(Objects::nonNull)
                 .sorted((a, b) -> Double.compare(b.getValue(), a.getValue())) // 유사도 내림차순
                 .limit(10)
                 .map(Map.Entry::getKey)
                 .toList();
     }
-}  
+}

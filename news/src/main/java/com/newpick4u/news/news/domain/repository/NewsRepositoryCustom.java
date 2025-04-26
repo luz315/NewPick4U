@@ -15,7 +15,7 @@ public interface NewsRepositoryCustom {
 
     Optional<News> findWithTagsByAiNewsId(String aiNewsId);
 
-    List<News> findAllActive();
+    List<UUID> findAllActiveNewsIds();
 
     List<News> findLatestNews(int limit);
 

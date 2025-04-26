@@ -9,9 +9,9 @@ import com.newpick4u.news.news.domain.entity.News;
 import com.newpick4u.news.news.domain.entity.NewsTag;
 import com.newpick4u.news.news.domain.repository.NewsRepository;
 import com.newpick4u.news.news.domain.repository.NewsRepositoryCustom;
-import com.newpick4u.news.news.infrastructure.redis.TagLogCacheOperatorImpl;
+import com.newpick4u.news.news.infrastructure.redis.RecommendationCacheOperatorImpl;
 import com.newpick4u.news.news.infrastructure.util.NewsRecommenderImpl;
-import com.newpick4u.news.news.infrastructure.util.VectorSimilarityCalculator;
+import com.newpick4u.news.news.infrastructure.util.CosineSimilarityUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +35,7 @@ class NewsRecommendationTest {
     NewsRepository newsRepository;
 
     @Autowired
-    TagLogCacheOperatorImpl tagLogCacheOperatorImpl;
+    RecommendationCacheOperatorImpl recommendationCacheOperatorImpl;
 
     @Autowired
     NewsService newsService;
@@ -73,7 +73,7 @@ class NewsRecommendationTest {
         // 2. 관심 태그 기록
         Long userId = 123L;
         List<String> interestedTags = tagsPool.subList(0, 20);
-        tagLogCacheOperatorImpl.incrementUserTags(userId, interestedTags);
+        recommendationCacheOperatorImpl.incrementUserTagScore(userId, interestedTags);
 
         // 3. 추천 호출
         CurrentUserInfoDto user = new CurrentUserInfoDto(userId, UserRole.ROLE_USER);
@@ -100,7 +100,7 @@ class NewsRecommendationTest {
     void 캐시_적용_결과_검증() {
         Long userId = 456L;
         List<String> tagList = List.of("tag1", "tag2", "tag3");
-        tagLogCacheOperatorImpl.incrementUserTags(userId, tagList);
+        recommendationCacheOperatorImpl.incrementUserTagScore(userId, tagList);
 
         // 실제 뉴스 10개 저장
         List<News> newsList = IntStream.range(0, 10)
@@ -119,7 +119,7 @@ class NewsRecommendationTest {
         List<String> savedNewsIds = newsList.stream()
                 .map(n -> n.getId().toString())
                 .toList();
-        tagLogCacheOperatorImpl.cacheRecommendedNews(userId, savedNewsIds);
+        recommendationCacheOperatorImpl.storeRecommendedNews(userId, savedNewsIds);
 
         // 2. recommendTop10 호출 시 캐시 사용되는지 검증
         CurrentUserInfoDto user = new CurrentUserInfoDto(userId, UserRole.ROLE_USER);
@@ -134,9 +134,9 @@ class NewsRecommendationTest {
         Long userId = 789L;
         List<String> manyTags = IntStream.range(0, 100).mapToObj(i -> "tag" + i).toList();
 
-        tagLogCacheOperatorImpl.incrementUserTags(userId, manyTags);
+        recommendationCacheOperatorImpl.incrementUserTagScore(userId, manyTags);
 
-        Map<String, Double> tagScoreMap = tagLogCacheOperatorImpl.getUserTagScoreMap(userId);
+        Map<String, Double> tagScoreMap = recommendationCacheOperatorImpl.getUserTagScore(userId);
 
         assertThat(tagScoreMap).hasSizeLessThanOrEqualTo(50); // 최대 50개 제한 확인
     }
@@ -147,8 +147,8 @@ class NewsRecommendationTest {
         double[] vec2 = {1, 1, 1};
         double[] vec3 = {0, 1, 0};
 
-        double sim12 = VectorSimilarityCalculator.cosineSimilarity(vec1, vec2);
-        double sim13 = VectorSimilarityCalculator.cosineSimilarity(vec1, vec3);
+        double sim12 = CosineSimilarityUtil.cosineSimilarity(vec1, vec2);
+        double sim13 = CosineSimilarityUtil.cosineSimilarity(vec1, vec3);
 
         assertThat(sim12).isGreaterThan(sim13); // vec1과 vec2가 더 유사함
         assertThat(sim12).isCloseTo(0.816, within(0.01));

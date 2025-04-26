@@ -1,5 +1,6 @@
-package com.newpick4u.news.news.application.usecase;
+package com.newpick4u.news.news.application.scheduler;
 
+import com.newpick4u.news.news.application.usecase.TagInboxProcessor;
 import com.newpick4u.news.news.domain.repository.NewsRepository;
 import com.newpick4u.news.news.domain.repository.TagInboxRepository;
 import lombok.RequiredArgsConstructor;
