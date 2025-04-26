@@ -2,19 +2,18 @@ server:
   port: 8080
 eureka:
   instance:
-    hostname: ${DEVELOP_EUREKA_HOSTNAME}
+    hostname: ${LOCAL_EUREKA_HOSTNAME}
     prefer-ip-address: false
     instance-id: ${spring.application.name}:${server.port}
     appname: ${spring.application.name}
   client:
+    service-url:
+      defaultZone: ${LOCAL_EUREKA_SERVER_URL}
     register-with-eureka: true
     fetch-registry: true
 spring:
   application:
     name: gateway-service
-  config:
-    import:
-      - file:.env.gateway[.properties]
   main:
     web-application-type: reactive
   cloud:
@@ -45,17 +44,9 @@ spring:
           predicates:
             - Path=/api/v1/news/**,/internal/v1/news/**
   datasource:
-    url: ${DEVELOP_DB_URL}
-    username: ${DEVELOP_DB_USERNAME}
-    password: ${DEVELOP_DB_PASSWORD}
+    url: ${LOCAL_DB_URL}
+    username: ${LOCAL_DB_USERNAME}
+    password: ${LOCAL_DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 jwt:
-  secret: bXktdmVyeS1zZWN1cmUtYW5kLWxvbmcgc2VjcmV0LWtleS12YWx1ZSE=  # Base64로 인코딩된 문자열
-
-management:
-  tracing:
-    sampling:
-      probability: 1.0
-  zipkin:
-    tracing:
-      endpoint: "http://localhost:9411/api/v2/spans"
+  secret: ${LOCAL_SECKET_KEY}
