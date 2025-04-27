@@ -1,6 +1,12 @@
 server:
   port: 11001
 
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
 spring:
   application:
     name: news-service
