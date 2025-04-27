@@ -23,8 +23,6 @@ public interface TagRepository {
 
   List<Tag> findAll();
 
-  void deleteAll();
-
   List<Tag> findAllByTagNameIn(List<String> tagNames);
 
   void incrementScoreByTagNames(ArrayList<String> strings);

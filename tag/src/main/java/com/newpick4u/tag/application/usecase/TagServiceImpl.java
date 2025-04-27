@@ -9,7 +9,6 @@ import com.newpick4u.tag.domain.criteria.SearchTagCriteria;
 import com.newpick4u.tag.domain.entity.Tag;
 import com.newpick4u.tag.domain.repository.TagRepository;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -74,9 +73,8 @@ public class TagServiceImpl implements TagService {
         .map(Tag::create)
         .collect(Collectors.toList());
 
-    List<Tag> savedNewTags = Collections.emptyList();
     if (!newTags.isEmpty()) {
-      savedNewTags = tagRepository.saveAll(newTags);
+      List<Tag> savedNewTags = tagRepository.saveAll(newTags);
       tagList.addAll(savedNewTags.stream()
           .map(t -> new TagDto(t.getId(), t.getTagName()))
           .toList());
