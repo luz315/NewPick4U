@@ -50,11 +50,6 @@ public class TagRepositoryImpl implements TagRepository {
   }
 
   @Override
-  public void deleteAll() {
-    tagJpaRepository.deleteAll();
-  }
-
-  @Override
   public List<Tag> findAllByTagNameIn(List<String> tagNames) {
     return tagJpaRepository.findAllByTagNameIn(tagNames);
   }
