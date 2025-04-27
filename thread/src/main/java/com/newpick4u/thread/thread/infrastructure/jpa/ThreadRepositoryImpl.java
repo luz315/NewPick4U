@@ -5,6 +5,7 @@ import com.newpick4u.thread.thread.domain.entity.ThreadStatus;
 import com.newpick4u.thread.thread.domain.repository.ThreadRepository;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -46,5 +47,20 @@ public class ThreadRepositoryImpl implements ThreadRepository {
   @Override
   public void deleteAll() {
     threadJpaRepository.deleteAll();
+  }
+
+  @Override
+  public void incrementScoreForTags(Set<String> existingTags) {
+    threadJpaRepository.incrementScoreForTags(existingTags);
+  }
+
+  @Override
+  public void saveAll(List<Thread> toCreate) {
+    threadJpaRepository.saveAll(toCreate);
+  }
+
+  @Override
+  public Optional<Thread> findTop1ByStatusOrderByScoreAsc(ThreadStatus status) {
+    return threadJpaRepository.findTop1ByStatusOrderByScoreAsc(status);
   }
 }
