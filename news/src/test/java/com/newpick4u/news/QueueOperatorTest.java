@@ -41,9 +41,9 @@ class QueueOperatorTest {
         List<News> allNews = newsRepository.findAll();  // 모든 뉴스 가져오기
         // when: 각 뉴스에 대해 대기열 작업을 진행
         for (News news : allNews) {
-            // 1. 뉴스 벡터 대기열에 넣기 제가볼때는 예외인거 같아요 그 디버깅으로 보면 다시디버깅해볼게요실행이 아예안돼요 왜냐면 제가
-            System.out.println("뉴스아이디 (테스트 중): " + news.getId()); //요기는됨되게 웃긴건 요기는 돼요
-            newsVectorQueueOperator.enqueueNewsVector(news.getId()); //요기안됨근데 여기가 안돼요 미치겟멘
+            // 1. 뉴스 벡터 대기열에 넣기
+            System.out.println("뉴스아이디 (테스트 중): " + news.getId());
+            newsVectorQueueOperator.enqueueNewsVector(news.getId());
             System.out.println("뉴스아이디 (enqueue 후): " + news.getId());
             // 2. 뉴스 태그 대기열에 넣기
             news.getNewsTagList().forEach(tag -> {

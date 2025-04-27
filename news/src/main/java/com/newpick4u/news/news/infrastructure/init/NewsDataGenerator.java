@@ -20,7 +20,7 @@ public class NewsDataGenerator {
 
     private final NewsRepository newsRepository;
 
-    @Bean
+    @Bean(name = "newsDataGeneratorInit")
     public CommandLineRunner init() {
         return args -> {
             createNewsData();
