@@ -65,6 +65,21 @@ public class NewsServiceImpl implements NewsService {
                 );
     }
 
+    @Override
+    @Transactional
+    public void saveNewsInfoAndUpdateTags(NewsInfoDto newsInfoDto) {
+        saveNewsInfo(newsInfoDto); // 기존 뉴스 저장
+        tagInboxRepository.findByAiNewsId(newsInfoDto.aiNewsId()).ifPresent(inbox -> {
+            try {
+                updateNewsTagList(objectMapper.readValue(inbox.getJsonPayload(), NewsTagDto.class));
+                tagInboxRepository.delete(inbox);
+                log.info("[TagInbox] 태그 적용 완료 및 삭제: aiNewsId={}", newsInfoDto.aiNewsId());
+            } catch (Exception e) {
+                log.warn("[TagInbox] 처리 실패: aiNewsId={}", newsInfoDto.aiNewsId(), e);
+            }
+        });
+    }
+
     // 내부 메서드
     private void validateTagListSize(NewsTagDto dto) {
         if (dto.tagList() == null || dto.tagList().size() > 10) {
@@ -132,7 +147,7 @@ public class NewsServiceImpl implements NewsService {
         if (viewCountCacheOperator.canIncreaseView(id, userInfoDto.userId())) {
             viewCountCacheOperator.incrementViewCount(id);
         }
-        news.setView(viewCountCacheOperator.getViewCount(news.getId()));
+        news.updateView(viewCountCacheOperator.getViewCount(news.getId()));
 
         return NewsResponseDto.from(news);
     }

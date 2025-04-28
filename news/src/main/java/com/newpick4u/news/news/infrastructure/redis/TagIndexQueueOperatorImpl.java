@@ -23,15 +23,13 @@ public class TagIndexQueueOperatorImpl implements TagIndexQueueOperator {
 
     @Override
     public void enqueuePendingTag(String tag) {
-        log.info("Enqueueing tag: {}", tag);
         redisTemplate.opsForSet().add(TAG_PENDING_SET, tag);
 
         // 대기열에 추가된 태그가 Redis에 잘 반영되었는지 확인
         Set<String> pendingTags = redisTemplate.opsForSet().members(TAG_PENDING_SET);
-        if (pendingTags != null && pendingTags.contains(tag)) {
-            log.info("Tag '{}' successfully added to the pending set.", tag);  // 태그가 대기열에 제대로 들어갔는지 확인
-        } else {
-            log.warn("Failed to add tag '{}' to the pending set.", tag);  // 실패 시 로그 추가
+        if (pendingTags == null || !pendingTags.contains(tag)) {
+            // 실패한 경우에만 로그 출력
+            log.warn("태그 '{}'가 대기열에 추가되지 않았습니다.", tag);
         }
     }
 

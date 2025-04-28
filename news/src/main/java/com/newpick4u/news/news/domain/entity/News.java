@@ -91,7 +91,7 @@ public class News extends BaseEntity {
     this.status = NewsStatus.ACTIVE;
   }
 
-    public void setView(Long view) {
+    public void updateView(Long view) {
         this.view = view;
     }
 }

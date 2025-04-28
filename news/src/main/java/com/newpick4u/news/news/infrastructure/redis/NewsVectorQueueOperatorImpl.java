@@ -7,7 +7,6 @@ import com.newpick4u.news.news.domain.repository.NewsRepository;
 import com.newpick4u.news.news.application.usecase.VectorConverter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import javax.crypto.Cipher;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,13 +27,9 @@ public class NewsVectorQueueOperatorImpl implements NewsVectorQueueOperator {
 
     @Override
     public void enqueueNewsVector(UUID newsId) {
-        log.info("엔큐들어오고 난 직전 id: {}", newsId);
-
-        Optional<News> newsOpt = newsRepository.findById(newsId);
-        if (newsOpt.isEmpty()) {
-            log.warn("News not found for ID: {}", newsId);
-        } else {
-            log.info("Enqueuing news ID to Redis: {}", newsId);
+        if (newsRepository.findById(newsId).isEmpty()) {
+            log.warn("벡터 대기열 등록 실패 - 해당 뉴스를 찾을 수 없습니다. newsId={}", newsId);
+            return;
         }
         redisTemplate.opsForSet().add(QUEUE_KEY, newsId.toString());
     }
@@ -54,30 +49,14 @@ public class NewsVectorQueueOperatorImpl implements NewsVectorQueueOperator {
         }
 
         List<String> tagIndexList = redisTemplate.opsForList().range("tag:index:list", 0, -1);
-        if (tagIndexList == null || tagIndexList.isEmpty()) {
-            log.warn("Tag index list is empty, unable to generate vectors.");
-            return;  // 태그 인덱스가 비어 있으면 벡터 생성 진행 불가
+
+        if (tagIndexList.isEmpty()) {
+            log.warn("태그 인덱스 리스트가 비어있어 벡터를 생성할 수 없습니다.");
+            return;
         }
+
         for (String idStr : pendingIds) {
-            try {
-                UUID newsId = UUID.fromString(idStr);
-                Optional<News> newsOpt = newsRepository.findById(newsId);
-                if (newsOpt.isEmpty()) {
-                    log.warn("News not found for ID: {}", newsId);
-                    continue;  // 뉴스가 없으면 벡터 생성 안함
-                }
-
-                News news = newsOpt.get();
-                double[] vector = vectorConverter.toNewsVector(news, tagIndexList);
-                String json = objectMapper.writeValueAsString(vector);
-
-                redisTemplate.opsForValue().set("news:vector:" + newsId, json);
-                removeFromQueue(newsId);
-                log.info("Saving vector for news ID: {}", newsId);
-
-            } catch (Exception e) {
-                log.error("[뉴스 벡터 생성 실패] id={}, err={}", idStr, e.getMessage());
-            }
+            processSingleNewsVector(idStr, tagIndexList);
         }
     }
 
@@ -88,6 +67,29 @@ public class NewsVectorQueueOperatorImpl implements NewsVectorQueueOperator {
             return Optional.of(objectMapper.readValue(json, double[].class));
         } catch (Exception e) {
             return Optional.empty();
+        }
+    }
+
+    private void processSingleNewsVector(String idStr, List<String> tagIndexList) {
+        try {
+            UUID newsId = UUID.fromString(idStr);
+            Optional<News> newsOpt = newsRepository.findById(newsId);
+
+            if (newsOpt.isEmpty()) {
+                log.warn("벡터 생성 실패 - 해당 뉴스를 찾을 수 없습니다. newsId={}", newsId);
+                return;
+            }
+
+            News news = newsOpt.get();
+            double[] vector = vectorConverter.toNewsVector(news, tagIndexList);
+            String newsVectorJson = objectMapper.writeValueAsString(vector);
+
+            redisTemplate.opsForValue().set(VECTOR_KEY_PREFIX + newsId, newsVectorJson);
+            removeFromQueue(newsId);
+            log.info("뉴스 벡터 생성 및 저장 완료. newsId={}", newsId);
+
+        } catch (Exception e) {
+            log.error("뉴스 벡터 생성 중 예외 발생. id={}, 에러={}", idStr, e.getMessage());
         }
     }
 }
