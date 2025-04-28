@@ -13,6 +13,7 @@ spring:
     redis:
       host: ${MAIN_REDIS_HOST}
       port: ${MAIN_REDIS_PORT}
+      password: ${REDIS_PASSWORD}
 
   kafka:
     bootstrap-servers: ${MAIN_KAFKA_BOOTSTRAP_SERVERS}
@@ -38,21 +39,24 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
         default_batch_fetch_size: 100
         format_sql: true
-#eureka:
-#  instance:
-#    hostname: ${MAIN_DEVELOP_EUREKA_HOSTNAME}
-#    prefer-ip-address: false
-#    instance-id: ${spring.application.name}:${server.port}
-#    appname: ${spring.application.name}
-#  client:
-#    register-with-eureka: true
-#    fetch-registry: true
 
 eureka:
+  instance:
+    hostname: ${MAIN_EUREKA_HOSTNAME}
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+    appname: ${spring.application.name}
   client:
-    enabled: false
-    register-with-eureka: false
-    fetch-registry: false
+    service-url:
+      defaultZone: ${MAIN_EUREKA_SERVER_URL}
+    register-with-eureka: true
+    fetch-registry: true
+
+#eureka:
+#  client:
+#    enabled: false
+#    register-with-eureka: false
+#    fetch-registry: false
 
 management:
   endpoints:
@@ -63,6 +67,12 @@ management:
     metrics:
       export:
         enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+    zipkin:
+      tracing:
+        endpoint: "http://localhost:9411/api/v2/spans"
 
 springdoc:
   api-docs:
