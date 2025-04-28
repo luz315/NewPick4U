@@ -4,6 +4,7 @@ import com.newpick4u.thread.thread.domain.entity.Thread;
 import com.newpick4u.thread.thread.domain.entity.ThreadStatus;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,4 +22,10 @@ public interface ThreadRepository {
   List<Thread> findAllByStatus(ThreadStatus threadStatus);
 
   void deleteAll();
+
+  void incrementScoreForTags(Set<String> existingTags);
+
+  void saveAll(List<Thread> toCreate);
+
+  Optional<Thread> findTop1ByStatusOrderByScoreAsc(ThreadStatus threadStatus);
 }
