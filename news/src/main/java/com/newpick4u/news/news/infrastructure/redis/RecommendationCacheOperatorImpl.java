@@ -1,6 +1,6 @@
 package com.newpick4u.news.news.infrastructure.redis;
 
-import com.newpick4u.news.news.application.usecase.TagLogRedisProvider;
+import com.newpick4u.news.news.application.usecase.RecommendationCacheOperator;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
-public class TagLogRedisOperator implements TagLogRedisProvider {
+public class RecommendationCacheOperatorImpl implements RecommendationCacheOperator {
 
     private final RedisTemplate<String, String> redisTemplate;
     private final RedissonClient redissonClient;
@@ -29,7 +29,7 @@ public class TagLogRedisOperator implements TagLogRedisProvider {
 
     // 태그 카운트 증가 (태그 기록 + 제한 개수 초과 시 삭제 + TTL 설정 (원자적 처리))
     @Override
-    public void incrementUserTags(Long userId, List<String> tagNames) {
+    public void incrementUserTagScore(Long userId, List<String> tagNames) {
         String key = buildKey(userId);
         String lockKey = LOCK_PREFIX + userId;
         RLock lock = redissonClient.getLock(lockKey);
@@ -39,7 +39,6 @@ public class TagLogRedisOperator implements TagLogRedisProvider {
                 for (String tag : tagNames) {
                     redisTemplate.opsForZSet().incrementScore(key, tag, 1);
                 }
-
                 trimTagLimit(key);
                 redisTemplate.expire(key, TAG_TTL);
             } else {
@@ -57,7 +56,7 @@ public class TagLogRedisOperator implements TagLogRedisProvider {
 
     // 유저 태그 점수 맵 가져오기
     @Override
-    public Map<String, Double> getUserTagScoreMap(Long userId) {
+    public Map<String, Double> getUserTagScore(Long userId) {
         String key = buildKey(userId);
         Set<ZSetOperations.TypedTuple<String>> rawTags =
                 redisTemplate.opsForZSet().rangeWithScores(key, 0, -1);
@@ -75,7 +74,7 @@ public class TagLogRedisOperator implements TagLogRedisProvider {
 
     // 추천 뉴스 캐시 저장
     @Override
-    public void cacheRecommendedNews(Long userId, List<String> newsIds) {
+    public void storeRecommendedNews(Long userId, List<String> newsIds) {
         String realKey = recommendKey(userId);
         String tempKey = realKey + ":tmp";
 
@@ -89,14 +88,14 @@ public class TagLogRedisOperator implements TagLogRedisProvider {
 
     // 추천 뉴스 캐시 조회
     @Override
-    public List<String> getCachedRecommendedNews(Long userId) {
+    public List<String> getRecommendedNews(Long userId) {
         String key = recommendKey(userId);
         return redisTemplate.opsForList().range(key, 0, -1);
     }
 
     // 추천 캐시용 사용자 ID 목록 조회 (SCAN 기반)
     @Override
-    public Set<Long> getAllUserIds() {
+    public Set<Long> getCachedUserIds() {
         Set<Long> userIds = new HashSet<>();
         ScanOptions scanOptions = ScanOptions.scanOptions().match(TAG_KEY_PATTERN).count(1000).build();
 
@@ -118,6 +117,12 @@ public class TagLogRedisOperator implements TagLogRedisProvider {
         }
 
         return userIds;
+    }
+
+    // 전역태그인덱스리스트 가져오기
+    @Override
+    public List<String> getGlobalTagIndexList() {
+        return redisTemplate.opsForList().range("tag:index:list", 0, -1);
     }
 
 

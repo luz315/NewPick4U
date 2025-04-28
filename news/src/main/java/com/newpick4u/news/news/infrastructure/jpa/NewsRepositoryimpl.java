@@ -55,8 +55,8 @@ public class NewsRepositoryimpl implements NewsRepository {
     }
 
     @Override
-    public List<News> findAllActive() {
-        return newsRepositoryCustom.findAllActive();
+    public List<UUID> findAllActiveNewsIds(){
+        return newsRepositoryCustom.findAllActiveNewsIds();
     }
 
     @Override
@@ -84,5 +84,8 @@ public class NewsRepositoryimpl implements NewsRepository {
         return newsJpaRepository.findById(id);
     }
 
-
+    @Override
+    public List<News> findAll() {
+        return newsJpaRepository.findAll();
+    }
 }

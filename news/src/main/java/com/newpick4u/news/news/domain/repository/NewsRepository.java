@@ -10,13 +10,14 @@ import java.util.UUID;
 
 public interface NewsRepository  {
     News save(News news);
+    List<News> findAll();
     Optional<News> findByAiNewsId(String aiNewsId);
     Optional<News> findWithTagsByAiNewsId(String aiNewsId);
     boolean existsByAiNewsId(String aiNewsId);
     Pagination<News> searchNewsList(NewsSearchCriteria request, boolean isMaster);
     Optional<News> findNewsByRole(UUID id, boolean isMaster);
     void flush();
-    List<News> findAllActive();
+    List<UUID> findAllActiveNewsIds();
     List<News> findLatestNews(int limit);
     List<News> findByIds(List<UUID> ids);
     List<News> saveAll(List<News> newsList);

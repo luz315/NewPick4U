@@ -1,6 +1,6 @@
 package com.newpick4u.news.news.infrastructure.util;
 
-import com.newpick4u.news.news.application.usecase.TagVectorConverterProvider;
+import com.newpick4u.news.news.application.usecase.VectorConverter;
 import com.newpick4u.news.news.domain.entity.News;
 import org.springframework.stereotype.Component;
 
@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
-public class TagVectorConverter implements TagVectorConverterProvider {
+public class VectorConverterImpl implements VectorConverter {
     // 사용자 + 뉴스 태그로부터 전역 태그 셋 추출 (추천 벡터 인덱스용)
     @Override
     public Set<String> extractGlobalTagSetFromNews(Map<String, Double> userTagMap, List<News> newsList) {
