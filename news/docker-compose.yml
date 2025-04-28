@@ -1,15 +1,21 @@
 services:
-  news-service:
-    build:
-      context: .         # news/ 폴더 (JAR 있는 곳 기준)
-      dockerfile: Dockerfile
-    container_name: news-main-app
-    ports:
-      - "11001:8080"
+  client-service:
+    image: news-service:latest
+    container_name: news-service
     env_file:
       - .env.news
+    ports:
+      - "11001:8080"
+    networks:
+      - my-internal-net
     environment:
+      TZ: Asia/Seoul
       SPRING_PROFILES_ACTIVE: main
-
+      JAVA_OPTS: >-
+        -Duser.timezone=Asia/Seoul
+    working_dir: /app
+networks:
+  my-internal-net:
+    external: true
 
 

@@ -52,12 +52,6 @@ eureka:
     register-with-eureka: true
     fetch-registry: true
 
-#eureka:
-#  client:
-#    enabled: false
-#    register-with-eureka: false
-#    fetch-registry: false
-
 management:
   endpoints:
     web:
