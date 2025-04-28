@@ -1,2 +1,69 @@
 server:
   port: 17001
+spring:
+  application:
+    name: client-service
+  datasource:
+    url: ${DEVELOP_DB_URL}
+    username: ${DEVELOP_DB_USERNAME}
+    password: ${DEVELOP_DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: ${DEVELOP_REDIS_HOST}
+      port: ${DEVELOP_REDIS_PORT}
+      password: ${DEVELOP_REDIS_PASSWORD}
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    consumer:
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      groups:
+        point-request: point-request-1
+        point-request-dlq: point-request-dlq-1
+        point-request-failure: point-request-failure-1
+        point-request-failure-dlq: point-request-failure-dlq-1
+      topics:
+        point-request: point-request.fct.v1
+        point-request-dlq: point-request-dlq.fct.v1
+        point-request-failure: point-request-failure.fct.v1
+        point-request-failure-dlq: point-request-failure-dlq.fct.v1
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      topics:
+        point-update: user-point-update.fct.v1
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    listener:
+      ack-mode: manual_immediate
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+    defer-datasource-initialization: true # hibernate가 초기화되기 전 data.sql 실행하는 것을 방지
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        default_batch_fetch_size: 100
+        format_sql: true
+eureka:
+  instance:
+    hostname: ${DEVELOP_EUREKA_HOSTNAME}
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+    appname: ${spring.application.name}
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true
