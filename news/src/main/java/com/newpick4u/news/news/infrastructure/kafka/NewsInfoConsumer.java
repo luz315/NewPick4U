@@ -1,11 +1,9 @@
 package com.newpick4u.news.news.infrastructure.kafka;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.newpick4u.common.exception.CustomException;
 import com.newpick4u.news.global.exception.NewsErrorCode;
 import com.newpick4u.news.news.application.dto.NewsInfoDto;
-import com.newpick4u.news.news.application.dto.NewsTagDto;
 import com.newpick4u.news.news.application.usecase.NewsService;
-import com.newpick4u.news.news.domain.repository.TagInboxRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -19,8 +17,6 @@ import org.springframework.stereotype.Component;
 public class NewsInfoConsumer {
 
   private final NewsService newsService;
-  private final TagInboxRepository tagInboxRepository;
-  private final ObjectMapper objectMapper;
 
   @KafkaListener(
       topics = "news-info.fct.v1",

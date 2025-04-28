@@ -1,5 +1,7 @@
 package com.newpick4u.news.news.application.scheduler;
 
+import com.newpick4u.common.exception.CustomException;
+import com.newpick4u.news.global.exception.NewsErrorCode;
 import com.newpick4u.news.news.application.usecase.NewsRecommender;
 import com.newpick4u.news.news.application.usecase.RecommendationCacheOperator;
 import com.newpick4u.news.news.application.usecase.VectorConverter;
@@ -67,6 +69,7 @@ public class NewsRecommendScheduler {
             log.info("[추천 저장 완료] userId={}, count={}", userId, recommendedIds.size());
         } catch (Exception e) {
             log.error("[추천 저장 실패] userId={}", userId, e);
+            throw CustomException.from(NewsErrorCode.NEWS_RECOMMENDATION_FAIL);
         }
     }
 }

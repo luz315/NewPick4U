@@ -1,5 +1,7 @@
 package com.newpick4u.news.news.application.scheduler;
 
+import com.newpick4u.common.exception.CustomException;
+import com.newpick4u.news.global.exception.NewsErrorCode;
 import com.newpick4u.news.news.application.usecase.TagIndexQueueOperator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +22,7 @@ public class TagIndexSyncScheduler {
             log.info("[태그 인덱스 갱신] 완료");
         } catch (Exception e) {
             log.error("[태그 인덱스 갱신 실패]", e);
+            throw CustomException.from(NewsErrorCode.REDIS_SCAN_FAIL);
         }
     }
 }

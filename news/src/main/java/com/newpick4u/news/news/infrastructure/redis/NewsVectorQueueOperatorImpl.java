@@ -1,6 +1,8 @@
 package com.newpick4u.news.news.infrastructure.redis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.newpick4u.common.exception.CustomException;
+import com.newpick4u.news.global.exception.NewsErrorCode;
 import com.newpick4u.news.news.application.usecase.NewsVectorQueueOperator;
 import com.newpick4u.news.news.domain.entity.News;
 import com.newpick4u.news.news.domain.repository.NewsRepository;
@@ -86,10 +88,12 @@ public class NewsVectorQueueOperatorImpl implements NewsVectorQueueOperator {
 
             redisTemplate.opsForValue().set(VECTOR_KEY_PREFIX + newsId, newsVectorJson);
             removeFromQueue(newsId);
-            log.info("뉴스 벡터 생성 및 저장 완료. newsId={}", newsId);
+            log.info("뉴스 벡터" +
+                    " 생성 및 저장 완료. newsId={}", newsId);
 
         } catch (Exception e) {
             log.error("뉴스 벡터 생성 중 예외 발생. id={}, 에러={}", idStr, e.getMessage());
+            throw CustomException.from(NewsErrorCode.VECTOR_GENERATION_FAIL);
         }
     }
 }

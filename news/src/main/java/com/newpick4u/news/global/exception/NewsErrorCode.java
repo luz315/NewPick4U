@@ -19,7 +19,8 @@ public enum NewsErrorCode implements ErrorCode {
     KAFKA_TAG_SAVE_FAIL(50005, "Kafka 태그 저장 실패", HttpStatus.INTERNAL_SERVER_ERROR),
     TEST_SIMULATED_FAILURE_ONCE(50006, "테스트용 첫 번째 실패 유도", HttpStatus.INTERNAL_SERVER_ERROR),
     TEST_SIMULATED_FAILURE_ALWAYS(50007, "테스트용 무조건 실패 유도", HttpStatus.INTERNAL_SERVER_ERROR),
-    VECTOR_LENGTH_MISMATCH(40002, "벡터 길이가 일치하지 않습니다.", HttpStatus.BAD_REQUEST);
+    VECTOR_LENGTH_MISMATCH(40002, "벡터 길이가 일치하지 않습니다.", HttpStatus.BAD_REQUEST),
+    NEWS_RECOMMENDATION_FAIL(50006, "사용자 뉴스 추천 실패", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final int code;
     private final String message;

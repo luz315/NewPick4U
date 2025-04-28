@@ -78,6 +78,7 @@ public class NewsServiceImpl implements NewsService {
                 log.info("[TagInbox] 태그 적용 완료 및 삭제: aiNewsId={}", newsInfoDto.aiNewsId());
             } catch (Exception e) {
                 log.warn("[TagInbox] 처리 실패: aiNewsId={}", newsInfoDto.aiNewsId(), e);
+                throw CustomException.from(NewsErrorCode.TAG_INBOX_SERIALIZATION_FAIL);
             }
         });
     }

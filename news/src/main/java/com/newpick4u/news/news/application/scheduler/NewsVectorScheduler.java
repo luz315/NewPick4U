@@ -1,5 +1,7 @@
 package com.newpick4u.news.news.application.scheduler;
 
+import com.newpick4u.common.exception.CustomException;
+import com.newpick4u.news.global.exception.NewsErrorCode;
 import com.newpick4u.news.news.application.usecase.NewsVectorQueueOperator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +22,7 @@ public class NewsVectorScheduler {
             log.info("[뉴스 벡터 생성 스케줄러] 처리 완료");
         } catch (Exception e) {
             log.error("[뉴스 벡터 생성 실패]", e);
+            throw CustomException.from(NewsErrorCode.VECTOR_GENERATION_FAIL);
         }
     }
 }

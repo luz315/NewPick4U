@@ -156,7 +156,7 @@ public class RecommendationCacheOperatorImpl implements RecommendationCacheOpera
             String[] parts = key.split(":" );
             return Long.parseLong(parts[1]);
         } catch (Exception e) {
-            return null;
+            throw CustomException.from(NewsErrorCode.REDIS_SCAN_FAIL);
         }
     }
 }
