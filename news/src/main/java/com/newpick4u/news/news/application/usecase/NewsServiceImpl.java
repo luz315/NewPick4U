@@ -134,20 +134,31 @@ public class NewsServiceImpl implements NewsService {
     @Override
     @Transactional(readOnly = true)
     public NewsResponseDto getNews(UUID id, CurrentUserInfoDto userInfoDto) {
+        long start = System.currentTimeMillis();
         boolean isMaster = userInfoDto.role() == UserRole.ROLE_MASTER;
         News news = newsRepository.findNewsByRole(id, isMaster)
                 .orElseThrow(() -> new IllegalArgumentException("뉴스를 찾을 수 없습니다."));
+        log.info("[Timer] findNewsByRole 끝, 소요시간 = {}ms", System.currentTimeMillis() - start);
 
         List<String> tags = news.getNewsTagList().stream()
                 .map(NewsTag::getName)
                 .toList();
 
+        long afterDb = System.currentTimeMillis();
         recommendationCacheOperator.incrementUserTagScore(userInfoDto.userId(), tags);
+        log.info("[Timer] Redis incrementUserTagScore 끝, 소요시간 = {}ms", System.currentTimeMillis() - afterDb);
 
         if (viewCountCacheOperator.canIncreaseView(id, userInfoDto.userId())) {
             viewCountCacheOperator.incrementViewCount(id);
         }
+        long afterRedis = System.currentTimeMillis();
+
+        log.info("[Timer] View Count 업데이트 끝, 소요시간 = {}ms", System.currentTimeMillis() - afterRedis);
+
         news.updateView(viewCountCacheOperator.getViewCount(news.getId()));
+
+        long total = System.currentTimeMillis() - start;
+        log.info("[Timer] getNews 전체 수행시간 = {}ms", total);
 
         return NewsResponseDto.from(news);
     }

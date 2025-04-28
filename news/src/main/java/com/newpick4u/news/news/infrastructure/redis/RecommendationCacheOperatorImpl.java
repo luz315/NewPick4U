@@ -24,34 +24,39 @@ public class RecommendationCacheOperatorImpl implements RecommendationCacheOpera
     private static final int MAX_TAGS = 50;
     private static final Duration TAG_TTL = Duration.ofDays(30); // 30일간 미접속 시 태그 만료
     private static final Duration RECOMMEND_CACHE_TTL = Duration.ofDays(1);
-    private static final String LOCK_PREFIX = "lock:user:tags:";
+//    private static final String LOCK_PREFIX = "lock:user:tags:";
     private static final String TAG_KEY_PATTERN = "user:*:tags";
 
     // 태그 카운트 증가 (태그 기록 + 제한 개수 초과 시 삭제 + TTL 설정 (원자적 처리))
     @Override
     public void incrementUserTagScore(Long userId, List<String> tagNames) {
         String key = buildKey(userId);
-        String lockKey = LOCK_PREFIX + userId;
-        RLock lock = redissonClient.getLock(lockKey);
 
-        try {
-            if (lock.tryLock(3, 2, TimeUnit.SECONDS)) { // timeout: 대기 3초, 점유 2초
-                for (String tag : tagNames) {
-                    redisTemplate.opsForZSet().incrementScore(key, tag, 1);
-                }
-                trimTagLimit(key);
-                redisTemplate.expire(key, TAG_TTL);
-            } else {
-                throw new IllegalStateException("Redis 락 획득 실패: userId=" + userId);
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Redis 락 인터럽트", e);
-        } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
+        for (String tag : tagNames) {
+            redisTemplate.opsForZSet().incrementScore(key, tag, 1);
         }
+
+        redisTemplate.expire(key, TAG_TTL);
+//        String lockKey = LOCK_PREFIX + userId;
+//        RLock lock = redissonClient.getLock(lockKey);
+//        try {
+//            if (lock.tryLock(3, 2, TimeUnit.SECONDS)) { // timeout: 대기 3초, 점유 2초
+//                for (String tag : tagNames) {
+//                    redisTemplate.opsForZSet().incrementScore(key, tag, 1);
+//                }
+//                trimTagLimit(key);
+//                redisTemplate.expire(key, TAG_TTL);
+//            } else {
+//                throw new IllegalStateException("Redis 락 획득 실패: userId=" + userId);
+//            }
+//        } catch (InterruptedException e) {
+//            Thread.currentThread().interrupt();
+//            throw new RuntimeException("Redis 락 인터럽트", e);
+//        } finally {
+//            if (lock.isHeldByCurrentThread()) {
+//                lock.unlock();
+//            }
+//        }
     }
 
     // 유저 태그 점수 맵 가져오기

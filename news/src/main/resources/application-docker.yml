@@ -1,5 +1,6 @@
 server:
   port: 11001
+  address: 0.0.0.0
 
 eureka:
   client:
@@ -10,10 +11,6 @@ eureka:
 spring:
   application:
     name: news-service
-  config:
-    import:
-      - file:.env.news[.properties]
-
   kafka:
     bootstrap-servers: ${DOCKER_KAFKA_BOOTSTRAP_SERVERS}
     consumer:
@@ -29,7 +26,7 @@ spring:
 
   datasource:
     url: ${DOCKER_DB_URL}
-    username: ${DEVELOP_DB_USERNAME} # 기존 값 그대로 사용
+    username: ${DEVELOP_DB_USERNAME}
     password: ${DEVELOP_DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
@@ -47,5 +44,16 @@ spring:
   data:
     redis:
       host: ${DOCKER_REDIS_HOST}
-      port: ${REDIS_PORT}
-      password: ${REDIS_PASSWORD}
+      port: ${DEVELOP_REDIS_PORT}
+      password: ${DEVELOP_REDIS_PASSWORD}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+
+  swagger-ui:
+    path: /doc
+    enabled: true
+    operations-sorter: method
+    tags-sorter: alpha

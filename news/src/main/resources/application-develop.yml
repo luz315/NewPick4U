@@ -2,20 +2,10 @@ server:
   port: 11001
 
 eureka:
-  instance:
-    hostname: ${DEVELOP_EUREKA_HOSTNAME}
-    prefer-ip-address: false
-    instance-id: ${spring.application.name}:${server.port}
-    appname: ${spring.application.name}
   client:
-    register-with-eureka: true
-    fetch-registry: true
-
-#eureka:
-#  client:
-#    enabled: false
-#    register-with-eureka: false
-#    fetch-registry: false
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
 
 spring:
   application:
@@ -41,6 +31,12 @@ spring:
     username: ${DEVELOP_DB_USERNAME}
     password: ${DEVELOP_DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 3000
 
   jpa:
     hibernate:
@@ -70,3 +66,9 @@ springdoc:
     operations-sorter: method
     tags-sorter: alpha
 
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+    zipkin:
+      endpoint: ${DEVELOP_ZIPKIN_SERVERS}
