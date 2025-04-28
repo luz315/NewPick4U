@@ -1,5 +1,7 @@
 package com.newpick4u.news.news.infrastructure.redis;
 
+import com.newpick4u.common.exception.CustomException;
+import com.newpick4u.news.global.exception.NewsErrorCode;
 import com.newpick4u.news.news.application.usecase.RecommendationCacheOperator;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
@@ -117,8 +119,7 @@ public class RecommendationCacheOperatorImpl implements RecommendationCacheOpera
             }
 
         } catch (Exception e) {
-            // 로그 처리 또는 예외 변환 처리
-            throw new RuntimeException("Redis SCAN 중 오류 발생", e);
+            throw CustomException.from(NewsErrorCode.REDIS_SCAN_FAIL);
         }
 
         return userIds;

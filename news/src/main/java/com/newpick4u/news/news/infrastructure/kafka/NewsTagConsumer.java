@@ -1,5 +1,7 @@
 package com.newpick4u.news.news.infrastructure.kafka;
 
+import com.newpick4u.common.exception.CustomException;
+import com.newpick4u.news.global.exception.NewsErrorCode;
 import com.newpick4u.news.news.application.dto.NewsTagDto;
 import com.newpick4u.news.news.application.usecase.NewsService;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +29,7 @@ public class NewsTagConsumer {
             ack.acknowledge();
         } catch (Exception e) {
             log.error("[Kafka] 뉴스 태그 연동 실패: {}", record.value(), e);
-            throw e;
+            throw CustomException.from(NewsErrorCode.KAFKA_TAG_SAVE_FAIL);
         }
     }
 }

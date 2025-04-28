@@ -1,6 +1,7 @@
 package com.newpick4u.news.news.infrastructure.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.newpick4u.news.global.exception.NewsErrorCode;
 import com.newpick4u.news.news.application.dto.NewsInfoDto;
 import com.newpick4u.news.news.application.dto.NewsTagDto;
 import com.newpick4u.news.news.application.usecase.NewsService;
@@ -34,7 +35,7 @@ public class NewsInfoConsumer {
     } catch (Exception e) {
 //            ack.nack(Duration.ofSeconds(3));
       log.error("[Kafka] 뉴스 저장 실패 - 메시지: {}", record.value(), e);
-      throw e; // 이걸 넣자!
+      throw CustomException.from(NewsErrorCode.KAFKA_NEWS_SAVE_FAIL);
     }
   }
 }

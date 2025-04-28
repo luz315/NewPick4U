@@ -2,8 +2,10 @@ package com.newpick4u.news.news.application.usecase;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.newpick4u.common.exception.CustomException;
 import com.newpick4u.common.resolver.dto.CurrentUserInfoDto;
 import com.newpick4u.common.resolver.dto.UserRole;
+import com.newpick4u.news.global.exception.NewsErrorCode;
 import com.newpick4u.news.news.application.dto.NewsInfoDto;
 import com.newpick4u.news.news.application.dto.NewsTagDto;
 import com.newpick4u.news.news.application.dto.response.NewsResponseDto;
@@ -43,8 +45,8 @@ public class NewsServiceImpl implements NewsService {
         simulateFailures(dto.aiNewsId()); // 테스트 조건 시뮬레이션
 
         if (newsRepository.existsByAiNewsId(dto.aiNewsId())) {
-              throw new IllegalStateException("이미 저장된 뉴스입니다: " + dto.aiNewsId());
-          }
+            throw CustomException.from(NewsErrorCode.DUPLICATE_NEWS);
+        }
           News news = News.create(dto.aiNewsId(), dto.title(), dto.content(), dto.url(), dto.publishedDate(), 0L);
           newsRepository.save(news);
       }
@@ -83,7 +85,7 @@ public class NewsServiceImpl implements NewsService {
     // 내부 메서드
     private void validateTagListSize(NewsTagDto dto) {
         if (dto.tagList() == null || dto.tagList().size() > 10) {
-            throw new IllegalArgumentException("뉴스 태그는 최대 10개까지 존재합니다.");
+            throw CustomException.from(NewsErrorCode.TAG_LIMIT_EXCEEDED);
         }
     }
 
@@ -107,7 +109,7 @@ public class NewsServiceImpl implements NewsService {
         try {
             return objectMapper.writeValueAsString(dto);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("태그 인박스 직렬화 실패", e);
+            throw CustomException.from(NewsErrorCode.TAG_INBOX_SERIALIZATION_FAIL);
         }
     }
 
@@ -123,11 +125,11 @@ public class NewsServiceImpl implements NewsService {
                 failureMap.put(aiNewsId, count + 1); // 첫 실패 기록
                 log.warn("[SimulateFail] 첫 번째 실패 유도: {}", aiNewsId);
 
-                throw new RuntimeException("첫 번째 실패 유도");
+                throw CustomException.from(NewsErrorCode.TEST_SIMULATED_FAILURE_ONCE);
             }
         }
         if ("fail-me".equals(aiNewsId)) {
-            throw new RuntimeException("무조건 실패 유도");
+            throw CustomException.from(NewsErrorCode.TEST_SIMULATED_FAILURE_ALWAYS);
         }
     }
 
@@ -137,7 +139,7 @@ public class NewsServiceImpl implements NewsService {
         long start = System.currentTimeMillis();
         boolean isMaster = userInfoDto.role() == UserRole.ROLE_MASTER;
         News news = newsRepository.findNewsByRole(id, isMaster)
-                .orElseThrow(() -> new IllegalArgumentException("뉴스를 찾을 수 없습니다."));
+                .orElseThrow(() -> CustomException.from(NewsErrorCode.NEWS_NOT_FOUND));
         log.info("[Timer] findNewsByRole 끝, 소요시간 = {}ms", System.currentTimeMillis() - start);
 
         List<String> tags = news.getNewsTagList().stream()
