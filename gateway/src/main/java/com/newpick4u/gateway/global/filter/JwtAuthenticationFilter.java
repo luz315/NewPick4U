@@ -22,7 +22,10 @@ public class JwtAuthenticationFilter implements WebFilter {
   private static final String USER_ID_HEADER = "X-User-Id";
   private static final String USER_ROLE_HEADER = "X-User-Role";
   private final TokenProvider tokenProvider;
-  private final List<String> whiteList = List.of("/api/v1/users", "/api/v1/users/signin");
+  private final List<String> whiteList = List.of(
+      "/api/v1/users",
+      "/api/v1/users/signin"
+  );
 
   private static ServerHttpRequest createCustomRequest(ServerWebExchange exchange, String userId,
       String userRole) {
@@ -35,7 +38,7 @@ public class JwtAuthenticationFilter implements WebFilter {
   @Override
   public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
     String requestPath = exchange.getRequest().getURI().getPath();
-    if (whiteList.contains(requestPath)) {
+    if (isWhiteListPath(requestPath)) {
       return chain.filter(exchange);
     }
 
@@ -51,6 +54,10 @@ public class JwtAuthenticationFilter implements WebFilter {
       return chain.filter(modifiedExchange);
     }
     throw CustomException.from(GatewayErrorCode.MISSING_AUTHORIZATION_HEADER);
+  }
+
+  private boolean isWhiteListPath(String requestPath) {
+    return requestPath.contains("/internal/") || whiteList.contains(requestPath);
   }
 
   private String extractToken(String accessToken) {

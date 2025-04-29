@@ -1,5 +1,8 @@
 package com.newpick4u.news.news.infrastructure.util;
 
+import com.newpick4u.common.exception.CustomException;
+import com.newpick4u.news.global.exception.NewsErrorCode;
+
 public class CosineSimilarityUtil {
 
     /**
@@ -8,7 +11,7 @@ public class CosineSimilarityUtil {
      */
     public static double cosineSimilarity(double[] vec1, double[] vec2) {
         if (vec1.length != vec2.length) {
-            throw new IllegalArgumentException("벡터 길이가 일치하지 않습니다.");
+            throw new CustomException(NewsErrorCode.VECTOR_LENGTH_MISMATCH);
         }
 
         double dotProduct = 0.0;

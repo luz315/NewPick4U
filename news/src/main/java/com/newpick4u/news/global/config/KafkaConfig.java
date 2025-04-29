@@ -1,4 +1,4 @@
-package com.newpick4u.news.news.infrastructure.kafka;
+package com.newpick4u.news.global.config;
 
 import com.newpick4u.news.news.application.dto.NewsInfoDto;
 import com.newpick4u.news.news.application.dto.NewsTagDto;

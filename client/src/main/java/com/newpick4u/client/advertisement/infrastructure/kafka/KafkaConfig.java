@@ -1,6 +1,5 @@
 package com.newpick4u.client.advertisement.infrastructure.kafka;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.newpick4u.client.advertisement.application.exception.AdvertisementException;
 import java.util.HashMap;
 import java.util.Map;
@@ -72,11 +71,6 @@ public class KafkaConfig {
     ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
     factory.setConsumerFactory(consumerFactory);
     return factory;
-  }
-
-  @Bean
-  public ObjectMapper objectMapper() {
-    return new ObjectMapper();
   }
 
   private Map<String, Object> producerConfigs() {

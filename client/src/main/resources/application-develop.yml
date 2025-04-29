@@ -17,7 +17,7 @@ spring:
       port: ${DEVELOP_REDIS_PORT}
       password: ${DEVELOP_REDIS_PASSWORD}
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    bootstrap-servers: ${DEVELOP_KAFKA_BOOTSTRAP_SERVERS}
     consumer:
       auto-offset-reset: earliest
       enable-auto-commit: false

@@ -33,7 +33,7 @@ spring:
       ack-mode: manual_immediate
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     show-sql: true
     open-in-view: false
     defer-datasource-initialization: true
@@ -59,3 +59,13 @@ eureka:
       defaultZone: ${LOCAL_EUREKA_SERVER_URL}
     register-with-eureka: true
     fetch-registry: true
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+    enabled: true
+  zipkin:
+    tracing:
+      endpoint: ${LOCAL_ZIPKIN_SERVER}
+      export:
+        enabled: true

@@ -1,11 +1,11 @@
 services:
   client-service:
-    image: news-service:latest
-    container_name: news-service
+    image: client-service:latest
+    container_name: client-service
     env_file:
-      - .env.news
+      - .env.client
     ports:
-      - "11001:11001"
+      - "17001:8080"
     networks:
       - my-internal-net
     environment:
@@ -17,5 +17,3 @@ services:
 networks:
   my-internal-net:
     external: true
-
-
