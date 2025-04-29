@@ -50,3 +50,13 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 jwt:
   secret: ${MAIN_SECKET_KEY}
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+    enabled: true
+  zipkin:
+    tracing:
+      endpoint: ${MAIN_ZIPKIN_SERVER}
+      export:
+        enabled: true
