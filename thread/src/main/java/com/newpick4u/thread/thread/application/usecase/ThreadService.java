@@ -13,7 +13,4 @@ public interface ThreadService {
   Thread getThreadDetail(UUID threadId);
 
   Boolean existThread(UUID threadId);
-
-  void saveThread();
-
 }
