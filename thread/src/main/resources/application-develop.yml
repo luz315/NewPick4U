@@ -1,7 +1,5 @@
 server:
   port: 13001
-  tomcat:
-    max-threads: 200
 
 eureka:
   instance:
