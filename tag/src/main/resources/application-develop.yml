@@ -12,6 +12,9 @@ eureka:
     fetch-registry: true
 
 spring:
+  config:
+    import:
+      - file:.env.tag[.properties]
   datasource:
     url: ${DEVELOP_DB_URL}
     username: ${DEVELOP_DB_USERNAME}
@@ -42,8 +45,8 @@ spring:
       delete:
         group-id: ${KAFKA_DELETE_GROUP_ID}
       topic:
-        create: "${CREATE_TAG_TOPIC}"
-        delete: "${DELETE_TAG_TOPIC}"
+        create: ${CREATE_TAG_TOPIC}
+        delete: ${DELETE_TAG_TOPIC}
 
 management:
   tracing:
