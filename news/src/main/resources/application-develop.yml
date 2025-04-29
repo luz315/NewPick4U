@@ -2,14 +2,10 @@ server:
   port: 11001
 
 eureka:
-  instance:
-    hostname: ${DEVELOP_EUREKA_HOSTNAME}
-    prefer-ip-address: false
-    instance-id: ${spring.application.name}:${server.port}
-    appname: ${spring.application.name}
   client:
-    register-with-eureka: true
-    fetch-registry: true
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
 
 spring:
   application:
@@ -23,10 +19,10 @@ spring:
       auto-offset-reset: earliest
       enable-auto-commit: false
       max-poll-records: 20
-      max-poll-interval-ms: 15000
-      heartbeat-interval-ms: 1000
-      session-timeout-ms: 60000
-
+    properties:
+      max.poll.interval.ms: 15000
+      heartbeat.interval.ms: 1000
+      session.timeout.ms: 60000
     listener:
       ack-mode: manual_immediate
 

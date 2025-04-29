@@ -2,6 +2,7 @@ package com.newpick4u.tag.domain.repository;
 
 import com.newpick4u.tag.domain.criteria.SearchTagCriteria;
 import com.newpick4u.tag.domain.entity.Tag;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -22,5 +23,9 @@ public interface TagRepository {
 
   List<Tag> findAll();
 
-  void deleteAll();
+  List<Tag> findAllByTagNameIn(List<String> tagNames);
+
+  void incrementScoreByTagNames(ArrayList<String> strings);
+
+  List<Tag> saveAll(List<Tag> newTags);
 }

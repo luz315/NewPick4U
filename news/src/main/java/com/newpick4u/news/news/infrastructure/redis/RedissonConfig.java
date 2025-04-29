@@ -22,7 +22,6 @@ public class RedissonConfig {
     @Value("${spring.data.redis.password}")
     private String password;
 
-
     @Bean
     public RedissonClient redissonClientFactory() {
         Config config = new Config();
@@ -31,7 +30,5 @@ public class RedissonConfig {
                 .setPassword(password);
         return Redisson.create(config);
     }
-//    log.info(">>> REDIS_PASSWORD = " + password); // RedissonConfig.java 내부
-
 }
 

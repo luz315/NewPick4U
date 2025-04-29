@@ -13,32 +13,39 @@ spring:
   config:
     import:
       - file:.env.news[.properties]
+
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    bootstrap-servers: ${DOCKER_KAFKA_BOOTSTRAP_SERVERS}
     consumer:
       auto-offset-reset: earliest
       enable-auto-commit: false
+      max-poll-records: 20
+    properties:
+      max.poll.interval.ms: 15000
+      heartbeat.interval.ms: 1000
+      session.timeout.ms: 60000
     listener:
       ack-mode: manual_immediate
 
   datasource:
-    url: ${DEVELOP_DB_URL}
-    username: ${DEVELOP_DB_USERNAME}
+    url: ${DOCKER_DB_URL}
+    username: ${DEVELOP_DB_USERNAME} # 기존 값 그대로 사용
     password: ${DEVELOP_DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     show-sql: true
     open-in-view: false
     properties:
       hibernate:
-      dialect: org.hibernate.dialect.MySQL8Dialect
-      format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        default_batch_fetch_size: 100
+        format_sql: true
 
   data:
     redis:
-      host: ${REDIS_HOST}
+      host: ${DOCKER_REDIS_HOST}
       port: ${REDIS_PORT}
-      password: ${REDIS_PASSWORD}
+#      password: ${REDIS_PASSWORD}
