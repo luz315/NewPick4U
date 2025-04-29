@@ -5,7 +5,7 @@ services:
     env_file:
       - .env.news
     ports:
-      - "11001:8080"
+      - "11001:11001"
     networks:
       - my-internal-net
     environment:
