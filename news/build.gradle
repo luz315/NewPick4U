@@ -61,6 +61,11 @@ dependencies {
 	// Testcontainers Kafka (선택적으로 EmbeddedKafka보다 현실적인 테스트가 필요할 때)
 	testImplementation 'org.testcontainers:kafka'
 	testImplementation 'org.testcontainers:junit-jupiter'
+//	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'io.micrometer:micrometer-core'
+	implementation 'io.micrometer:micrometer-registry-prometheus'
+	implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+	implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
 }
 
 dependencyManagement {

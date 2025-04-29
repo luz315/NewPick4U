@@ -1,5 +1,7 @@
 package com.newpick4u.news.news.infrastructure.redis;
 
+import com.newpick4u.common.exception.CustomException;
+import com.newpick4u.news.global.exception.NewsErrorCode;
 import com.newpick4u.news.news.application.usecase.RecommendationCacheOperator;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
@@ -24,34 +26,39 @@ public class RecommendationCacheOperatorImpl implements RecommendationCacheOpera
     private static final int MAX_TAGS = 50;
     private static final Duration TAG_TTL = Duration.ofDays(30); // 30일간 미접속 시 태그 만료
     private static final Duration RECOMMEND_CACHE_TTL = Duration.ofDays(1);
-    private static final String LOCK_PREFIX = "lock:user:tags:";
+//    private static final String LOCK_PREFIX = "lock:user:tags:";
     private static final String TAG_KEY_PATTERN = "user:*:tags";
 
     // 태그 카운트 증가 (태그 기록 + 제한 개수 초과 시 삭제 + TTL 설정 (원자적 처리))
     @Override
     public void incrementUserTagScore(Long userId, List<String> tagNames) {
         String key = buildKey(userId);
-        String lockKey = LOCK_PREFIX + userId;
-        RLock lock = redissonClient.getLock(lockKey);
 
-        try {
-            if (lock.tryLock(3, 2, TimeUnit.SECONDS)) { // timeout: 대기 3초, 점유 2초
-                for (String tag : tagNames) {
-                    redisTemplate.opsForZSet().incrementScore(key, tag, 1);
-                }
-                trimTagLimit(key);
-                redisTemplate.expire(key, TAG_TTL);
-            } else {
-                throw new IllegalStateException("Redis 락 획득 실패: userId=" + userId);
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Redis 락 인터럽트", e);
-        } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
+        for (String tag : tagNames) {
+            redisTemplate.opsForZSet().incrementScore(key, tag, 1);
         }
+
+        redisTemplate.expire(key, TAG_TTL);
+//        String lockKey = LOCK_PREFIX + userId;
+//        RLock lock = redissonClient.getLock(lockKey);
+//        try {
+//            if (lock.tryLock(3, 2, TimeUnit.SECONDS)) { // timeout: 대기 3초, 점유 2초
+//                for (String tag : tagNames) {
+//                    redisTemplate.opsForZSet().incrementScore(key, tag, 1);
+//                }
+//                trimTagLimit(key);
+//                redisTemplate.expire(key, TAG_TTL);
+//            } else {
+//                throw new IllegalStateException("Redis 락 획득 실패: userId=" + userId);
+//            }
+//        } catch (InterruptedException e) {
+//            Thread.currentThread().interrupt();
+//            throw new RuntimeException("Redis 락 인터럽트", e);
+//        } finally {
+//            if (lock.isHeldByCurrentThread()) {
+//                lock.unlock();
+//            }
+//        }
     }
 
     // 유저 태그 점수 맵 가져오기
@@ -112,8 +119,7 @@ public class RecommendationCacheOperatorImpl implements RecommendationCacheOpera
             }
 
         } catch (Exception e) {
-            // 로그 처리 또는 예외 변환 처리
-            throw new RuntimeException("Redis SCAN 중 오류 발생", e);
+            throw CustomException.from(NewsErrorCode.REDIS_SCAN_FAIL);
         }
 
         return userIds;
@@ -150,7 +156,7 @@ public class RecommendationCacheOperatorImpl implements RecommendationCacheOpera
             String[] parts = key.split(":" );
             return Long.parseLong(parts[1]);
         } catch (Exception e) {
-            return null;
+            throw CustomException.from(NewsErrorCode.REDIS_SCAN_FAIL);
         }
     }
 }
