@@ -5,6 +5,7 @@ import com.newpick4u.common.response.SliceResponse;
 import com.newpick4u.thread.thread.application.dto.ThreadDetailResponseDto;
 import com.newpick4u.thread.thread.application.dto.ThreadResponseDto;
 import com.newpick4u.thread.thread.application.usecase.ThreadService;
+import io.micrometer.core.annotation.Timed;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -27,12 +28,13 @@ public class ThreadApiController {
   private final ThreadService threadService;
 
   @GetMapping()
+  @Timed(value = "threads_request", description = "Total time for thread list request", histogram = true)
   public ResponseEntity<ApiResponse<SliceResponse<ThreadResponseDto>>> getThreads(
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "10") int size
   ) {
-    final String getThreadRequestMetric = "threads_request";
-    meterRegistry.counter(getThreadRequestMetric).increment();
+//    final String getThreadRequestMetric = "threads_request";
+//    meterRegistry.counter(getThreadRequestMetric).increment();
 
     Pageable pageable = PageRequest.of(page, size);
     SliceResponse<ThreadResponseDto> response = threadService.getThreads(pageable);

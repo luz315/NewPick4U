@@ -12,6 +12,11 @@ eureka:
     fetch-registry: true
 
 spring:
+  application:
+    name: thread-service
+  config:
+    import:
+      - file:.env.thread[.properties]
   datasource:
     url: ${DEVELOP_DB_URL}
     username: ${DEVELOP_DB_USERNAME}

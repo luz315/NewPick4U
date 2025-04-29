@@ -1,2 +1,70 @@
 server:
   port: 14001
+
+eureka:
+  instance:
+    hostname: ${MAIN_EUREKA_HOSTNAME}
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+    appname: ${spring.application.name}
+  client:
+    service-url:
+      defaultZone: ${MAIN_EUREKA_SERVER_URL}
+    register-with-eureka: true
+    fetch-registry: true
+
+spring:
+  datasource:
+    url: ${MAIN_DB_URL}
+    username: ${MAIN_DB_USERNAME}
+    password: ${MAIN_DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 2000
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+    defer-datasource-initialization: true # hibernate가 초기화되기 전 data.sql 실행하는 것을 방지
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        default_batch_fetch_size: 100
+        format_sql: true
+
+  data:
+    redis:
+      host: ${MAIN_REDIS_HOST}
+      port: ${MAIN_REDIS_PORT}
+      password: ${MAIN_REDIS_PASSWORD}
+  kafka:
+    tag-topic:
+      topic-name: tag.fct.v1
+    dlq-topic:
+      topic-name: dev.tag.fct.dql.v1
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    consumer:
+      create:
+        group-id: ${KAFKA_CREATE_GROUP_ID}
+      delete:
+        group-id: ${KAFKA_DELETE_GROUP_ID}
+      topic:
+        create: "${CREATE_TAG_TOPIC}"
+        delete: "${DELETE_TAG_TOPIC}"
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+    enabled: true
+
+  zipkin:
+    tracing:
+      endpoint: ${MAIN_ZIPKIN_ENDPOINT}
+      export:
+        enabled: true
