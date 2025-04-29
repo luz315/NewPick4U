@@ -52,6 +52,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-tracing-bridge-brave'
     implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
+
+    // 메트릭 수집용
+    implementation 'io.micrometer:micrometer-core'
+
+    // Prometheus에 메트릭을 노출시키기 위한 추가 라이브러리
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 }
 
 dependencyManagement {

@@ -58,11 +58,18 @@ spring:
         delete: "${DELETE_TAG_TOPIC}"
 
 management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus
   tracing:
     sampling:
       probability: 1.0
     enabled: true
-
+  prometheus:
+    metrics:
+      export:
+        enabled: true
   zipkin:
     tracing:
       endpoint: ${MAIN_ZIPKIN_ENDPOINT}

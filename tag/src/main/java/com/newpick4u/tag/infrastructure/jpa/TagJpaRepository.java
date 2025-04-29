@@ -15,7 +15,7 @@ public interface TagJpaRepository extends JpaRepository<Tag, UUID> {
 
   List<Tag> findAllByTagNameIn(List<String> tagNames);
 
-  @Modifying
+  @Modifying(flushAutomatically = true)
   @Query("""
           UPDATE Tag t
           SET t.score = t.score + 1
