@@ -6,6 +6,7 @@ import com.newpick4u.comment.comment.application.CommentSearchCriteria;
 import com.newpick4u.comment.comment.application.NewsClient;
 import com.newpick4u.comment.comment.application.TagCacheRepository;
 import com.newpick4u.comment.comment.application.ThreadClient;
+import com.newpick4u.comment.comment.application.UserClient;
 import com.newpick4u.comment.comment.application.dto.CommentListPageDto.CommentContentDto;
 import com.newpick4u.comment.comment.application.dto.CommentSaveRequestDto;
 import com.newpick4u.comment.comment.application.dto.CommentUpdateDto;
@@ -41,6 +42,7 @@ public class CommentServiceImpl implements CommentService {
   private final ObjectMapper objectMapper;
   private final ThreadClient threadClient;
   private final NewsClient newsClient;
+  private final UserClient userClient;
   private final TagCacheRepository tagCacheRepository;
   private final CommentRepository commentRepository;
   private final CommentGoodRepository commentGoodRepository;
@@ -57,7 +59,10 @@ public class CommentServiceImpl implements CommentService {
       throw new CommentException.NewsNotFoundException();
     }
 
-    Comment comment = Comment.createForNews(saveDto.newsId(), saveDto.content());
+    // 유저 이름 조회
+    String username = userClient.getUsername(currentUserInfo.userId());
+
+    Comment comment = Comment.createForNews(saveDto.newsId(), saveDto.content(), username);
     Comment savedComment = commentRepository.save(comment);
 
     String message = null;
@@ -110,7 +115,10 @@ public class CommentServiceImpl implements CommentService {
       throw new CommentException.ThreadNotFoundException();
     }
 
-    Comment comment = Comment.createForThread(saveDto.threadId(), saveDto.content());
+    // 유저 이름 조회
+    String username = userClient.getUsername(currentUserInfo.userId());
+
+    Comment comment = Comment.createForThread(saveDto.threadId(), saveDto.content(), username);
     commentRepository.save(comment);
 
     return comment.getId();
@@ -172,9 +180,7 @@ public class CommentServiceImpl implements CommentService {
       throw new CommentGoodException.PermissionDeniedException();
     }
 
-    // 댓글 조회
-    Comment comment = commentRepository.findById(commentId)
-        .orElseThrow(() -> new CommentNotFoundException());
+    Comment comment = commentGood.getComment();
 
     Long currentGoodCount = comment.deleteGood(commentGood);
     return currentGoodCount;

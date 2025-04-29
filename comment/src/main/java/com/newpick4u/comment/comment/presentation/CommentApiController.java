@@ -69,7 +69,7 @@ public class CommentApiController {
     UUID updatedCommentId = commentService.updateComment(commentId, requestDto, currentUserInfo);
 
     return ResponseEntity
-        .status(HttpStatus.CREATED.value())
+        .status(HttpStatus.OK.value())
         .body(
             ApiResponse.of(
                 HttpStatus.OK,
@@ -88,7 +88,7 @@ public class CommentApiController {
     GetCommentResponseDto commentDto = commentService.getComment(commentId, currentUserInfo);
 
     return ResponseEntity
-        .status(HttpStatus.CREATED.value())
+        .status(HttpStatus.OK.value())
         .body(
             ApiResponse.of(
                 HttpStatus.OK,
@@ -108,7 +108,7 @@ public class CommentApiController {
         commentSearchCriteria, currentUserInfo);
 
     return ResponseEntity
-        .status(HttpStatus.CREATED.value())
+        .status(HttpStatus.OK.value())
         .body(
             ApiResponse.of(
                 HttpStatus.OK,
@@ -129,7 +129,7 @@ public class CommentApiController {
         .status(HttpStatus.CREATED.value())
         .body(
             ApiResponse.of(
-                HttpStatus.OK,
+                HttpStatus.CREATED,
                 "Success",
                 Map.of("currentGoodCount", currentGoodCount)
             )
@@ -144,7 +144,7 @@ public class CommentApiController {
   ) {
     Long currentGoodCount = commentFacadeService.deleteGood(commentId, currentUserInfoDto);
     return ResponseEntity
-        .status(HttpStatus.CREATED.value())
+        .status(HttpStatus.OK.value())
         .body(
             ApiResponse.of(
                 HttpStatus.OK,

@@ -35,35 +35,41 @@ public class Comment extends BaseEntity {
 
   @Column(columnDefinition = "TEXT")
   private String content;
-  
+
   private Long goodCount = 0L;
+
+  @Column(length = 50)
+  private String username;
 
   @OneToMany(mappedBy = "comment",
       cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval = true)
   private List<CommentGood> goodList = new ArrayList<>();
 
   @Builder
-  private Comment(UUID newsId, UUID threadId, String content) {
+  private Comment(UUID newsId, UUID threadId, String content, String username) {
     this.newsId = newsId;
     this.threadId = threadId;
     this.content = content;
     this.goodCount = 0L;
     this.goodList = new ArrayList<>();
+    this.username = username;
   }
 
-  public static Comment createForNews(UUID newsId, String content) {
+  public static Comment createForNews(UUID newsId, String content, String username) {
     return Comment.builder()
         .newsId(newsId)
         .threadId(null)
         .content(content)
+        .username(username)
         .build();
   }
 
-  public static Comment createForThread(UUID threadId, String content) {
+  public static Comment createForThread(UUID threadId, String content, String username) {
     return Comment.builder()
         .newsId(null)
         .threadId(threadId)
         .content(content)
+        .username(username)
         .build();
   }
 

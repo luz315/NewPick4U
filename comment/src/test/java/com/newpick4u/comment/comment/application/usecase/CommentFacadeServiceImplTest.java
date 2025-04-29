@@ -51,7 +51,7 @@ class CommentFacadeServiceImplTest {
     // given
     ArrayList<Comment> commentList = new ArrayList<>();
     for (int i = 0; i < 3; i++) {
-      Comment comment = Comment.createForNews(UUID.randomUUID(), "댓글내용" + i);
+      Comment comment = Comment.createForNews(UUID.randomUUID(), "댓글내용" + i, "userName");
       commentList.add(comment);
     }
     commentJpaRepository.saveAll(commentList);
