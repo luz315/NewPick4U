@@ -17,17 +17,20 @@ spring:
       port: ${DEVELOP_REDIS_PORT}
       password: ${DEVELOP_REDIS_PASSWORD}
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    bootstrap-servers: ${DEVELOP_KAFKA_BOOTSTRAP_SERVERS}
     consumer:
       auto-offset-reset: earliest
       enable-auto-commit: false
       groups:
         point-request: point-request-1
         point-request-dlq: point-request-dlq-1
+        point-request-failure: point-request-failure-1
+        point-request-failure-dlq: point-request-failure-dlq-1
       topics:
         point-request: point-request.fct.v1
         point-request-dlq: point-request-dlq.fct.v1
-        point-update: user-point-update.fct.v1
+        point-request-failure: point-request-failure.fct.v1
+        point-request-failure-dlq: point-request-failure-dlq.fct.v1
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     producer:
@@ -57,3 +60,12 @@ eureka:
   client:
     register-with-eureka: true
     fetch-registry: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true

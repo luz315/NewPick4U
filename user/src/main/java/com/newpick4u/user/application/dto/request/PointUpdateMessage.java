@@ -1,5 +1,7 @@
 package com.newpick4u.user.application.dto.request;
 
-public record PointUpdateMessage(Long userId, Integer point) {
+import java.util.UUID;
+
+public record PointUpdateMessage(Long userId, Integer point, UUID advertisementId) {
 
 }

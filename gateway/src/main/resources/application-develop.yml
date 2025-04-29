@@ -51,5 +51,11 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 jwt:
   secret: bXktdmVyeS1zZWN1cmUtYW5kLWxvbmcgc2VjcmV0LWtleS12YWx1ZSE=  # Base64로 인코딩된 문자열
-  issuer: newpick4u
-  access-token-expiration: 3600000  # 1시간 (단위: milliseconds)
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: "http://localhost:9411/api/v2/spans"

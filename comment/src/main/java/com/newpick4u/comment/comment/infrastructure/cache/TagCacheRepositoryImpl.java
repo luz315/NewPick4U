@@ -4,6 +4,7 @@ import com.newpick4u.comment.comment.application.TagCacheRepository;
 import jakarta.annotation.PostConstruct;
 import java.time.Duration;
 import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -29,6 +30,7 @@ public class TagCacheRepositoryImpl implements TagCacheRepository {
   }
 
   // 태그 정보 캐싱
+  @Override
   public void increaseTagCount(List<String> tags) {
     for (String tag : tags) {
       zSetOperations.incrementScore(TAG_COUNT_ZSET_KEY, tag, 1);        // 태그 스코어 정보 증가
@@ -36,8 +38,28 @@ public class TagCacheRepositoryImpl implements TagCacheRepository {
     }
   }
 
-  // TTL 만료 키 삭제 작업
-  public void deleteByTTL() {
+  @Override
+  public Long deleteTagScoreCacheByTTL() {
+    ZSetOperations<String, String> zSetOps = redisTemplate.opsForZSet();
 
+    // ZSet의 모든 태그 조회
+    Set<String> tagSet = zSetOps.range(TAG_COUNT_ZSET_KEY, 0, -1);
+    if (tagSet == null || tagSet.isEmpty()) {
+      return null;
+    }
+
+    Long totalDeletedCount = 0L;
+    for (String tag : tagSet) {
+      String ttlKey = TAG_TTL_KEY_PREFIX + tag;
+
+      // TTL 키 존재 여부 확인
+      Boolean exists = redisTemplate.hasKey(ttlKey);
+      if (Boolean.FALSE.equals(exists)) {
+        // TTL 키가 존재하지 않으면 ZSet에서 제거
+        totalDeletedCount += zSetOps.remove(TAG_COUNT_ZSET_KEY, tag);
+      }
+    }
+
+    return totalDeletedCount;
   }
 }

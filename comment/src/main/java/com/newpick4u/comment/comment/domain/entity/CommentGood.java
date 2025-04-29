@@ -2,6 +2,7 @@ package com.newpick4u.comment.comment.domain.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -25,7 +26,7 @@ public class CommentGood {
   private Long id;
 
   @JoinColumn(name = "comment_id")
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   private Comment comment;
 
   private Long userId;

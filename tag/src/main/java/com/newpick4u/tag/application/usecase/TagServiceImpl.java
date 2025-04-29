@@ -10,8 +10,9 @@ import com.newpick4u.tag.domain.entity.Tag;
 import com.newpick4u.tag.domain.repository.TagRepository;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -47,27 +48,41 @@ public class TagServiceImpl implements TagService {
   @Override
   @Transactional
   public List<TagDto> createTagFromAi(AiNewsDto dto) {
-    List<TagDto> tagList = new ArrayList<>();
+    List<String> tagNames = dto.tags();
 
-    dto.tags().forEach(tagName -> {
-      Optional<Tag> tag = tagRepository.findByTagName(tagName); // 존재하는 태그는 score +1 처리
-      if (tag.isPresent()) {
-        Tag existingTag = tag.get();
-        existingTag.increaseScore();
-        TagDto tagDto = new TagDto(existingTag.getId(), tagName);
-        tagList.add(tagDto);
-        return;
-      }
+    // 1) 한 번에 기존 태그들 조회
+    List<Tag> existingTags = tagRepository.findAllByTagNameIn(tagNames);
+    Set<String> existingNames = existingTags.stream()
+        .map(Tag::getTagName)
+        .collect(Collectors.toSet());
 
-      // 존재하지 않는 태그의 경우는 새로 생성해서 db에 저장
-      Tag newTag = Tag.create(tagName);
-      Tag savedTag = tagRepository.save(newTag);
-      TagDto tagDto = new TagDto(savedTag.getId(), tagName);
-      tagList.add(tagDto);
-    });
+    // 2) 배치 SQL로 점수 증분
+    if (!existingNames.isEmpty()) {
+      tagRepository.incrementScoreByTagNames(new ArrayList<>(existingNames));
+    }
+
+    // 3) 기존 태그 DTO 변환
+    List<TagDto> tagList = existingTags.stream()
+        .map(t -> new TagDto(t.getId(), t.getTagName()))
+        .collect(Collectors.toList());
+
+    // 4) 신규 태그만 걸러내서 배치 생성
+    List<Tag> newTags = tagNames.stream()
+        .filter(name -> !existingNames.contains(name))
+        .distinct()
+        .map(Tag::create)
+        .collect(Collectors.toList());
+
+    if (!newTags.isEmpty()) {
+      List<Tag> savedNewTags = tagRepository.saveAll(newTags);
+      tagList.addAll(savedNewTags.stream()
+          .map(t -> new TagDto(t.getId(), t.getTagName()))
+          .toList());
+    }
 
     return tagList;
   }
+
 
   @Override
   @Transactional

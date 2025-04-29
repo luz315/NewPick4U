@@ -2,8 +2,8 @@ package com.newpick4u.newsorigin.newsorigin.application.usecase;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.newpick4u.newsorigin.newsorigin.application.EventPublisher;
 import com.newpick4u.newsorigin.newsorigin.application.GetOriginBodyClient;
-import com.newpick4u.newsorigin.newsorigin.application.MessageClient;
 import com.newpick4u.newsorigin.newsorigin.application.OriginCollectClient;
 import com.newpick4u.newsorigin.newsorigin.application.dto.NewNewsOriginDto;
 import com.newpick4u.newsorigin.newsorigin.application.dto.SendNewOriginDto;
@@ -20,6 +20,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -27,13 +29,16 @@ import org.springframework.stereotype.Service;
 @Service
 public class NewsOriginServiceImpl implements NewsOriginService {
 
-  private static final int SEND_BATCH_SIZE = 20;
+  private static final int SEND_BATCH_SIZE = 10;
   private final OriginCollectClient originCollectClient;
   private final GetOriginBodyClient getOriginBodyClient;
   private final NewsOriginRepository newsOriginRepository;
   private final BodyParser bodyParser;
-  private final MessageClient messageClient;
+  private final EventPublisher eventPublisher;
   private final ObjectMapper mapper = new ObjectMapper();
+
+  @Value("${app.news-origin.send-limit-per-min:10}")
+  private int sendLimitPerMin;
 
   // 뉴스 수집 및 저장
   @Override
@@ -46,14 +51,27 @@ public class NewsOriginServiceImpl implements NewsOriginService {
           .map(dto -> NewsOrigin.create(dto.title(), dto.url(), dto.publishedDate()))
           .toList();
 
-      // TODO : 중복 기사 제거 로직 추가 예정
-
-      List<NewsOrigin> savedNewsOriginList = newsOriginRepository.saveAll(newsOriginList);
-      count = savedNewsOriginList.size();
+      // 중복 처리를 위한
+      int saveCount = 0;
+      for (NewsOrigin newsOrigin : newsOriginList) {
+        saveCount += saveNewsOrigin(newsOrigin);
+      }
+      return saveCount;
+      
     } catch (JsonProcessingException e) {
       log.error("", e);
     }
     return count;
+  }
+
+  private int saveNewsOrigin(NewsOrigin newsOrigin) {
+    try {
+      newsOriginRepository.save(newsOrigin);
+      return 1;
+    } catch (DataIntegrityViolationException e) {
+      log.warn("Already Saved News : url={} ", newsOrigin.getUrl());
+      return 0;
+    }
   }
 
   // 뉴스 조회 및 전송
@@ -61,7 +79,8 @@ public class NewsOriginServiceImpl implements NewsOriginService {
   public int sendNewsOriginMessages() {
 
     // RDB 조회
-    List<NewsOrigin> beforeSentNewsOrigin = newsOriginRepository.getAllByBeforeSentQueue();
+    List<NewsOrigin> beforeSentNewsOrigin = newsOriginRepository.getAllByBeforeSentQueue(
+        sendLimitPerMin);
     AtomicInteger updateCount = new AtomicInteger(0);
     if (beforeSentNewsOrigin.isEmpty()) {
       return updateCount.get();
@@ -102,13 +121,14 @@ public class NewsOriginServiceImpl implements NewsOriginService {
       ExecutorService threadPool,
       List<NewsOrigin> beforeSentNewsOrigin,
       AtomicInteger updateCount) {
+
     ArrayList<CompletableFuture<Void>> sendTaskList = new ArrayList<>();
     for (NewsOrigin newsOrigin : beforeSentNewsOrigin) {
-      CompletableFuture<Void> sendTask = CompletableFuture.runAsync(() -> {
 
+      CompletableFuture<Void> sendTask = CompletableFuture.runAsync(() -> {
         // 뉴스 원본 기사 획득
         String originNewsBody = getOriginBodyClient.getOriginNewsBody(newsOrigin.getUrl());
-        if (StringUtils.isEmpty(originNewsBody)) {
+        if (StringUtils.isBlank(originNewsBody)) {
           return;
         }
 
@@ -122,6 +142,13 @@ public class NewsOriginServiceImpl implements NewsOriginService {
             newsOrigin.getNewsPublishedDate(),
             extractedMainBody);
 
+        if (StringUtils.isBlank(sendNewOriginDto.body())) {
+          // 기사 본문 파싱 불가 케이스 : 기사 본문이 자바스크립트로 이루어진 케이스
+          newsOrigin.sendFail();
+          newsOriginRepository.save(newsOrigin); // update
+          return;
+        }
+
         String jsonMessage = null;
         try {
           jsonMessage = mapper.writeValueAsString(sendNewOriginDto);
@@ -131,7 +158,7 @@ public class NewsOriginServiceImpl implements NewsOriginService {
         }
 
         // message send
-        boolean isSuccess = messageClient.sendNewsOriginMessage(jsonMessage);
+        boolean isSuccess = eventPublisher.sendNewsOriginMessage(jsonMessage);
         if (isSuccess) {
           newsOrigin.sentToQueue();
           newsOriginRepository.save(newsOrigin); // update

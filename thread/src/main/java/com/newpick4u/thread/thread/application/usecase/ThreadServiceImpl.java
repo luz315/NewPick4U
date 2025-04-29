@@ -6,11 +6,9 @@ import com.newpick4u.thread.thread.application.exception.ThreadException.NotFoun
 import com.newpick4u.thread.thread.domain.entity.Thread;
 import com.newpick4u.thread.thread.domain.entity.ThreadStatus;
 import com.newpick4u.thread.thread.domain.repository.ThreadRepository;
-import com.newpick4u.thread.thread.infrastructure.client.CommentClient;
 import com.newpick4u.thread.thread.infrastructure.client.dto.CommentResponse;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -40,7 +37,6 @@ public class ThreadServiceImpl implements ThreadService {
   private static final String OPEN_THREAD_KEY = "thread:open:id";
   private static final String HOT_TAG_KEY = "tag_count";
   private static final int MAX_THREADS = 5;
-  private static final int MIN_HOT_TAG_COUNT = 30;
   private final ThreadRepository threadRepository;
   private final CommentClient commentClient;
   private final AiClient aiClient;
@@ -75,6 +71,7 @@ public class ThreadServiceImpl implements ThreadService {
   @Scheduled(fixedDelay = 5 * 60 * 1000)
   @Transactional
   public void createSummaryFromAi() {
+    log.info("createSummaryFromAi Scheduler Start");
     Set<String> openThreadIds = getOpenThreadIdsFromRedis();
 
     // 핫 태그 없을 경우 넘어감
@@ -85,10 +82,12 @@ public class ThreadServiceImpl implements ThreadService {
     for (String threadId : openThreadIds) {
       try {
         // 쓰레드에 달린 댓글들 가져오기
-        ResponseEntity<ApiResponse<CommentResponse>> resposeEntity = commentClient.getAllByThreadId(
+        ResponseEntity<ApiResponse<CommentResponse>> responseEntity = commentClient.getAllByThreadId(
             UUID.fromString(threadId));
-        ApiResponse<CommentResponse> body = resposeEntity.getBody();
-        CommentResponse comments = body.data();
+
+        CommentResponse comments = Objects.requireNonNull(responseEntity.getBody(),
+            "댓글 응답의 body가 null입니다.").data();
+
         if (CollectionUtils.isEmpty(comments.commentList())) {
           log.info("분석할 댓글 없음 [threadId={}]", threadId);
           continue;
@@ -103,10 +102,11 @@ public class ThreadServiceImpl implements ThreadService {
         thread.addSummary(summary);
 
       } catch (Exception e) {
-        log.error("", e);
-        throw new IllegalArgumentException("여론 분석 실패");
+        log.error("여론 분석 실패 [threadId={}]: {}", threadId, e.getMessage(), e);
       }
     }
+
+    log.info("createSummaryFromAi Scheduler End");
   }
 
   private Set<String> getOpenThreadIdsFromRedis() {
@@ -120,6 +120,7 @@ public class ThreadServiceImpl implements ThreadService {
   @Scheduled(fixedDelay = 5 * 60 * 1000)
   @Transactional
   public void saveThread() {
+    log.info("save thread Scheduler start");
     Set<String> hotTags = getHotTagsFromRedis();
     if (hotTags.isEmpty()) {
       return;
@@ -136,12 +137,13 @@ public class ThreadServiceImpl implements ThreadService {
     if (threadsToCreate > 0) {
       createAdditionalThreads(hotTags, threadsToCreate, tagToThreadMap);
     } else if (processedTags.isEmpty()) {
-      replaceLowestScoreThread(hotTags, tagToThreadMap, openThreads);
+      replaceLowestScoreThread(hotTags, tagToThreadMap);
     }
 
     if (!openThreads.isEmpty()) {
       cacheOpenThreadsToRedis(openThreads);
     }
+    log.info("save thread Scheduler end");
   }
 
   private void cacheOpenThreadsToRedis(List<Thread> openThreads) {
@@ -158,19 +160,18 @@ public class ThreadServiceImpl implements ThreadService {
    * 레디스에서 핫태그(score ≥ 30) 조회
    */
   private Set<String> getHotTagsFromRedis() {
-    Set<ZSetOperations.TypedTuple<String>> sortedTags = redisTemplate.opsForZSet()
-        .reverseRangeByScoreWithScores(HOT_TAG_KEY, MIN_HOT_TAG_COUNT, Double.MAX_VALUE);
 
-    if (CollectionUtils.isEmpty(sortedTags)) {
+    Set<String> rawTags = redisTemplate.opsForZSet()
+        .reverseRange(HOT_TAG_KEY, 0, 4);
+
+    if (CollectionUtils.isEmpty(rawTags)) {
       return Collections.emptySet();
     }
 
-    // 태그 이름만 추출 (score 높은 순)
-    return sortedTags.stream()
-        .map(ZSetOperations.TypedTuple::getValue)
-        .filter(Objects::nonNull)
-        .map(value -> value.replace("tag_count", ""))
-        .collect(Collectors.toCollection(LinkedHashSet::new)); // 순서 유지
+    // Java 스트림으로 접두사 제거 및 순서 유지
+    return rawTags.stream()
+        .map(tag -> tag.replaceFirst("^tag_count", ""))
+        .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
   /**
@@ -181,69 +182,79 @@ public class ThreadServiceImpl implements ThreadService {
         .collect(Collectors.toMap(Thread::getTagName, Function.identity()));
   }
 
-  // 이미 존재하는 쓰레드가 핫태그에 해당하는 경우 score 증가
-  private Set<String> updateExistingThreads(Set<String> hotTags,
+  /**
+   * 이미 존재하는 쓰레드의 score를 bulk 업데이트 후, 처리된 tag 이름 반환
+   */
+  @Transactional
+  public Set<String> updateExistingThreads(Set<String> hotTags,
       Map<String, Thread> tagToThreadMap) {
-    Set<String> processedTags = new HashSet<>();
-    for (String tag : hotTags) {
-      if (tagToThreadMap.containsKey(tag)) {
-        Thread thread = tagToThreadMap.get(tag);
-        thread.plusScore();
-        threadRepository.save(thread);
-        processedTags.add(tag);
-      }
+    // 1. hotTags 중, 실제 DB에 존재하는 tagName만 추출
+    Set<String> existingTags = hotTags.stream()
+        .filter(tagToThreadMap::containsKey)
+        .collect(Collectors.toSet());
+
+    // 2. 한 번의 bulk UPDATE 수행
+    if (!existingTags.isEmpty()) {
+      threadRepository.incrementScoreForTags(existingTags);
     }
-    return processedTags;
+
+    // 3. 처리된 태그명 반환
+    return existingTags;
   }
 
-  // 부족한 쓰레드 개수만큼 새로 생성
+
+  /**
+   * 부족한 쓰레드 개수만큼 일괄 생성
+   */
   private void createAdditionalThreads(Set<String> hotTags,
       int threadsToCreate,
-      Map<String, Thread> tagToThreadMap
-  ) {
-    int created = 0;
+      Map<String, Thread> tagToThreadMap) {
+    List<Thread> toCreate = new ArrayList<>(threadsToCreate);
+
     for (String tag : hotTags) {
       if (tagToThreadMap.containsKey(tag)) {
-        continue; // 이미 쓰레드가 존재하는 태그는 건너뜀
+        continue;  // 이미 존재하면 건너뜀
       }
 
-      Thread newThread = Thread.create(tag);
-      threadRepository.save(newThread);
-      created++;
+      toCreate.add(Thread.create(tag));
 
-      if (created >= threadsToCreate) {
-        break; // 필요한 개수만큼 생성 완료
+      if (toCreate.size() >= threadsToCreate) {
+        break;
       }
+    }
+
+    if (!toCreate.isEmpty()) {
+      // 한 번에 배치 저장
+      threadRepository.saveAll(toCreate);
     }
   }
 
-  // 기존 쓰레드가 5개이지만 핫태그에 해당하지 않는 경우 → score 낮은 쓰레드 교체
+  /**
+   * 최저 스코어 쓰레드를 찾아 닫고, 남은 hotTags 중 첫 번째로 신규 생성할 태그를 한 건만 처리
+   */
   private void replaceLowestScoreThread(Set<String> hotTags,
-      Map<String, Thread> tagToThreadMap,
-      List<Thread> openThreads) {
+      Map<String, Thread> tagToThreadMap) {
+    // 1) 가장 낮은 score의 열린 쓰레드를 한 건 조회
+    Optional<Thread> lowestOpt =
+        threadRepository.findTop1ByStatusOrderByScoreAsc(ThreadStatus.OPEN);
 
-    Optional<Thread> lowestThreadOpt = openThreads.stream()
-        .min(Comparator.comparingLong(Thread::getScore));
-
-    if (lowestThreadOpt.isEmpty()) {
+    if (lowestOpt.isEmpty()) {
       return;
     }
 
-    // 가장 점수가 낮은 쓰레드 종료
-    Thread lowestThread = lowestThreadOpt.get();
-    lowestThread.closedThread();
-    threadRepository.save(lowestThread);
-    openThreads.remove(lowestThread);
+    Thread lowest = lowestOpt.get();
 
-    hotTags.stream()
-        .filter(tag -> !tagToThreadMap.containsKey(tag))
-        .findFirst()
-        .ifPresent(tag -> {
-          Thread newThread = Thread.create(tag);
-          threadRepository.save(newThread);
-
-          openThreads.add(newThread);
-          tagToThreadMap.put(tag, newThread);
-        });
+    // 2) hotTags 중에 아직 쓰레드가 없는 태그 하나를 찾아 교체
+    for (String candidateTag : hotTags) {
+      if (!tagToThreadMap.containsKey(candidateTag)) {
+        // 닫고
+        lowest.closedThread();
+        // 새 쓰레드로 교체
+        Thread newThread = Thread.create(candidateTag);
+        // 두 엔티티를 한번에 저장
+        threadRepository.saveAll(List.of(lowest, newThread));
+        break;
+      }
+    }
   }
 }

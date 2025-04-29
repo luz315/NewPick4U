@@ -16,6 +16,9 @@ public enum GatewayErrorCode implements ErrorCode {
   UNSUPPORTED_JWT_TOKEN(HttpStatus.UNAUTHORIZED.value(), "지원되지 않는 JWT 토큰입니다.",
       HttpStatus.UNAUTHORIZED),
   JWT_CLAIMS_EMPTY(HttpStatus.UNAUTHORIZED.value(), "잘못된 JWT 토큰입니다.", HttpStatus.UNAUTHORIZED),
+  MISSING_AUTHORIZATION_HEADER(HttpStatus.UNAUTHORIZED.value(),
+      "Authorization 헤더가 존재하지 않거나 Bearer 형식이 아닙니다.", HttpStatus.UNAUTHORIZED),
+
 
   // Not Found: 404 - 자원 없음
   USER_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "유저 개체를 찾지 못했습니다.", HttpStatus.NOT_FOUND),
