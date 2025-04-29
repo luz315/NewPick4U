@@ -1,0 +1,9 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'spring-boot'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      # 메트릭 데이터를 수집하기 위한 도메인 서버 정보 작성
+      - targets: [ 'host.docker.internal:13001' ]

@@ -1,12 +1,14 @@
 package com.newpick4u.thread.thread.application.usecase;
 
 import com.newpick4u.common.response.ApiResponse;
+import com.newpick4u.common.response.SliceResponse;
 import com.newpick4u.thread.thread.application.dto.ThreadResponseDto;
 import com.newpick4u.thread.thread.application.exception.ThreadException.NotFoundException;
 import com.newpick4u.thread.thread.domain.entity.Thread;
 import com.newpick4u.thread.thread.domain.entity.ThreadStatus;
 import com.newpick4u.thread.thread.domain.repository.ThreadRepository;
 import com.newpick4u.thread.thread.infrastructure.client.dto.CommentResponse;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -20,8 +22,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -34,6 +37,7 @@ import org.springframework.util.CollectionUtils;
 @Slf4j
 public class ThreadServiceImpl implements ThreadService {
 
+  private final MeterRegistry meterRegistry;
   private static final String OPEN_THREAD_KEY = "thread:open:id";
   private static final String HOT_TAG_KEY = "tag_count";
   private static final int MAX_THREADS = 5;
@@ -48,15 +52,18 @@ public class ThreadServiceImpl implements ThreadService {
 
   @Override
   @Transactional(readOnly = true)
-  public Page<ThreadResponseDto> getThreads(Pageable pageable) {
-    Page<Thread> threadList = threadRepository.findAll(pageable);
+  @Cacheable(value = "threads", key = "'page=' + #pageable.pageNumber + ':size=' + #pageable.pageSize")
+  public SliceResponse<ThreadResponseDto> getThreads(Pageable pageable) {
+    Slice<Thread> threadList = threadRepository.findAll(pageable);
 
-    return threadList.map(ThreadResponseDto::from);
+    return SliceResponse.from(threadList.map(ThreadResponseDto::from));
   }
 
   @Override
   @Transactional(readOnly = true)
   public Thread getThreadDetail(UUID threadId) {
+    final String getThreadRequestMetric = "thread_detail_request";
+    meterRegistry.counter(getThreadRequestMetric).increment();
     return threadRepository.findById(threadId).orElseThrow(NotFoundException::new);
   }
 
