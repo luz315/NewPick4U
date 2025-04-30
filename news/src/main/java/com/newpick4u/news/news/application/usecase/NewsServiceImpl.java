@@ -175,7 +175,7 @@ public class NewsServiceImpl implements NewsService {
 
     private void updateViewCount(UUID newsId, Long userId, News news) {
         long start = System.currentTimeMillis();
-        if (viewCountCacheOperator.canIncreaseView(newsId, userId)) {
+        if (viewCountCacheOperator.isViewToday(newsId, userId)) {
             viewCountCacheOperator.incrementViewCount(newsId);
         }
         news.updateView(viewCountCacheOperator.getViewCount(newsId));

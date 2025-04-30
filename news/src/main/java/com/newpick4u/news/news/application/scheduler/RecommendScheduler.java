@@ -18,7 +18,7 @@ import java.util.concurrent.Executors;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class NewsRecommendScheduler {
+public class RecommendScheduler {
 
     private final NewsRepository newsRepository;
     private final RecommendationCacheOperator recommendationCacheOperator;

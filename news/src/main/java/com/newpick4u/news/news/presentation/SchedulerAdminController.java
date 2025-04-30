@@ -1,6 +1,6 @@
 package com.newpick4u.news.news.presentation;
 
-import com.newpick4u.news.news.application.scheduler.NewsRecommendScheduler;
+import com.newpick4u.news.news.application.scheduler.RecommendScheduler;
 import com.newpick4u.news.news.application.scheduler.NewsVectorScheduler;
 import com.newpick4u.news.news.application.scheduler.TagIndexSyncScheduler;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +15,7 @@ public class SchedulerAdminController {
 
     private final NewsVectorScheduler newsVectorScheduler;
     private final TagIndexSyncScheduler tagIndexSyncScheduler;
-    private final NewsRecommendScheduler newsRecommendScheduler;
+    private final RecommendScheduler recommendScheduler;
 
     @PostMapping("/sync-tags")
     public String syncPendingTags() {
@@ -31,7 +31,7 @@ public class SchedulerAdminController {
 
     @PostMapping("/update-recommendations")
     public String updateRecommendations() {
-        newsRecommendScheduler.updateAllUserRecommendations();
+        recommendScheduler.updateAllUserRecommendations();
         return "사용자 추천 업데이트 완료";
     }
 }

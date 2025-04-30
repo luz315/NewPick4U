@@ -6,6 +6,8 @@ import com.newpick4u.news.news.domain.model.Pagination;
 import com.newpick4u.news.news.domain.repository.NewsRepository;
 import com.newpick4u.news.news.domain.repository.NewsRepositoryCustom;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -88,4 +90,10 @@ public class NewsRepositoryimpl implements NewsRepository {
     public List<News> findAll() {
         return newsJpaRepository.findAll();
     }
+
+    @Override
+    public void incrementViewCount(UUID newsId, long count){
+        newsJpaRepository.incrementViewCount(newsId, count);
+    }
+
 }
