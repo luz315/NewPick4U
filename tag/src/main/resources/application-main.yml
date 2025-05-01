@@ -19,12 +19,6 @@ spring:
     username: ${MAIN_DB_USERNAME}
     password: ${MAIN_DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    hikari:
-      maximum-pool-size: 50
-      minimum-idle: 10
-      idle-timeout: 30000
-      max-lifetime: 1800000
-      connection-timeout: 2000
   jpa:
     hibernate:
       ddl-auto: update
@@ -54,8 +48,8 @@ spring:
       delete:
         group-id: ${KAFKA_DELETE_GROUP_ID}
       topic:
-        create: "${CREATE_TAG_TOPIC}"
-        delete: "${DELETE_TAG_TOPIC}"
+        create: ${CREATE_TAG_TOPIC}
+        delete: ${DELETE_TAG_TOPIC}
 
 management:
   endpoints:
