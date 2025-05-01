@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -94,4 +95,9 @@ public class News extends BaseEntity {
     public void updateView(Long view) {
         this.view = view;
     }
+
+  public void markAsDeleted(LocalDateTime deleteAt, long deletedBy) {
+    this.status = NewsStatus.DELETED;
+    delete(deleteAt, deletedBy);
+  }
 }

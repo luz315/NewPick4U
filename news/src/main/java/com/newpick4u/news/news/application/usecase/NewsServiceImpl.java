@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -258,6 +259,28 @@ public class NewsServiceImpl implements NewsService {
         List<UUID> ids = newsIdStrs.stream().map(UUID::fromString).toList();
         List<News> newsList = newsRepository.findByIds(ids);
         return newsList.stream().map(NewsSummaryDto::from).toList();
+    }
+
+    @Transactional
+    public void deleteNews(UUID newsId, CurrentUserInfoDto userInfoDto) {
+        News news = getNewsByRole(newsId, userInfoDto.role());
+
+        news.markAsDeleted(LocalDateTime.now(), userInfoDto.userId());
+        newsRepository.save(news);
+
+        // 연관된 Redis 캐시 삭제
+        removeRedisCache(newsId);
+
+        log.info("[뉴스 삭제] newsId={}, deletedBy={}", newsId, userInfoDto.userId());
+    }
+
+    private void removeRedisCache(UUID newsId) {
+        // 사용자별 조회수 키 삭제는 생략 또는 별도 처리 필요
+        viewCountCacheOperator.updatePopularityScore(newsId, 0L, LocalDateTime.now());
+        recommendationCacheOperator.getCachedUserIds().forEach(userId -> {
+            recommendationCacheOperator.getRecommendedNews(userId).remove(newsId.toString());
+        });
+        newsVectorQueueOperator.removeFromQueue(newsId);
     }
 }
 
