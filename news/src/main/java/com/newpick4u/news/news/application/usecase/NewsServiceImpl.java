@@ -261,6 +261,7 @@ public class NewsServiceImpl implements NewsService {
         return newsList.stream().map(NewsSummaryDto::from).toList();
     }
 
+    @Override
     @Transactional
     public void deleteNews(UUID newsId, CurrentUserInfoDto userInfoDto) {
         News news = getNewsByRole(newsId, userInfoDto.role());
@@ -281,6 +282,14 @@ public class NewsServiceImpl implements NewsService {
         recommendationCacheOperator.removeFromAllRecommendations(newsId);
         // 벡터 대기열에서 제거
         newsVectorQueueOperator.removeFromQueue(newsId);
+    }
+
+    // 내부 API용 단순 조회 메서드 (조회수 증가, 태그 점수 증가 없음)
+    @Override
+    @Transactional(readOnly = true)
+    public NewsResponseDto getNewsFeign(UUID id, CurrentUserInfoDto userInfoDto) {
+        News news = getNewsByRole(id, userInfoDto.role());
+        return NewsResponseDto.from(news);
     }
 }
 

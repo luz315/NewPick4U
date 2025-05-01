@@ -20,4 +20,5 @@ public interface NewsService {
     void saveNewsInfoAndUpdateTags(NewsInfoDto newsInfoDto);
     List<NewsSummaryDto> getPopularTop10();
     void deleteNews(UUID newsId, CurrentUserInfoDto userInfo);
+    NewsResponseDto getNewsFeign(UUID id, CurrentUserInfoDto userInfoDto);
 }
