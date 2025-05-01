@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -24,10 +25,16 @@ public class RecommendationCacheOperatorImpl implements RecommendationCacheOpera
     private final RedissonClient redissonClient;
 
     private static final int MAX_TAGS = 50;
-    private static final Duration TAG_TTL = Duration.ofDays(30); // 30일간 미접속 시 태그 만료
-    private static final Duration RECOMMEND_CACHE_TTL = Duration.ofDays(1);
-//    private static final String LOCK_PREFIX = "lock:user:tags:";
+
     private static final String TAG_KEY_PATTERN = "user:*:tags";
+    private static final String USER_TAG_KEY_PREFIX = "user:";
+    private static final String USER_TAG_KEY_SUFFIX = ":tags";
+    private static final String RECOMMEND_KEY_SUFFIX = ":recommend";
+    private static final String RECOMMEND_FALLBACK_KEY = "news:recommend:fallback";
+
+    private static final Duration TAG_TTL = Duration.ofDays(30);
+    private static final Duration RECOMMEND_CACHE_TTL = Duration.ofDays(1);
+    private static final Duration RECOMMEND_FALLBACK_TTL = Duration.ofSeconds(30);
 
     // 태그 카운트 증가 (태그 기록 + 제한 개수 초과 시 삭제 + TTL 설정 (원자적 처리))
     @Override
@@ -39,26 +46,6 @@ public class RecommendationCacheOperatorImpl implements RecommendationCacheOpera
         }
 
         redisTemplate.expire(key, TAG_TTL);
-//        String lockKey = LOCK_PREFIX + userId;
-//        RLock lock = redissonClient.getLock(lockKey);
-//        try {
-//            if (lock.tryLock(3, 2, TimeUnit.SECONDS)) { // timeout: 대기 3초, 점유 2초
-//                for (String tag : tagNames) {
-//                    redisTemplate.opsForZSet().incrementScore(key, tag, 1);
-//                }
-//                trimTagLimit(key);
-//                redisTemplate.expire(key, TAG_TTL);
-//            } else {
-//                throw new IllegalStateException("Redis 락 획득 실패: userId=" + userId);
-//            }
-//        } catch (InterruptedException e) {
-//            Thread.currentThread().interrupt();
-//            throw new RuntimeException("Redis 락 인터럽트", e);
-//        } finally {
-//            if (lock.isHeldByCurrentThread()) {
-//                lock.unlock();
-//            }
-//        }
     }
 
     // 유저 태그 점수 맵 가져오기
@@ -132,6 +119,24 @@ public class RecommendationCacheOperatorImpl implements RecommendationCacheOpera
     }
 
 
+    @Override
+    public void cacheFallbackLatestNews(List<UUID> newsIds) {
+        String value = newsIds.stream()
+                .map(UUID::toString)
+                .collect(Collectors.joining(","));
+        redisTemplate.opsForValue().set(RECOMMEND_FALLBACK_KEY, value, RECOMMEND_FALLBACK_TTL);
+    }
+
+    @Override
+    public List<UUID> getFallbackLatestNews() {
+        String value = redisTemplate.opsForValue().get(RECOMMEND_FALLBACK_KEY);
+        if (value == null || value.isBlank()) {
+            return Collections.emptyList();
+        }
+        return Arrays.stream(value.split(","))
+                .map(UUID::fromString)
+                .collect(Collectors.toList());
+    }
     // 내부메서드
 
     // 태그 개수 제한 초과 시 오래된 태그 제거
@@ -143,12 +148,12 @@ public class RecommendationCacheOperatorImpl implements RecommendationCacheOpera
     }
 
     private String buildKey(Long userId) {
-        return "user:" + userId + ":tags";
+        return USER_TAG_KEY_PREFIX + userId + USER_TAG_KEY_SUFFIX;
     }
 
     // 추천 캐시 키
     private String recommendKey(Long userId) {
-        return "user:" + userId + ":recommend";
+        return USER_TAG_KEY_PREFIX + userId + RECOMMEND_KEY_SUFFIX;
     }
 
     private Long extractUserIdFromKey(String key) {
@@ -159,4 +164,44 @@ public class RecommendationCacheOperatorImpl implements RecommendationCacheOpera
             throw CustomException.from(NewsErrorCode.REDIS_SCAN_FAIL);
         }
     }
+
+    @Override
+    public void removeFromAllRecommendations(UUID newsId) {
+        String newsIdStr = newsId.toString();
+
+        // 1. 사용자 추천 캐시 제거
+        Set<Long> userIds = getCachedUserIds();
+        for (Long userId : userIds) {
+            String key = "user:" + userId + ":recommend";
+            List<String> list = redisTemplate.opsForList().range(key, 0, -1);
+            if (list != null && list.contains(newsIdStr)) {
+                List<String> filtered = list.stream().filter(id -> !id.equals(newsIdStr)).toList();
+                String tmpKey = key + ":tmp";
+                redisTemplate.delete(tmpKey);
+                if (!filtered.isEmpty()) {
+                    redisTemplate.opsForList().rightPushAll(tmpKey, filtered);
+                    redisTemplate.rename(tmpKey, key);
+                } else {
+                    redisTemplate.delete(key);
+                }
+            }
+        }
+
+        // 2. fallback 추천 캐시 제거
+        String fallback = redisTemplate.opsForValue().get("news:recommend:fallback");
+        if (fallback != null && fallback.contains(newsIdStr)) {
+            List<String> filtered = Arrays.stream(fallback.split(","))
+                    .filter(id -> !id.equals(newsIdStr))
+                    .toList();
+            if (!filtered.isEmpty()) {
+                redisTemplate.opsForValue().set("news:recommend:fallback", String.join(",", filtered));
+            } else {
+                redisTemplate.delete("news:recommend:fallback");
+            }
+        }
+
+        // 3. 인기 ZSet 제거
+        redisTemplate.opsForZSet().remove("popular", newsIdStr);
+    }
+
 }

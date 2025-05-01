@@ -13,10 +13,12 @@ import com.newpick4u.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import io.swagger.v3.oas.annotations.Parameter;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -56,9 +58,29 @@ public class NewsAPIController {
     @GetMapping("/recommend")
     @Operation(summary = "추천 뉴스 리스트 조회", description = "10개의 추천 뉴스를 조회합니다.")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "뉴스 추천 리스트 조회 성공")
-    public ResponseEntity<ApiResponse<List<NewsSummaryDto>>> recommend(
+    public ResponseEntity<ApiResponse<List<NewsSummaryDto>>> recommendNewsList(
             @CurrentUserInfo @Parameter(hidden = true) CurrentUserInfoDto currentUser
     ) {
         return ResponseEntity.ok(ApiResponse.ok(newsService.recommendTop10(currentUser)));
     }
+
+    @GetMapping("/popular")
+    @Operation(summary = "추천 뉴스 리스트 조회", description = "10개의 인기 뉴스를 조회합니다.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "뉴스 인기 리스트 조회 성공")
+    public ResponseEntity<ApiResponse<List<NewsSummaryDto>>> getPopularNewsList() {
+        return ResponseEntity.ok(ApiResponse.ok(newsService.getPopularTop10()));
+    }
+
+
+    @DeleteMapping("/{newsId}")
+    @Operation(summary = "뉴스 삭제", description = "권한에 따라 뉴스를 소프트 삭제합니다.")public ResponseEntity<ApiResponse<Map<String, UUID>>> deleteNews(
+            @PathVariable UUID newsId,
+            @CurrentUserInfo @Parameter(hidden = true) CurrentUserInfoDto userInfo
+    ) {
+        newsService.deleteNews(newsId, userInfo);
+        return ResponseEntity.ok(
+                ApiResponse.of(HttpStatus.OK, Map.of("뉴스 삭제 완료", newsId))
+        );
+    }
+
 }

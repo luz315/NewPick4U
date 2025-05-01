@@ -33,4 +33,18 @@ public class NewsInternalController {
     ) {
         return ResponseEntity.ok(ApiResponse.ok(newsService.getNews(id, userInfoDto)));
     }
+
+    @GetMapping("/exist/{id}")
+    @Operation(
+            summary = "뉴스 단순 조회 (내부용)",
+            description = "조회수, 사용자 태그 점수 증가 없이 뉴스만 조회"
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "뉴스 조회 성공")
+    public ResponseEntity<ApiResponse<NewsResponseDto>> getNewsForFeign(
+            @PathVariable UUID id,
+            @CurrentUserInfo @Parameter(hidden = true) CurrentUserInfoDto userInfoDto
+    ) {
+        NewsResponseDto response = newsService.getNewsFeign(id, userInfoDto);
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
 }

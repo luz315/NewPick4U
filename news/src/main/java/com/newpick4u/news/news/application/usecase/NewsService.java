@@ -18,4 +18,7 @@ public interface NewsService {
     PageResponse<NewsSummaryDto> searchNewsList(NewsSearchCriteria request, CurrentUserInfoDto userInfoDto);
     List<NewsSummaryDto> recommendTop10(CurrentUserInfoDto user);
     void saveNewsInfoAndUpdateTags(NewsInfoDto newsInfoDto);
+    List<NewsSummaryDto> getPopularTop10();
+    void deleteNews(UUID newsId, CurrentUserInfoDto userInfo);
+    NewsResponseDto getNewsFeign(UUID id, CurrentUserInfoDto userInfoDto);
 }

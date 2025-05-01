@@ -3,6 +3,9 @@ package com.newpick4u.news.news.domain.repository;
 import com.newpick4u.news.news.application.dto.NewsSearchCriteria;
 import com.newpick4u.news.news.domain.entity.News;
 import com.newpick4u.news.news.domain.model.Pagination;
+import com.newpick4u.news.news.domain.repository.projection.NewsCreatedInfo;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,5 +26,6 @@ public interface NewsRepository  {
     List<News> saveAll(List<News> newsList);
     void deleteAll();
     Optional<News> findById(UUID id);
-
+    void incrementViewCount(UUID newsId, long count);
+    List<NewsCreatedInfo> findAllActiveNewsCreatedInfos();
 }

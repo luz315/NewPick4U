@@ -3,51 +3,79 @@
 //import com.newpick4u.news.news.domain.entity.News;
 //import com.newpick4u.news.news.domain.entity.NewsTag;
 //import com.newpick4u.news.news.domain.repository.NewsRepository;
+//import jakarta.annotation.PostConstruct;
 //import lombok.RequiredArgsConstructor;
 //import org.springframework.boot.CommandLineRunner;
 //import org.springframework.context.annotation.Bean;
+//import org.springframework.context.annotation.Profile;
 //import org.springframework.stereotype.Component;
 //
+//import java.io.BufferedWriter;
+//import java.io.File;
+//import java.io.FileWriter;
+//import java.io.IOException;
+//import java.nio.file.Paths;
 //import java.util.*;
 //
 //@Component
+//@Profile("!test")
 //@RequiredArgsConstructor
 //public class NewsDataGenerator {
 //
 //    private final NewsRepository newsRepository;
 //    private final Random random = new Random();
 //
-//    @Bean(name = "newsDataGeneratorInit")
-//    public CommandLineRunner generateNewsData() {
-//        return args -> {
-//            List<String> tags = generateTagList(); // 200개 태그 생성
+//    @PostConstruct
+//    public void generateNewsData() {
+//        List<String> tags = generateTagList();
+//        List<UUID> newsIdList = new ArrayList<>();
 //
-//            for (int i = 0; i < 10000; i++) {
-//                String aiNewsId = "news-" + UUID.randomUUID();
-//                News news = News.create(
-//                        aiNewsId,
-//                        "뉴스 제목 " + (i + 1),
-//                        "뉴스 본문 " + (i + 1),
-//                        "http://news.example.com/" + (i + 1),
-//                        "2025-04-" + ((i % 30) + 1),
-//                        0L
-//                );
+//        for (int i = 0; i < 10000; i++) {
+//            String aiNewsId = "news-" + UUID.randomUUID();
+//            News news = News.create(
+//                    aiNewsId,
+//                    "뉴스 제목 " + (i + 1),
+//                    "뉴스 본문 " + (i + 1),
+//                    "http://news.example.com/" + (i + 1),
+//                    "2025-04-" + ((i % 30) + 1),
+//                    0L
+//            );
 //
-//                // 태그 무작위로 5~9개 선택
-//                Collections.shuffle(tags);
-//                int tagCount = 5 + random.nextInt(5); // 5 ~ 9개
-//                List<String> selectedTags = tags.subList(0, tagCount);
+//            // 태그 무작위로 5~9개 선택
+//            Collections.shuffle(tags);
+//            int tagCount = 5 + random.nextInt(5); // 5 ~ 9개
+//            List<String> selectedTags = tags.subList(0, tagCount);
 //
-//                for (String tagName : selectedTags) {
-//                    NewsTag newsTag = NewsTag.create(UUID.randomUUID(), tagName, news);
-//                    news.addTags(Collections.singletonList(newsTag));
-//                }
-//
-//                newsRepository.save(news);
+//            for (String tagName : selectedTags) {
+//                NewsTag newsTag = NewsTag.create(UUID.randomUUID(), tagName, news);
+//                news.addTags(Collections.singletonList(newsTag));
 //            }
 //
-//            System.out.println("[뉴스 10,000개 생성 완료]");
-//        };
+//            News savedNews = newsRepository.save(news);
+//            newsIdList.add(savedNews.getId());
+//        }
+//
+//        saveNewsIdsToFile(newsIdList);
+//        System.out.println("[뉴스 10,000개 생성 완료]");
+//    }
+//
+//    private void saveNewsIdsToFile(List<UUID> newsIds) {
+//
+//        System.out.println("###System.getProperty(\"app.root.path\") = " + System.getProperty("app.root.path"));
+//        System.out.println("###System.getProperty(\"user.dir\") = " + System.getProperty("user.dir"));
+//
+////        String projectRoot = Paths.get("").toAbsolutePath().toString();
+//        File file = new File(System.getProperty("user.dir"), "k6-news-ids.txt");
+//
+//        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+//            for (UUID newsId : newsIds) {
+//                writer.write(newsId.toString());
+//                writer.newLine();
+//            }
+//            System.out.println("[k6-news-ids.txt 파일 생성 완료]");
+//        } catch (IOException e) {
+//            System.err.println("뉴스 ID 저장 실패: " + e.getMessage());
+//        }
 //    }
 //
 //    private List<String> generateTagList() {

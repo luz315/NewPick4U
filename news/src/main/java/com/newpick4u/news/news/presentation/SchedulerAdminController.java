@@ -1,8 +1,9 @@
 package com.newpick4u.news.news.presentation;
 
-import com.newpick4u.news.news.application.scheduler.NewsRecommendScheduler;
+import com.newpick4u.news.news.application.scheduler.RecommendScheduler;
 import com.newpick4u.news.news.application.scheduler.NewsVectorScheduler;
 import com.newpick4u.news.news.application.scheduler.TagIndexSyncScheduler;
+import com.newpick4u.news.news.application.scheduler.ViewCountScheduler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -15,7 +16,8 @@ public class SchedulerAdminController {
 
     private final NewsVectorScheduler newsVectorScheduler;
     private final TagIndexSyncScheduler tagIndexSyncScheduler;
-    private final NewsRecommendScheduler newsRecommendScheduler;
+    private final RecommendScheduler recommendScheduler;
+    private final ViewCountScheduler viewCountScheduler;
 
     @PostMapping("/sync-tags")
     public String syncPendingTags() {
@@ -31,7 +33,19 @@ public class SchedulerAdminController {
 
     @PostMapping("/update-recommendations")
     public String updateRecommendations() {
-        newsRecommendScheduler.updateAllUserRecommendations();
+        recommendScheduler.updateAllUserRecommendations();
         return "사용자 추천 업데이트 완료";
+    }
+
+    @PostMapping("/sync-views")
+    public String syncViewCounts() {
+        viewCountScheduler.syncViewCounts();
+        return "조회수 동기화 완료";
+    }
+
+    @PostMapping("/update-popularity")
+    public String updatePopularityScores() {
+        viewCountScheduler.updatePopularityScores();
+        return "인기 점수 갱신 완료";
     }
 }

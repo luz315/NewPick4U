@@ -1,5 +1,7 @@
 package com.newpick4u.news.news.application.usecase;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.newpick4u.common.exception.CustomException;
@@ -22,8 +24,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -31,6 +37,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 @RequiredArgsConstructor
 public class NewsServiceImpl implements NewsService {
+
+//    private final MeterRegistry meterRegistry;
+//    private final Counter updateNewsTagSuccessCounter;
+//    private final Counter updateNewsTagFailCounter;
     private final NewsRepository newsRepository;
     private final TagInboxRepository tagInboxRepository;
     private final ObjectMapper objectMapper;
@@ -138,32 +148,43 @@ public class NewsServiceImpl implements NewsService {
     @Transactional(readOnly = true)
     public NewsResponseDto getNews(UUID id, CurrentUserInfoDto userInfoDto) {
         long start = System.currentTimeMillis();
-        boolean isMaster = userInfoDto.role() == UserRole.ROLE_MASTER;
-        News news = newsRepository.findNewsByRole(id, isMaster)
-                .orElseThrow(() -> CustomException.from(NewsErrorCode.NEWS_NOT_FOUND));
-        log.info("[Timer] findNewsByRole 끝, 소요시간 = {}ms", System.currentTimeMillis() - start);
+        News news = getNewsByRole(id, userInfoDto.role());
 
-        List<String> tags = news.getNewsTagList().stream()
-                .map(NewsTag::getName)
-                .toList();
-
-        long afterDb = System.currentTimeMillis();
-        recommendationCacheOperator.incrementUserTagScore(userInfoDto.userId(), tags);
-        log.info("[Timer] Redis incrementUserTagScore 끝, 소요시간 = {}ms", System.currentTimeMillis() - afterDb);
-
-        if (viewCountCacheOperator.canIncreaseView(id, userInfoDto.userId())) {
-            viewCountCacheOperator.incrementViewCount(id);
-        }
-        long afterRedis = System.currentTimeMillis();
-
-        log.info("[Timer] View Count 업데이트 끝, 소요시간 = {}ms", System.currentTimeMillis() - afterRedis);
-
-        news.updateView(viewCountCacheOperator.getViewCount(news.getId()));
+        updateUserTagScore(userInfoDto.userId(), news);
+        updateViewCount(id, userInfoDto.userId(), news);
 
         long total = System.currentTimeMillis() - start;
         log.info("[Timer] getNews 전체 수행시간 = {}ms", total);
 
         return NewsResponseDto.from(news);
+    }
+
+    private News getNewsByRole(UUID id, UserRole role) {
+        boolean isMaster = role == UserRole.ROLE_MASTER;
+        return newsRepository.findNewsByRole(id, isMaster)
+                .orElseThrow(() -> CustomException.from(NewsErrorCode.NEWS_NOT_FOUND));
+    }
+
+    private void updateUserTagScore(Long userId, News news) {
+        List<String> tags = news.getNewsTagList().stream()
+                .map(NewsTag::getName)
+                .toList();
+
+        long start = System.currentTimeMillis();
+        recommendationCacheOperator.incrementUserTagScore(userId, tags);
+        log.info("[Timer] 사용자 태그 점수 증가 끝, 소요시간 = {}ms", System.currentTimeMillis() - start);
+    }
+
+    private void updateViewCount(UUID newsId, Long userId, News news) {
+        long start = System.currentTimeMillis();
+        if (viewCountCacheOperator.isViewToday(newsId, userId)) {
+            viewCountCacheOperator.incrementViewCount(newsId);
+        }
+        long viewCount = viewCountCacheOperator.getViewCount(newsId);
+        news.updateView(viewCount);
+
+        viewCountCacheOperator.updatePopularityScore(newsId, viewCount, news.getCreatedAt());
+        log.info("[Timer] 조회수 처리 끝, 소요시간 = {}ms", System.currentTimeMillis() - start);
     }
 
     @Override
@@ -178,21 +199,97 @@ public class NewsServiceImpl implements NewsService {
     @Transactional(readOnly = true)
     public List<NewsSummaryDto> recommendTop10(CurrentUserInfoDto userInfo) {
         Long userId = userInfo.userId();
+        long start = System.currentTimeMillis();
 
         // 1. Redis에서 추천된 뉴스 ID 가져옴
-        List<String> cachedNewsIds = recommendationCacheOperator.getRecommendedNews(userId);
-        if (cachedNewsIds != null && !cachedNewsIds.isEmpty()) {
-            List<UUID> ids = cachedNewsIds.stream().map(UUID::fromString).toList();
-            // 2. DB에서 추천 뉴스 조회
-            List<News> newsList = newsRepository.findByIds(ids);
-            return newsList.stream().map(NewsSummaryDto::from).toList();
+        List<NewsSummaryDto> result = getRecommendedNewsFromCache(userId);
+
+        // 2. 추천 뉴스 캐시 없으면 최신 뉴스 fallback
+        if (result.isEmpty()) {
+            result = getFallbackNews();
         }
 
-        // 3. 추천 뉴스 캐시 없으면 최신 뉴스 fallback
-        List<News> fallbackNews = newsRepository.findLatestNews(10);
-        return fallbackNews.stream()
-                .map(NewsSummaryDto::from)
-                .toList();
+        long total = System.currentTimeMillis() - start;
+        if (total >= 2500) { // P95 슬로우 기준: 2.5초 이상
+            log.warn("[SLOW][recommendTop10] 전체 수행시간 = {}ms, userId={}", total, userId);
+        } else {
+            log.info("[Timer] recommendTop10 전체 수행시간 = {}ms", total);
+        }
+        return result;
+    }
+
+    private List<NewsSummaryDto> getRecommendedNewsFromCache(Long userId) {
+        long start = System.currentTimeMillis();
+        List<String> cachedNewsIds = recommendationCacheOperator.getRecommendedNews(userId);
+        long duration = System.currentTimeMillis() - start;
+
+        log.info("[Timer] 추천 캐시 조회 끝, 소요시간 = {}ms", duration);
+
+        if (cachedNewsIds == null || cachedNewsIds.isEmpty()) return List.of();
+
+        List<UUID> newsUUIDList = cachedNewsIds.stream().map(UUID::fromString).toList();
+        List<News> newsList = newsRepository.findByIds(newsUUIDList);
+
+        log.info("[Timer] 추천 뉴스 DB 조회 끝, 소요시간 = {}ms", System.currentTimeMillis() - start);
+        return newsList.stream().map(NewsSummaryDto::from).toList();
+    }
+
+    private List<NewsSummaryDto> getFallbackNews() {
+        List<UUID> fallbackNewsIds = recommendationCacheOperator.getFallbackLatestNews();
+        List<News> fallbackNewsList;
+
+        if (fallbackNewsIds != null && !fallbackNewsIds.isEmpty()) {
+            // 캐시된 fallback ID로 조회
+            fallbackNewsList = newsRepository.findByIds(fallbackNewsIds);
+        } else {
+            // fallback 캐시가 없으면 DB 조회 후 캐시 등록
+            fallbackNewsList = newsRepository.findLatestNews(10);
+            List<UUID> ids = fallbackNewsList.stream().map(News::getId).toList();
+            recommendationCacheOperator.cacheFallbackLatestNews(ids);
+        }
+
+        return fallbackNewsList.stream().map(NewsSummaryDto::from).toList();
+    }
+
+    @Override
+    public List<NewsSummaryDto> getPopularTop10() {
+        Set<String> newsIdStrs = viewCountCacheOperator.getTopPopularNewsIds(10);
+        if (newsIdStrs == null || newsIdStrs.isEmpty()) return List.of();
+
+        List<UUID> ids = newsIdStrs.stream().map(UUID::fromString).toList();
+        List<News> newsList = newsRepository.findByIds(ids);
+        return newsList.stream().map(NewsSummaryDto::from).toList();
+    }
+
+    @Override
+    @Transactional
+    public void deleteNews(UUID newsId, CurrentUserInfoDto userInfoDto) {
+        News news = getNewsByRole(newsId, userInfoDto.role());
+
+        news.markAsDeleted(LocalDateTime.now(), userInfoDto.userId());
+        newsRepository.save(news);
+
+        // 연관된 Redis 캐시 삭제
+        removeRedisCache(newsId);
+
+        log.info("[뉴스 삭제] newsId={}, deletedBy={}", newsId, userInfoDto.userId());
+    }
+
+    private void removeRedisCache(UUID newsId) {
+        // 인기 점수 초기화
+        viewCountCacheOperator.updatePopularityScore(newsId, 0L, LocalDateTime.now());
+        // 추천 목록에서 제거
+        recommendationCacheOperator.removeFromAllRecommendations(newsId);
+        // 벡터 대기열에서 제거
+        newsVectorQueueOperator.removeFromQueue(newsId);
+    }
+
+    // 내부 API용 단순 조회 메서드 (조회수 증가, 태그 점수 증가 없음)
+    @Override
+    @Transactional(readOnly = true)
+    public NewsResponseDto getNewsFeign(UUID id, CurrentUserInfoDto userInfoDto) {
+        News news = getNewsByRole(id, userInfoDto.role());
+        return NewsResponseDto.from(news);
     }
 }
 

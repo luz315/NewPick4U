@@ -2,10 +2,19 @@ server:
   port: 11001
 
 eureka:
+  instance:
+    hostname: ${DEVELOP_EUREKA_HOSTNAME}
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+    appname: ${spring.application.name}
   client:
-    enabled: false
-    register-with-eureka: false
-    fetch-registry: false
+    register-with-eureka: true
+    fetch-registry: true
+#eureka:
+#  client:
+#    enabled: false
+#    register-with-eureka: false
+#    fetch-registry: false
 
 spring:
   application:

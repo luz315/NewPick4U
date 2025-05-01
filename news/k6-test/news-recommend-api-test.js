@@ -1,7 +1,11 @@
 import http from 'k6/http';
 import { check } from 'k6';
+import { SharedArray } from 'k6/data';
 
-const userIds = Array.from({ length: 100 }, (_, i) => i + 1); // 1번 ~ 100번 유저
+const tokens = new SharedArray('JWT Tokens', function () {
+    return open('../../k6-user-tokens.txt').split('\n').filter(Boolean);
+});
+// const userIds = Array.from({ length: 100 }, (_, i) => i + 1); // 1번 ~ 100번 유저
 
 export const options = {
     vus: 100, // 100명 동시 사용자
@@ -13,14 +17,19 @@ export const options = {
 };
 
 export default function () {
-    const BASE_URL = 'http://localhost:11001'; // 실제 주소
-    const userId = userIds[Math.floor(Math.random() * userIds.length)];
+    const BASE_URL = 'http://localhost:8080'; // 실제 주소
+    // const userId = userIds[Math.floor(Math.random() * userIds.length)];
+    const token = tokens[Math.floor(Math.random() * tokens.length)];
 
     const headers = {
-        'Content-Type': 'application/json',
-        'X-USER-ID': String(userId),
-        'X-USER-ROLE': 'ROLE_MASTER',
+        Authorization: `Bearer ${token}`,
     };
+
+    // const headers = {
+    //     'Content-Type': 'application/json',
+    //     'X-USER-ID': String(userId),
+    //     'X-USER-ROLE': 'ROLE_MASTER',
+    // };
 
     const res = http.get(`${BASE_URL}/api/v1/news/recommend`, { headers });
 

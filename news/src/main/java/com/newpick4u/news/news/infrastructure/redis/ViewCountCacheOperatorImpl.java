@@ -6,6 +6,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.UUID;
 
 @Component
@@ -13,36 +15,51 @@ import java.util.UUID;
 public class ViewCountCacheOperatorImpl implements ViewCountCacheOperator {
 
     private final RedisTemplate<String, String> redisTemplate;
-    private static final String DAILY_VIEW_KEY = "view:user:%s:news:%s";
-    private static final String NEWS_VIEW_COUNT_KEY = "news:view:%s";
+    private static final String USER_VIEW_SET_KEY = "view:user:%s";
+    private static final String VIEW_COUNT_KEY = "view:%s";
+    private static final String POPULARITY_ZSET_KEY = "popular";
 
     @Override
-    public boolean canIncreaseView(UUID newsId, Long userId) {
-        String key = String.format(DAILY_VIEW_KEY, userId, newsId);
-        Boolean exists = redisTemplate.hasKey(key);
-        if (Boolean.TRUE.equals(exists)) {
+    public boolean isViewToday(UUID newsId, Long userId) {
+        String key = String.format(USER_VIEW_SET_KEY, userId);
+        String newsIdStr = newsId.toString();
+
+        Boolean alreadyViewed = redisTemplate.opsForSet().isMember(key, newsIdStr);
+        if (Boolean.TRUE.equals(alreadyViewed)) {
             return false;
         }
-        redisTemplate.opsForValue().set(key, "1", Duration.ofDays(1));
+
+        redisTemplate.opsForSet().add(key, newsIdStr);
+        redisTemplate.expire(key, Duration.ofDays(1));
         return true;
     }
 
     @Override
     public void incrementViewCount(UUID newsId) {
-        String key = String.format(NEWS_VIEW_COUNT_KEY, newsId);
-        redisTemplate.opsForValue().increment(key);
+        redisTemplate.opsForValue().increment(String.format(VIEW_COUNT_KEY, newsId));
     }
 
     @Override
     public long getViewCount(UUID newsId) {
-        String key = String.format(NEWS_VIEW_COUNT_KEY, newsId);
-        String value = redisTemplate.opsForValue().get(key);
+        String value = redisTemplate.opsForValue().get(String.format(VIEW_COUNT_KEY, newsId));
         return value == null ? 0 : Long.parseLong(value);
     }
 
     @Override
     public void clearDailyViewKey(UUID newsId, Long userId) {
-        String key = String.format(DAILY_VIEW_KEY, userId, newsId);
-        redisTemplate.delete(key);
+        redisTemplate.opsForSet().remove(String.format(USER_VIEW_SET_KEY, userId), newsId.toString());
+    }
+
+    @Override
+    public void updatePopularityScore(UUID newsId, long viewCount, LocalDateTime createdAt) {
+        long days = Duration.between(createdAt, LocalDateTime.now()).toDays();
+        double score = viewCount / (1.0 + days);
+        redisTemplate.opsForZSet().add(POPULARITY_ZSET_KEY, newsId.toString(), score);
+        redisTemplate.opsForZSet().removeRange(POPULARITY_ZSET_KEY, 20, -1);
+    }
+
+    @Override
+    public Set<String> getTopPopularNewsIds(int limit) {
+        return redisTemplate.opsForZSet().reverseRange(POPULARITY_ZSET_KEY, 0, limit - 1);
     }
 }
