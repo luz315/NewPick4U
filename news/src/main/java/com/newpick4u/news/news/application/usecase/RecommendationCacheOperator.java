@@ -15,4 +15,5 @@ public interface RecommendationCacheOperator {
     List<String> getGlobalTagIndexList();
     void cacheFallbackLatestNews(List<UUID> newsIds);
     List<UUID> getFallbackLatestNews();
+    void removeFromAllRecommendations(UUID newsId);
 }

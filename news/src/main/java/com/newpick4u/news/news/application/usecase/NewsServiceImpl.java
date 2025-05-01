@@ -275,11 +275,11 @@ public class NewsServiceImpl implements NewsService {
     }
 
     private void removeRedisCache(UUID newsId) {
-        // 사용자별 조회수 키 삭제는 생략 또는 별도 처리 필요
+        // 인기 점수 초기화
         viewCountCacheOperator.updatePopularityScore(newsId, 0L, LocalDateTime.now());
-        recommendationCacheOperator.getCachedUserIds().forEach(userId -> {
-            recommendationCacheOperator.getRecommendedNews(userId).remove(newsId.toString());
-        });
+        // 추천 목록에서 제거
+        recommendationCacheOperator.removeFromAllRecommendations(newsId);
+        // 벡터 대기열에서 제거
         newsVectorQueueOperator.removeFromQueue(newsId);
     }
 }

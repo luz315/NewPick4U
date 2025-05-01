@@ -164,4 +164,44 @@ public class RecommendationCacheOperatorImpl implements RecommendationCacheOpera
             throw CustomException.from(NewsErrorCode.REDIS_SCAN_FAIL);
         }
     }
+
+    @Override
+    public void removeFromAllRecommendations(UUID newsId) {
+        String newsIdStr = newsId.toString();
+
+        // 1. 사용자 추천 캐시 제거
+        Set<Long> userIds = getCachedUserIds();
+        for (Long userId : userIds) {
+            String key = "user:" + userId + ":recommend";
+            List<String> list = redisTemplate.opsForList().range(key, 0, -1);
+            if (list != null && list.contains(newsIdStr)) {
+                List<String> filtered = list.stream().filter(id -> !id.equals(newsIdStr)).toList();
+                String tmpKey = key + ":tmp";
+                redisTemplate.delete(tmpKey);
+                if (!filtered.isEmpty()) {
+                    redisTemplate.opsForList().rightPushAll(tmpKey, filtered);
+                    redisTemplate.rename(tmpKey, key);
+                } else {
+                    redisTemplate.delete(key);
+                }
+            }
+        }
+
+        // 2. fallback 추천 캐시 제거
+        String fallback = redisTemplate.opsForValue().get("news:recommend:fallback");
+        if (fallback != null && fallback.contains(newsIdStr)) {
+            List<String> filtered = Arrays.stream(fallback.split(","))
+                    .filter(id -> !id.equals(newsIdStr))
+                    .toList();
+            if (!filtered.isEmpty()) {
+                redisTemplate.opsForValue().set("news:recommend:fallback", String.join(",", filtered));
+            } else {
+                redisTemplate.delete("news:recommend:fallback");
+            }
+        }
+
+        // 3. 인기 ZSet 제거
+        redisTemplate.opsForZSet().remove("popular", newsIdStr);
+    }
+
 }
