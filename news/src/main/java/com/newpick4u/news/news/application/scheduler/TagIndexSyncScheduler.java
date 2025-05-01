@@ -15,7 +15,7 @@ public class TagIndexSyncScheduler {
 
     private final TagIndexQueueOperator tagIndexQueueOperator;
 
-//    @Scheduled(fixedDelay = 3600000) // 1시간마다 실행
+    @Scheduled(fixedDelay = 3600000) // 1시간마다 실행
     public void syncPendingTagsToGlobalIndex() {
         try {
             tagIndexQueueOperator.flushPendingTagsToGlobalIndex();

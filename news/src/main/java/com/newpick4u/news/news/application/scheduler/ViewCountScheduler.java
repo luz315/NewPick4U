@@ -26,7 +26,7 @@ public class ViewCountScheduler {
     private final NewsRepository newsRepository;
     private static final String VIEW_COUNT_KEY_PREFIX = "view:";
 
-    @Scheduled(cron = "0 * * * * *") // 매 1분마다 실행
+    @Scheduled(fixedDelay = 3600000) // 1시간마다 실행
     public void syncViewCounts() {
         Set<ZSetOperations.TypedTuple<String>> entries = redisTemplate.opsForZSet().rangeWithScores(VIEW_COUNT_KEY_PREFIX, 0, -1);
 
