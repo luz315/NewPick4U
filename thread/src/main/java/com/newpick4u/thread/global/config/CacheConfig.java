@@ -1,5 +1,8 @@
 package com.newpick4u.thread.global.config;
 
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,24 +20,44 @@ public class CacheConfig {
 
   @Bean
   public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
-    RedisCacheConfiguration config = RedisCacheConfiguration
+    // 기본 설정
+    RedisCacheConfiguration defaultConfig = RedisCacheConfiguration
         .defaultCacheConfig()
-        // 캐시 값에 Null 허용.
         .disableCachingNullValues()
-        // 캐시에 붙을 prefix를 설정. `CacheKeyPrefix.simple()`의 경우 `::`로 설정.
         .computePrefixWith(CacheKeyPrefix.simple())
-        // 캐시에 저장할 값을 어떻게 직렬화 할 것인지. RedisSerializer.java() 사용.
-        .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(
-            new StringRedisSerializer()))
-        .serializeValuesWith(
-            RedisSerializationContext.SerializationPair.fromSerializer(
-                new GenericJackson2JsonRedisSerializer())
-        );
+        .serializeKeysWith(
+            RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+        .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
+            new GenericJackson2JsonRedisSerializer()))
+        .entryTtl(Duration.ofMinutes(10)); // 전체 기본 TTL: 10분
+
+    // 캐시 이름별 TTL 설정
+    Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
+
+    cacheConfigurations.put("threads", RedisCacheConfiguration
+        .defaultCacheConfig()
+        .disableCachingNullValues()
+        .computePrefixWith(CacheKeyPrefix.simple())
+        .serializeKeysWith(
+            RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+        .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
+            new GenericJackson2JsonRedisSerializer()))
+        .entryTtl(Duration.ofMinutes(5))); // threads 캐시는 5분
+
+    cacheConfigurations.put("otherCache", RedisCacheConfiguration
+        .defaultCacheConfig()
+        .disableCachingNullValues()
+        .computePrefixWith(CacheKeyPrefix.simple())
+        .serializeKeysWith(
+            RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+        .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
+            new GenericJackson2JsonRedisSerializer()))
+        .entryTtl(Duration.ofMinutes(3))); // otherCache 캐시는 3분
 
     return RedisCacheManager
         .builder(connectionFactory)
-        // 모든 캐시에 기본적으로 저장.
-        .cacheDefaults(config)
+        .cacheDefaults(defaultConfig) // 전체 기본 설정
+        .withInitialCacheConfigurations(cacheConfigurations) // 개별 캐시 설정
         .build();
   }
 }

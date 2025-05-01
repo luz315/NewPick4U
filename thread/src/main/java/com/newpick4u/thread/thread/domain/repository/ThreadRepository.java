@@ -6,12 +6,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 
 public interface ThreadRepository {
 
-  Page<Thread> findAll(Pageable pageable);
+  Slice<Thread> findAll(Pageable pageable);
 
   Optional<Thread> findById(UUID threadId);
 

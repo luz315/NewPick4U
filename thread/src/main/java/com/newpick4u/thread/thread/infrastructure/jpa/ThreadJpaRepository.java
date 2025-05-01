@@ -16,7 +16,7 @@ public interface ThreadJpaRepository extends JpaRepository<Thread, UUID> {
 
   List<Thread> findAllByStatus(ThreadStatus threadStatus);
 
-  @Modifying(clearAutomatically = true)
+  @Modifying(flushAutomatically = true)
   @Query("UPDATE Thread t "
       + "SET t.score = t.score + 1 "
       + "WHERE t.tagName IN :existingTags")

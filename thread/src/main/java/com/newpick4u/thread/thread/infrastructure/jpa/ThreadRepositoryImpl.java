@@ -8,8 +8,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -20,8 +20,8 @@ public class ThreadRepositoryImpl implements ThreadRepository {
   private final ThreadRepositoryCustom threadRepositoryCustom;
 
   @Override
-  public Page<Thread> findAll(Pageable pageable) {
-    return threadJpaRepository.findAll(pageable);
+  public Slice<Thread> findAll(Pageable pageable) {
+    return threadRepositoryCustom.findSliceBy(pageable);
   }
 
   @Override

@@ -1,13 +1,14 @@
 package com.newpick4u.thread.thread.presentation.controller;
 
 import com.newpick4u.common.response.ApiResponse;
-import com.newpick4u.common.response.PageResponse;
+import com.newpick4u.common.response.SliceResponse;
 import com.newpick4u.thread.thread.application.dto.ThreadDetailResponseDto;
 import com.newpick4u.thread.thread.application.dto.ThreadResponseDto;
 import com.newpick4u.thread.thread.application.usecase.ThreadService;
+import io.micrometer.core.annotation.Timed;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -23,19 +24,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/threads")
 public class ThreadApiController {
 
+  private final MeterRegistry meterRegistry;
   private final ThreadService threadService;
 
   @GetMapping()
-  public ResponseEntity<ApiResponse<PageResponse<ThreadResponseDto>>> getThreads(
+  @Timed(value = "threads_request", description = "Total time for thread list request", histogram = true)
+  public ResponseEntity<ApiResponse<SliceResponse<ThreadResponseDto>>> getThreads(
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "10") int size
   ) {
+//    final String getThreadRequestMetric = "threads_request";
+//    meterRegistry.counter(getThreadRequestMetric).increment();
 
     Pageable pageable = PageRequest.of(page, size);
-    Page<ThreadResponseDto> response = threadService.getThreads(pageable);
-
+    SliceResponse<ThreadResponseDto> response = threadService.getThreads(pageable);
     return ResponseEntity.status(HttpStatus.OK.value())
-        .body(ApiResponse.of(HttpStatus.OK, PageResponse.from(response)));
+        .body(ApiResponse.of(HttpStatus.OK, response));
   }
 
   @GetMapping("/{threadId}")

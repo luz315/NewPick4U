@@ -8,6 +8,7 @@ import com.newpick4u.tag.application.dto.UpdateTagRequestDto;
 import com.newpick4u.tag.domain.criteria.SearchTagCriteria;
 import com.newpick4u.tag.domain.entity.Tag;
 import com.newpick4u.tag.domain.repository.TagRepository;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class TagServiceImpl implements TagService {
 
+  private final MeterRegistry meterRegistry;
   private final TagRepository tagRepository;
 
   @Override
@@ -48,6 +50,9 @@ public class TagServiceImpl implements TagService {
   @Override
   @Transactional
   public List<TagDto> createTagFromAi(AiNewsDto dto) {
+    final String pointRequestMetric = "tag_request_processed_total";
+    // ✅ TPS 측정을 위한 카운터 증가
+    meterRegistry.counter(pointRequestMetric).increment();
     List<String> tagNames = dto.tags();
 
     // 1) 한 번에 기존 태그들 조회
