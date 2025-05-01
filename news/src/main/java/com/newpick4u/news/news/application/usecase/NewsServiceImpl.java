@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -178,7 +179,10 @@ public class NewsServiceImpl implements NewsService {
         if (viewCountCacheOperator.isViewToday(newsId, userId)) {
             viewCountCacheOperator.incrementViewCount(newsId);
         }
-        news.updateView(viewCountCacheOperator.getViewCount(newsId));
+        long viewCount = viewCountCacheOperator.getViewCount(newsId);
+        news.updateView(viewCount);
+
+        viewCountCacheOperator.updatePopularityScore(newsId, viewCount, news.getCreatedAt());
         log.info("[Timer] 조회수 처리 끝, 소요시간 = {}ms", System.currentTimeMillis() - start);
     }
 
@@ -244,6 +248,16 @@ public class NewsServiceImpl implements NewsService {
         }
 
         return fallbackNewsList.stream().map(NewsSummaryDto::from).toList();
+    }
+
+    @Override
+    public List<NewsSummaryDto> getPopularTop10() {
+        Set<String> newsIdStrs = viewCountCacheOperator.getTopPopularNewsIds(10);
+        if (newsIdStrs == null || newsIdStrs.isEmpty()) return List.of();
+
+        List<UUID> ids = newsIdStrs.stream().map(UUID::fromString).toList();
+        List<News> newsList = newsRepository.findByIds(ids);
+        return newsList.stream().map(NewsSummaryDto::from).toList();
     }
 }
 

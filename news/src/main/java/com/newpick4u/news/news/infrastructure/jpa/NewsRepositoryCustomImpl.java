@@ -86,7 +86,6 @@ public class NewsRepositoryCustomImpl implements NewsRepositoryCustom {
     private OrderSpecifier<?> buildOrderSpecifier(NewsSearchCriteria request, QNews news) {
         if (request.sort() != null && !request.sort().isBlank()) {
             return switch (request.sort()) {
-                case "comment" -> news.createdAt.desc();
                 case "view" -> news.view.desc();
                 case "latest" -> news.createdAt.desc();
                 default -> news.createdAt.desc();

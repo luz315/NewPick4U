@@ -1,6 +1,7 @@
 package com.newpick4u.news.news.infrastructure.jpa;
 
 import com.newpick4u.news.news.domain.entity.News;
+import com.newpick4u.news.news.domain.repository.projection.NewsCreatedInfo;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -19,4 +20,6 @@ public interface NewsJpaRepository extends JpaRepository<News, UUID> {
     @Modifying
     @Query("UPDATE News n SET n.view = n.view + :count WHERE n.id = :newsId")
     void incrementViewCount(@Param("newsId") UUID newsId, @Param("count") long count);
+    @Query("SELECT n.id AS id, n.createdAt AS createdAt FROM News n WHERE n.status = com.newpick4u.news.news.domain.entity.NewsStatus.ACTIVE")
+    List<NewsCreatedInfo> findAllActiveNewsCreatedInfos();
 }

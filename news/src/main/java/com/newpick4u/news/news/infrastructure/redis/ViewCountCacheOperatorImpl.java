@@ -6,6 +6,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.UUID;
 
 @Component
@@ -15,6 +17,7 @@ public class ViewCountCacheOperatorImpl implements ViewCountCacheOperator {
     private final RedisTemplate<String, String> redisTemplate;
     private static final String USER_VIEW_SET_KEY = "view:user:%s";
     private static final String VIEW_COUNT_KEY = "view:%s";
+    private static final String POPULARITY_ZSET_KEY = "popular";
 
     @Override
     public boolean isViewToday(UUID newsId, Long userId) {
@@ -45,5 +48,18 @@ public class ViewCountCacheOperatorImpl implements ViewCountCacheOperator {
     @Override
     public void clearDailyViewKey(UUID newsId, Long userId) {
         redisTemplate.opsForSet().remove(String.format(USER_VIEW_SET_KEY, userId), newsId.toString());
+    }
+
+    @Override
+    public void updatePopularityScore(UUID newsId, long viewCount, LocalDateTime createdAt) {
+        long days = Duration.between(createdAt, LocalDateTime.now()).toDays();
+        double score = viewCount / (1.0 + days);
+        redisTemplate.opsForZSet().add(POPULARITY_ZSET_KEY, newsId.toString(), score);
+        redisTemplate.opsForZSet().removeRange(POPULARITY_ZSET_KEY, 20, -1);
+    }
+
+    @Override
+    public Set<String> getTopPopularNewsIds(int limit) {
+        return redisTemplate.opsForZSet().reverseRange(POPULARITY_ZSET_KEY, 0, limit - 1);
     }
 }
