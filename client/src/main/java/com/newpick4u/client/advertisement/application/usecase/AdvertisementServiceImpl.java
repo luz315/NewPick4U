@@ -38,7 +38,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
   @Transactional
   public UUID createAdvertisement(CreateAdvertiseRequestDto request, CurrentUserInfoDto userInfo) {
     // TODO 뉴스 도메인의 객체 반환방식에 따라 변돋이 생길 수 있음
-    UUID newsId = getNews(request, userInfo);
+    UUID newsId = getNews(request);
     if (validateCondition(request.title(), request.url())) {
       throw new AdvertisementException.AlreadyExistsTitleOrUrlException();
     }
@@ -96,9 +96,9 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     }
   }
 
-  private UUID getNews(CreateAdvertiseRequestDto requestDto, CurrentUserInfoDto userInfo) {
+  private UUID getNews(CreateAdvertiseRequestDto requestDto) {
     ResponseEntity<ApiResponse<GetNewsResponseDto>> response = newsClient.getNews(
-        requestDto.newsId(), userInfo);
+        requestDto.newsId());
     if (Objects.nonNull(response) && response.getStatusCode().is2xxSuccessful()) {
       UUID newsId = Objects.requireNonNull(response.getBody()).data().getId();
       return newsId;
