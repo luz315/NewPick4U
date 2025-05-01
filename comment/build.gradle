@@ -57,6 +57,13 @@ dependencies {
     testImplementation 'org.springframework.kafka:spring-kafka-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+    // 집킨을 위한 설정
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+    implementation 'io.github.openfeign:feign-micrometer'
+    implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
+    implementation 'io.github.openfeign:feign-micrometer'
+
     // 테스트에서 사용하기 위한 h2
     runtimeOnly 'com.h2database:h2'
     testRuntimeOnly 'com.h2database:h2'

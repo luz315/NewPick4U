@@ -48,7 +48,6 @@ public class CommentServiceImpl implements CommentService {
   private final CommentGoodRepository commentGoodRepository;
 
   // 댓글 저장 : 뉴스 댓글
-  @Transactional
   @Override
   public Map<String, Object> saveCommentForNews(CommentSaveRequestDto saveDto,
       CurrentUserInfoDto currentUserInfo) {
@@ -104,7 +103,6 @@ public class CommentServiceImpl implements CommentService {
   }
 
   // 댓글 저장 : 쓰레드
-  @Transactional
   @Override
   public UUID saveCommentForThread(CommentSaveRequestDto saveDto,
       CurrentUserInfoDto currentUserInfo) {

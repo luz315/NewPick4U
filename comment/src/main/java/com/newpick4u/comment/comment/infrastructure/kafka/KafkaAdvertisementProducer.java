@@ -61,7 +61,8 @@ public class KafkaAdvertisementProducer implements EventPublisher {
           .thenAccept(result -> {
           }).exceptionally(ex -> {
             log.error("Fail Send Message [{}] : {}", pointRequestTopicName, message, ex);
-            throw new RuntimeException(ex);
+            sendPointRequestDLQ(message);
+            return null;
           });
 
     } catch (Exception e) {

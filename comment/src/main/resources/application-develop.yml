@@ -1,5 +1,5 @@
 server:
-  port: 12001
+  port: 12000
 spring:
   application:
     name: comment-service
@@ -24,7 +24,6 @@ spring:
     defer-datasource-initialization: true # hibernate가 초기화되기 전 data.sql 실행하는 것을 방지
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect
         default_batch_fetch_size: 100
         format_sql: true
 eureka:
@@ -34,8 +33,10 @@ eureka:
     instance-id: ${spring.application.name}:${server.port}
     appname: ${spring.application.name}
   client:
-    register-with-eureka: true
-    fetch-registry: true
+    service-url:
+      defaultZone: ${DEVELOP_EUREKA_SERVER_URL}
+    register-with-eureka: false
+    fetch-registry: false
 
 app:
   kafka:
@@ -100,3 +101,14 @@ app:
           point-request-dlq:
             topic-name: ${DEVELOP_KAFKA_CONSUMER_EXCEPTION_TOPIC_POINT_REQUEST_DLQ_TOPIC_NAME}
             group-id: ${DEVELOP_KAFKA_CONSUMER_EXCEPTION_TOPIC_POINT_REQUEST_DLQ_GROUP_ID}
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+    enabled: true
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+      export:
+        enabled: true
