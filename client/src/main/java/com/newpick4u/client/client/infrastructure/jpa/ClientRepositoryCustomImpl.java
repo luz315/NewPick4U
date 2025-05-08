@@ -33,17 +33,20 @@ public class ClientRepositoryCustomImpl implements ClientRepositoryCustom {
         .where(booleanBuilder)
         .offset(pageable.getOffset())
         .limit(pageable.getPageSize())
+        .orderBy(client.industry.asc())
         .fetch();
 
     int total = clients.size();
 
     List<GetClientResponseDto> responseDtos = clients.stream()
         .map(client -> new GetClientResponseDto(client.getName(), client.getIndustry(),
-            client.getEmail(), client.getCreatedAt(), client.getCreatedBy(), client.getUpdatedAt(),
+            client.getAddress(),
+            client.getPhone(), client.getEmail(), client.getCreatedAt(), client.getCreatedBy(),
+            client.getUpdatedAt(),
             client.getUpdatedBy()))
         .toList();
 
     return new PageImpl<>(responseDtos, pageable, total);
-    
+
   }
 }

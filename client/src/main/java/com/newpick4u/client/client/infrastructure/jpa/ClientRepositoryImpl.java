@@ -4,6 +4,7 @@ import com.newpick4u.client.client.application.dto.response.GetClientResponseDto
 import com.newpick4u.client.client.domain.criteria.SearchClientCriteria;
 import com.newpick4u.client.client.domain.entity.Client;
 import com.newpick4u.client.client.domain.repository.ClientRepository;
+import com.newpick4u.client.client.infrastructure.elasticsearch.ClientSearchRepository;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ public class ClientRepositoryImpl implements ClientRepository {
 
   private final ClientJpaRepository jpaRepository;
   private final ClientRepositoryCustom clientRepositoryCustom;
+  private final ClientSearchRepository searchRepository;
 
   @Override
   public Client save(Client client) {

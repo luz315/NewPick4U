@@ -3,6 +3,7 @@ package com.newpick4u.client.client.application.usecase;
 import com.newpick4u.client.client.application.dto.request.CreateClientRequestDto;
 import com.newpick4u.client.client.application.dto.request.UpdateClientRequestDto;
 import com.newpick4u.client.client.application.dto.response.GetClientResponseDto;
+import com.newpick4u.client.client.application.event.ClientSavedEvent;
 import com.newpick4u.client.client.application.exception.ClientException.DuplicateEmailException;
 import com.newpick4u.client.client.application.exception.ClientException.DuplicatePhoneNumberException;
 import com.newpick4u.client.client.application.exception.ClientException.NotFoundException;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ClientServiceImpl implements ClientService {
 
   private final ClientRepository clientRepository;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Override
   @Transactional
@@ -33,7 +36,12 @@ public class ClientServiceImpl implements ClientService {
         request.phone(),
         request.address());
     Client saveClient = clientRepository.save(client);
+    publishClientSavedEvent(ClientSavedEvent.from(saveClient));
     return saveClient.getClientId();
+  }
+
+  public void publishClientSavedEvent(ClientSavedEvent event) {
+    eventPublisher.publishEvent(event);
   }
 
   @Override
@@ -62,8 +70,9 @@ public class ClientServiceImpl implements ClientService {
   public GetClientResponseDto getClient(UUID clientId) {
     Client client = clientRepository.findById(clientId)
         .orElseThrow(NotFoundException::new);
-    return new GetClientResponseDto(client.getName(), client.getIndustry(), client.getEmail(),
-        client.getCreatedAt(), client.getCreatedBy(), client.getUpdatedAt(), client.getUpdatedBy());
+    return new GetClientResponseDto(client.getName(), client.getIndustry(), client.getAddress(),
+        client.getPhone(), client.getEmail(), client.getCreatedAt(),
+        client.getCreatedBy(), client.getUpdatedAt(), client.getUpdatedBy());
   }
 
   @Override
