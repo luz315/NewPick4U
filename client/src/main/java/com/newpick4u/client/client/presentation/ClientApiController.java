@@ -1,10 +1,13 @@
 package com.newpick4u.client.client.presentation;
 
 import com.newpick4u.client.client.application.dto.request.CreateClientRequestDto;
+import com.newpick4u.client.client.application.dto.request.SearchClientRequestDto;
 import com.newpick4u.client.client.application.dto.request.UpdateClientRequestDto;
 import com.newpick4u.client.client.application.dto.response.GetClientResponseDto;
+import com.newpick4u.client.client.application.usecase.ClientSearchService;
 import com.newpick4u.client.client.application.usecase.ClientService;
 import com.newpick4u.client.client.domain.criteria.SearchClientCriteria;
+import com.newpick4u.client.client.domain.entity.ClientDocument;
 import com.newpick4u.common.resolver.annotation.CurrentUserInfo;
 import com.newpick4u.common.resolver.dto.CurrentUserInfoDto;
 import com.newpick4u.common.response.ApiResponse;
@@ -35,6 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ClientApiController {
 
   private final ClientService clientService;
+  private final ClientSearchService clientSearchService;
 
   @PostMapping
   public ResponseEntity<ApiResponse<Map<String, UUID>>> saveClient(
@@ -44,6 +48,15 @@ public class ClientApiController {
     return ResponseEntity.status(HttpStatus.CREATED.value())
         .body(ApiResponse.of(HttpStatus.CREATED, Map.of("savedClientId", savedClientId)));
   }
+
+  @GetMapping("/search-elastic")
+  public ResponseEntity<ApiResponse<PageResponse<ClientDocument>>> getClientsElastic(
+      SearchClientRequestDto request, Pageable pageable) {
+    PageResponse<ClientDocument> response = clientSearchService.search(request, pageable);
+    return ResponseEntity.status(HttpStatus.OK.value())
+        .body(ApiResponse.of(HttpStatus.OK, response));
+  }
+
 
   @GetMapping("/{clientID}")
   public ResponseEntity<ApiResponse<GetClientResponseDto>> getClient(

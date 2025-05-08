@@ -16,6 +16,15 @@ spring:
       host: ${DEVELOP_REDIS_HOST}
       port: ${DEVELOP_REDIS_PORT}
       password: ${DEVELOP_REDIS_PASSWORD}
+    elasticsearch:
+      host: ${DEVELOP_ELASTIC_HOST}
+      username: ${DEVELOP_ELASTIC_USERNAME}
+      password: ${DEVELOP_ELASTIC_PASSWORD}
+      connection-timeout: 10000
+      socket-timeout: 10000
+      # 'ELK 도커 실행' 과정에서 설정한 .env 의 값과 일치해야 함
+      repositories:
+        enabled: true
   kafka:
     bootstrap-servers: ${DEVELOP_KAFKA_BOOTSTRAP_SERVERS}
     consumer:
