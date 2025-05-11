@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.newpick4u.newsorigin.global.common.CommonUtil;
+import com.newpick4u.newsorigin.global.common.EnvDecoder;
 import com.newpick4u.newsorigin.newsorigin.application.OriginCollectClient;
 import com.newpick4u.newsorigin.newsorigin.application.dto.NewNewsOriginDto;
 import io.micrometer.common.util.StringUtils;
@@ -64,7 +65,7 @@ public class OriginCollectClientImpl implements OriginCollectClient {
 
   private Map<String, String> getRequestParam() {
     return Map.of(
-        "query", searchQuery,
+        "query", EnvDecoder.decodeBase64(searchQuery),
         "sort", searchSort,
         "display", searchDisplay
     );

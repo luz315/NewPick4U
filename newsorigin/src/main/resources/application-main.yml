@@ -10,7 +10,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
     open-in-view: false
     defer-datasource-initialization: true # hibernate가 초기화되기 전 data.sql 실행하는 것을 방지
@@ -51,3 +51,15 @@ app:
       topic:
         news-origin:
           topic-name: ${MAIN_NEWSORIGIN_TOPIC_NAME}
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+    enabled: true
+    brave:
+      service-name: newsorigin-service
+  zipkin:
+    tracing:
+      endpoint: ${MAIN_ZIPKIN_SERVER}
+      export:
+        enabled: true
