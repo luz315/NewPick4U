@@ -1,5 +1,6 @@
 package com.newpick4u.newsorigin.newsorigin.infrastructure.client;
 
+import com.newpick4u.newsorigin.global.common.EnvDecoder;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
@@ -38,7 +39,7 @@ class NaverFeignClientTest {
 
   private Map<String, String> getRequestParam() {
     return Map.of(
-        "query", "우주 수장의 워싱턴 출장",
+        "query", EnvDecoder.decodeBase64(searchQuery),
         "sort", searchSort,
         "display", searchDisplay
     );

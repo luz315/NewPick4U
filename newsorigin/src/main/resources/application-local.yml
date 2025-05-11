@@ -7,10 +7,10 @@ spring:
     import:
       - file:.env.newsorigin[.properties]
   datasource:
-    url: ${TEST_DB_URL}
-    username: ${TEST_DB_USERNAME}
-    password: ${TEST_DB_PASSWORD}
-    driver-class-name: org.h2.Driver
+    url: ${LOCAL_DB_URL}
+    username: ${LOCAL_DB_USERNAME}
+    password: ${LOCAL_DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: update
@@ -19,31 +19,30 @@ spring:
     defer-datasource-initialization: true # hibernate가 초기화되기 전 data.sql 실행하는 것을 방지
     properties:
       hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
         default_batch_fetch_size: 100
         format_sql: true
 app:
-  news-origin:
-    send-limit-per-min: 10
   client:
     naver:
-      host: ${TEST_NAVER_HOST}
+      host: ${LOCAL_NAVER_HOST}
       collect-news:
-        id: ${TEST_NAVER_COLLECT_NEWS_ID}
-        key: ${TEST_NAVER_COLLECT_NEWS_KEY}
-        path: ${TEST_NAVER_COLLECT_NEWS_PATH}
+        id: ${LOCAL_NAVER_COLLECT_NEWS_ID}
+        key: ${LOCAL_NAVER_COLLECT_NEWS_KEY}
+        path: ${LOCAL_NAVER_COLLECT_NEWS_PATH}
         # 최대한 한번에 검색이 많이 되도록 하기 위해 가장 많이 등장하는 단어로 검색
-        search-query: ${TEST_NAVER_COLLECT_NEWS_SEARCH_QUERY}
+        search-query: ${LOCAL_NAVER_COLLECT_NEWS_SEARCH_QUERY}
         # 정렬 기준 : date(날짜순 내림차순) or sim(정확도 내림차순)
-        search-sort: ${TEST_NAVER_COLLECT_NEWS_SEARCH_SORT}
+        search-sort: ${LOCAL_NAVER_COLLECT_NEWS_SEARCH_SORT}
         # 한번에 쿼리할 양
-        search-display: ${TEST_NAVER_COLLECT_NEWS_SEARCH_DISPLAY}
+        search-display: ${LOCAL_NAVER_COLLECT_NEWS_SEARCH_DISPLAY}
     webclient:
       connection-timeout: 5000
       read-timeout: 20000
       max-buffer-size-MB: 20
   kafka:
     producer:
-      bootstrap-servers: ${TEST_SPRING_KAFKA_BOOTSTRAP_SERVERS} # Kafka 브로커 주소 (복수 개일 경우 쉼표로 구분)
+      bootstrap-servers: ${LOCAL_SPRING_KAFKA_BOOTSTRAP_SERVERS} # Kafka 브로커 주소 (복수 개일 경우 쉼표로 구분)
       acks: all                                                 # 메시지 전송 확인 수준 (0: 확인 안 함, 1: 리더만 확인, all: 모든 ISR 복제본 확인)
       retries: 3                                                # 전송 실패 시 재시도 횟수
       retry-backoff-ms: 1000                                    # 재시도 간 대기 시간 (ms)
@@ -54,4 +53,16 @@ app:
       compression-type: none                                    # 메시지 압축 방식 (none, gzip, snappy, lz4, zstd 등)
       topic:
         news-origin:
-          topic-name: ${TEST_NEWSORIGIN_TOPIC_NAME}
+          topic-name: ${LOCAL_NEWSORIGIN_TOPIC_NAME}
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+    enabled: true
+    brave:
+      service-name: newsorigin-service
+  zipkin:
+    tracing:
+      endpoint: ${LOCAL_ZIPKIN_SERVER}
+      export:
+        enabled: true

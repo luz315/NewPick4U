@@ -57,7 +57,7 @@ public class NewsOriginServiceImpl implements NewsOriginService {
         saveCount += saveNewsOrigin(newsOrigin);
       }
       return saveCount;
-      
+
     } catch (JsonProcessingException e) {
       log.error("", e);
     }
@@ -129,6 +129,8 @@ public class NewsOriginServiceImpl implements NewsOriginService {
         // 뉴스 원본 기사 획득
         String originNewsBody = getOriginBodyClient.getOriginNewsBody(newsOrigin.getUrl());
         if (StringUtils.isBlank(originNewsBody)) {
+          newsOrigin.sendFail();
+          newsOriginRepository.save(newsOrigin); // update
           return;
         }
 
