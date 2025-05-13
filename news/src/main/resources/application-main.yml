@@ -1,0 +1,80 @@
+server:
+  port: 11001
+
+spring:
+  application:
+    name: news-service
+  datasource:
+    url: ${MAIN_DB_URL}
+    username: ${MAIN_DB_USERNAME}
+    password: ${MAIN_DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: ${MAIN_REDIS_HOST}
+      port: ${MAIN_REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+
+  kafka:
+    bootstrap-servers: ${MAIN_KAFKA_BOOTSTRAP_SERVERS}
+    consumer:
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      max-poll-records: 20
+    properties:
+      max.poll.interval.ms: 15000
+      heartbeat.interval.ms: 1000
+      session.timeout.ms: 60000
+    listener:
+      ack-mode: manual_immediate
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+    defer-datasource-initialization: true # hibernate가 초기화되기 전 data.sql 실행하는 것을 방지
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        default_batch_fetch_size: 100
+        format_sql: true
+
+eureka:
+  instance:
+    hostname: ${MAIN_EUREKA_HOSTNAME}
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+    appname: ${spring.application.name}
+  client:
+    service-url:
+      defaultZone: ${MAIN_EUREKA_SERVER_URL}
+    register-with-eureka: true
+    fetch-registry: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+    zipkin:
+      endpoint: ${MAIN_ZIPKIN_SERVERS}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /doc
+    enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+
+

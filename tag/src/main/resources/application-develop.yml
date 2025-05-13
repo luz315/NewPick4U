@@ -1,0 +1,65 @@
+server:
+  port: 14001
+
+eureka:
+  instance:
+    hostname: ${DEVELOP_EUREKA_HOSTNAME}
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+    appname: ${spring.application.name}
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+
+spring:
+  config:
+    import:
+      - file:.env.tag[.properties]
+  datasource:
+    url: ${DEVELOP_DB_URL}
+    username: ${DEVELOP_DB_USERNAME}
+    password: ${DEVELOP_DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  #    decorator:
+  #      enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    open-in-view: false
+    defer-datasource-initialization: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        default_batch_fetch_size: 100
+        format_sql: true
+  kafka:
+    tag-topic:
+      topic-name: tag.fct.v1
+    dlq-topic:
+      topic-name: dev.tag.fct.dql.v1
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    consumer:
+      create:
+        group-id: ${KAFKA_CREATE_GROUP_ID}
+      delete:
+        group-id: ${KAFKA_DELETE_GROUP_ID}
+      topic:
+        create: ${CREATE_TAG_TOPIC}
+        delete: ${DELETE_TAG_TOPIC}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: "http://localhost:9411/api/v2/spans"
+  prometheus:
+    metrics:
+      export:
+        enabled: true

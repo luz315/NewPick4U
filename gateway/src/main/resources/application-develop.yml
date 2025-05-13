@@ -1,0 +1,61 @@
+server:
+  port: 8080
+eureka:
+  instance:
+    hostname: ${DEVELOP_EUREKA_HOSTNAME}
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+    appname: ${spring.application.name}
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+spring:
+  application:
+    name: gateway-service
+  config:
+    import:
+      - file:.env.gateway[.properties]
+  main:
+    web-application-type: reactive
+  cloud:
+    gateway:
+      routes:
+        - id: tag-service
+          uri: lb://tag-service
+          predicates:
+            - Path=/api/v1/tags/**
+        - id: thread-service
+          uri: lb://thread-service
+          predicates:
+            - Path=/api/v1/threads/**, /internal/v1/threads/**
+        - id: client-service
+          uri: lb://client-service
+          predicates:
+            - Path=/api/v1/advertisements/**, /api/v1/clients/**
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/v1/users/**, /internal/v1/users/**
+        - id: comment-service
+          uri: lb://comment-service
+          predicates:
+            - Path=/api/v1/comments/**,/internal/v1/comments/**
+        - id: news-service
+          uri: lb://news-service
+          predicates:
+            - Path=/api/v1/news/**,/internal/v1/news/**
+  datasource:
+    url: ${DEVELOP_DB_URL}
+    username: ${DEVELOP_DB_USERNAME}
+    password: ${DEVELOP_DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+jwt:
+  secret: bXktdmVyeS1zZWN1cmUtYW5kLWxvbmcgc2VjcmV0LWtleS12YWx1ZSE=  # Base64로 인코딩된 문자열
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: "http://localhost:9411/api/v2/spans"

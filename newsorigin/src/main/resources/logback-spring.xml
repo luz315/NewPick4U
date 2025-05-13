@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="60 seconds">
+  <appender class="ch.qos.logback.core.ConsoleAppender" name="console">
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <pattern>
+        %clr([%d{yyyy-MM-dd HH:mm:ss.SSS}]){faint} %clr(%highlight([%-5p])) %clr([%thread]){magenta} %clr(%logger{35}){cyan}[%method:%line] - %msg%n
+      </pattern>
+    </encoder>
+  </appender>
+  <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="file">
+    <encoder>
+      <pattern>
+        [%d{yyyy-MM-dd HH:mm:ss.SSS}][%p][%thread] %logger{35}[%method:%line] - %msg%n
+      </pattern>
+    </encoder>
+    <file>newsorigin/logs/log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>newsorigin/logs/log.%d{yyyy-MM-dd}_%i</fileNamePattern>
+      <maxHistory>60</maxHistory>
+      <timeBasedFileNamingAndTriggeringPolicy
+        class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+        <!-- or whenever the file size reaches 100MB -->
+        <maxFileSize>100MB</maxFileSize>
+      </timeBasedFileNamingAndTriggeringPolicy>
+    </rollingPolicy>
+  </appender>
+
+  <conversionRule conversionWord="clr"
+    converterClass="org.springframework.boot.logging.logback.ColorConverter"/>
+
+  <root level="info">
+    <appender-ref ref="console"/>
+    <appender-ref ref="file"/>
+  </root>
+
+</configuration>

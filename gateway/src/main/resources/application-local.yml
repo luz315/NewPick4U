@@ -1,0 +1,63 @@
+server:
+  port: 8080
+eureka:
+  instance:
+    hostname: ${LOCAL_EUREKA_HOSTNAME}
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+    appname: ${spring.application.name}
+  client:
+    service-url:
+      defaultZone: ${LOCAL_EUREKA_SERVER_URL}
+    register-with-eureka: true
+    fetch-registry: true
+spring:
+  application:
+    name: gateway-service
+  main:
+    web-application-type: reactive
+  cloud:
+    gateway:
+      routes:
+        - id: tag-service
+          uri: lb://tag-service
+          predicates:
+            - Path=/api/v1/tags/**
+        - id: thread-service
+          uri: lb://thread-service
+          predicates:
+            - Path=/api/v1/threads/**, /internal/v1/threads/**
+        - id: client-service
+          uri: lb://client-service
+          predicates:
+            - Path=/api/v1/advertisements/**, /api/v1/clients/**
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/v1/users/**, /internal/v1/users/**
+        - id: comment-service
+          uri: lb://comment-service
+          predicates:
+            - Path=/api/v1/comments/**,/internal/v1/comments/**
+        - id: news-service
+          uri: lb://news-service
+          predicates:
+            - Path=/api/v1/news/**,/internal/v1/news/**
+  datasource:
+    url: ${LOCAL_DB_URL}
+    username: ${LOCAL_DB_USERNAME}
+    password: ${LOCAL_DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+jwt:
+  secret: ${LOCAL_SECKET_KEY}
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+    enabled: true
+  zipkin:
+    tracing:
+      endpoint: ${LOCAL_ZIPKIN_SERVER}
+      export:
+        enabled: true

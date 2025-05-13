@@ -1,0 +1,71 @@
+server:
+  port: 10001
+
+spring:
+  application:
+    name: user-service
+
+  datasource:
+    url: ${LOCAL_DB_URL}
+    username: ${LOCAL_DB_USERNAME}
+    password: ${LOCAL_DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  kafka:
+    bootstrap-servers: ${LOCAL_KAFKA_BOOTSTRAP_SERVERS}
+    consumer:
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      groups:
+        user-point-update: user-point-update-1
+        user-point-update-dlq: user-point-update-dlq-1
+      topics:
+        point-update: user-point-update.fct.v1
+        point-update-dlq: user-point-update-dlq.fct.v1
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      topics:
+        point-request-failure: point-request-failure.fct.v1
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    listener:
+      ack-mode: manual_immediate
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+    defer-datasource-initialization: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        default_batch_fetch_size: 100
+        format_sql: true
+
+jwt:
+  secret: ${LOCAL_SECRET_KEY}
+  issuer: newpick4u
+  access-token-expiration: 3600000  # 1시간 (단위: milliseconds)
+
+eureka:
+  instance:
+    hostname: ${LOCAL_EUREKA_HOSTNAME}
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+    appname: ${spring.application.name}
+  client:
+    service-url:
+      defaultZone: ${LOCAL_EUREKA_SERVER_URL}
+    register-with-eureka: true
+    fetch-registry: true
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+    enabled: true
+  zipkin:
+    tracing:
+      endpoint: ${LOCAL_ZIPKIN_SERVER}
+      export:
+        enabled: true

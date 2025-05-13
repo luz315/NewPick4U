@@ -1,0 +1,21 @@
+services:
+  newsorigin-service:
+    image: newsorigin-service:latest
+    container_name: newsorigin-service
+    env_file:
+      - .env.newsorigin
+    ports:
+      - "15001:15001"
+    networks: # 네트워크 설정
+      - my-internal-net
+    environment:
+      TZ: Asia/Seoul
+      SPRING_PROFILES_ACTIVE: local
+      JAVA_OPTS: >-
+        -Duser.timezone=Asia/Seoul
+      working_dir: /app
+    volumes:
+      - ./logs:/app/newsorigin/logs
+networks:
+  my-internal-net:
+    external: true
